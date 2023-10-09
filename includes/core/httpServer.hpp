@@ -17,6 +17,7 @@
 #include <iomanip>
 
 #include "core/HttpRequestHandler.hpp"
+#include "core/HttpRequest.hpp"
 #include "core/HttpResponse.hpp"
 
 #define MAX_BUFFER_SIZE 1024
@@ -68,6 +69,7 @@ public:
 	//void addRoute(const std::string& route, const HttpRequestHandler& handler);
 	int acceptConnection();
 	void handleRequest(int clientSocket);
+	bool parseRequest(int clientSocket, char data[], HttpRequest &request);
 	void sendResponse(int clientSocket, const HttpResponse& response);
 	void handleError(int clientSocket, int errorCode);
 	void log(std::string message);

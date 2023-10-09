@@ -206,10 +206,16 @@ void HttpServer::handleRequest(int clientSocket) {
 
     if (bytesRead == -1) {
         perror("Error reading data");
-    } else if (bytesRead == 0) {
+    }
+	else if (bytesRead == 0) {
         std::cout << "Connection closed by client." << std::endl;
-    } else {
+    }
+	else {
         std::cout << "Read " << bytesRead << " bytes of data." << std::endl;
+
+		HttpRequest request;
+
+		parseRequest(clientSocket, dataBuffer, request);
 		/* std::cout << "Data: " << std::endl;
 		std::cout << dataBuffer << std::endl; */
     }
@@ -218,6 +224,54 @@ void HttpServer::handleRequest(int clientSocket) {
     close(clientSocket);
 }
 
+bool HttpServer::parseRequest(int clientSocket, char data[], HttpRequest &request) {
+
+	(void)clientSocket;
+
+	std::string dataString(data);
+	std::cout << "Data: " << std::endl;
+	std::cout << dataString << std::endl;
+
+	// Parse the request
+	std::istringstream requestStream(dataString);
+	std::string line;
+
+	// Parse the request line
+	std::getline(requestStream, line);
+	std::istringstream requestLineStream(line);
+	std::string method;
+	std::string resource;
+	std::string httpVersion;
+	requestLineStream >> method >> resource >> httpVersion;
+	
+	// Parse the resource
+	std::cout << "Found ?" << std::endl;
+
+	std::map<std::string, std::string> args = std::map<std::string, std::string>();
+	request.readArgs(resource);
+
+	resource = resource.substr(0, resource.find("?"));
+
+	request.readHeaders(requestStream, request);
+
+	// Parse the body
+	std::string body;
+	while (std::getline(requestStream, line)) {
+		body += line;
+	}
+
+	// Set the request properties
+	request.setMethod(method);
+	request.setResource(resource);
+	request.setHttpVersion(httpVersion);
+	request.setHost(request.getHeaders()["Host"]);
+	request.setBody(body);
+
+	// Print the request
+	std::cout << request << std::endl;
+
+	return true;
+}
 
 void HttpServer::log(std::string message) {
 
@@ -259,3 +313,25 @@ void HttpServer::log(const std::string& message, int clientSocket) {
     std::cout << "[" << timeString.str() << "] [Socket " << clientSocket << "] " << message << std::endl;
 }
 
+std::ostream& operator<<(std::ostream& os, const HttpRequest& request) {
+	os << "Method: " << request.getMethod() << std::endl;
+	os << "Resource: " << request.getResource() << std::endl;
+	os << "HTTP Version: " << request.getHttpVersion() << std::endl;
+	os << "Host: " << request.getHost() << std::endl;
+
+	os << "Headers: " << std::endl;
+	const std::map<std::string, std::string>& headers = request.getHeaders();
+	for (std::map<std::string, std::string>::const_iterator it = headers.begin(); it != headers.end(); ++it) {
+		os << "-> " << it->first << ": " << it->second << std::endl;
+	}
+
+	os << "Args: " << std::endl;
+	const std::map<std::string, std::string>& args = request.getArgs();
+	for (std::map<std::string, std::string>::const_iterator it = args.begin(); it != args.end(); ++it) {
+		os << "-> " << it->first << ": " << it->second << std::endl;
+	}
+
+	os << "Body: " << request.getBody() << std::endl;
+
+	return os;
+}

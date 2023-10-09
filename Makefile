@@ -17,6 +17,7 @@ SRCS := \
     $(SRC_DIR)/core/HttpServer.cpp \
     $(SRC_DIR)/core/HttpRequestHandler.cpp \
 	$(SRC_DIR)/core/HttpResponse.cpp \
+	$(SRC_DIR)/core/HttpRequest.cpp \
     $(SRC_DIR)/main.cpp
 
 OBJS	=	$(patsubst $(SRC_DIR)/%.cpp, $(BIN_DIR)/%.o, $(SRCS))
