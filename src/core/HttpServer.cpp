@@ -285,6 +285,10 @@ bool HttpServer::parseRequest(int clientSocket, char data[], HttpRequest &reques
 	return true;
 }
 
+void HttpServer::addRouteHandler(const RouteHandler& routeHandler) {
+	routes[routeHandler.getLocation().getPath()] = routeHandler;
+}
+
 void HttpServer::log(std::string message) {
 
 	if (!enableLogging) {

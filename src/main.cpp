@@ -27,6 +27,12 @@ int main(int argc, char **argv) {
 	for (size_t i = 0; i < serverConfigs.size(); ++i) {
 		HttpServer httpServer;
 
+		for (size_t i = 0; i < serverConfig.getLocations().size(); i++) {
+			Location location = serverConfig.getLocations()[i];
+			RouteHandler routeHandler(location);
+			httpServer.addRouteHandler(routeHandler);
+		}
+
         // Configure the HttpServer instance based on serverConfigs[i]
         httpServer.loadConfig(serverConfigs[i].getConfigFilePath());
         httpServer.setPort(serverConfigs[i].getPort());

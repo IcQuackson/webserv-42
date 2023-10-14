@@ -36,3 +36,11 @@ std::string ServerConfig::getHost() {
 int ServerConfig::getPort() {
 	return this->port;
 }
+
+std::vector<Location> ServerConfig::getLocations() {
+	return this->locations;
+}
+
+void ServerConfig::addLocation(Location location) {
+	this->locations.push_back(location);
+}

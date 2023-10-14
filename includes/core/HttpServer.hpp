@@ -20,6 +20,7 @@
 #include "core/HttpRequestHandler.hpp"
 #include "core/HttpRequest.hpp"
 #include "core/HttpResponse.hpp"
+#include "core/RouteHandler.hpp"
 
 #define MAX_BUFFER_SIZE 1024
 #define MAX_EVENTS 64
@@ -39,7 +40,7 @@ private:
 	int maxConnections;
 
 	// Routes and Handlers
-	std::map<std::string, HttpRequestHandler> routes;
+	std::map<std::string, RouteHandler> routes;
 
 	// Request and Response Buffers
 	char buffer[MAX_BUFFER_SIZE];
@@ -55,7 +56,6 @@ public:
 	HttpServer(HttpServer const &httpServer);
 	HttpServer &operator=(HttpServer const &httpServer);
 
-	// getters and setters
 	int getPort();
 	std::string getHost();
 	int getMaxConnections();
@@ -63,11 +63,10 @@ public:
 	void setHost(const std::string& host);
 	void setMaxConnections(int maxConnections);
 
-	// functions
 
 	bool init();
 	bool loadConfig(const std::string& configFilePath);
-	//void addRoute(const std::string& route, const HttpRequestHandler& handler);
+	void addRouteHandler(const RouteHandler& routeHandler);
 	int acceptConnection();
 	void handleRequest(int clientSocket);
 	bool parseRequest(int clientSocket, char data[], HttpRequest &request);
