@@ -1,4 +1,4 @@
-#include "core/HttpRequest.hpp"
+#include "../../includes/core/HttpRequest.hpp"
 
 HttpRequest::HttpRequest() {
 	args = std::map<std::string, std::string>();
