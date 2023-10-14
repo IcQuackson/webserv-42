@@ -1,5 +1,5 @@
-#include "core/httpServer.hpp"
-#include "core/httpStatusCode.hpp"
+#include "core/HttpServer.hpp"
+#include "core/HttpStatusCode.hpp"
 
 int epollFd = -1;
 bool HttpServer::enableLogging = true;

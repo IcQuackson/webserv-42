@@ -1,4 +1,4 @@
-#include "core/httpServer.hpp"
+#include "core/HttpServer.hpp"
 #include "config/ConfigParser.hpp"
 #include "config/ServerConfig.hpp"
 #include "core/HttpStatusCode.hpp"
