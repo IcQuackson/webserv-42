@@ -18,6 +18,7 @@ SRCS := \
     $(SRC_DIR)/core/HttpRequestHandler.cpp \
 	$(SRC_DIR)/core/HttpResponse.cpp \
 	$(SRC_DIR)/core/HttpRequest.cpp \
+	$(SRC_DIR)/core/HttpStatusCode.cpp \
     $(SRC_DIR)/main.cpp
 
 OBJS	=	$(patsubst $(SRC_DIR)/%.cpp, $(BIN_DIR)/%.o, $(SRCS))
@@ -59,6 +60,34 @@ fclean:		clean
 
 re:			fclean all
 			@echo "$(MAGENTA)Cleaned and rebuilt!$(DEFAULT)"
+
+test:
+		@echo "Testing server with valid request..."
+		curl -X GET "http://localhost:8080/resource" -H "Host: example.com"
+
+		@echo "\nTesting server with POST request..."
+		curl -X POST "http://localhost:8080/resource?param1=value1&param2=value2" -H "Host: example.com"
+
+		@echo "\nTesting server with invalid request (Bad method)..."
+		curl -X INVALIDMETHOD "http://localhost:8080/resource" -H "Host: example.com"
+
+		@echo "\nTesting server with invalid request (No Host header)..."
+		printf "GET /resource HTTP/1.1\r\n\r\n" | nc localhost 8080
+
+		@echo "\nTesting server with invalid request (No method)..."
+		printf "/resource HTTP/1.1\r\nHost: example.com\r\n\r\n" | nc localhost 8080
+
+		@echo "\nTesting server with invalid request (No HTTP version)..."
+		printf "GET /resource\r\nHost: example.com\r\n\r\n" | nc localhost 8080
+
+		@echo "\nTesting server with invalid request (Invalid HTTP version)..."
+		printf "GET /resource HTTP/2.0\r\nHost: example.com\r\n\r\n" | nc localhost 8080
+
+		@echo "\nTesting server with invalid request (Empty request)..."
+		printf "\r\n" | nc localhost 8080
+
+		@echo "\nTesting server with invalid request (Invalid URL)..."
+		curl -X GET "http://localhost:8080/resource?param1=value1&param2" -H "Host: example.com"
 
 
 run: all

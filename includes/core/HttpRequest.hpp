@@ -40,6 +40,7 @@ public:
 	bool readArgs(const std::string& resource);
 	bool readHeaders(std::istringstream& requestStream, HttpRequest& request);
 	void setBody(const std::string& body);
+	static bool isRequestValid(char data[]);
 };
 
 std::ostream& operator<<(std::ostream& os, const HttpRequest& request);

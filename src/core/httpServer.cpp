@@ -1,4 +1,5 @@
 #include "core/httpServer.hpp"
+#include "core/httpStatusCode.hpp"
 
 int epollFd = -1;
 bool HttpServer::enableLogging = true;
@@ -135,7 +136,6 @@ void HttpServer::run() {
 		// Wait for events to occur on any of the registered file descriptors
 		int numEvents = epoll_wait(epollFd, events, MAX_EVENTS, -1);
 
-
 		if (numEvents == -1) {
 			perror("Error in epoll_wait");
 			break;
@@ -211,26 +211,32 @@ void HttpServer::handleRequest(int clientSocket) {
         std::cout << "Connection closed by client." << std::endl;
     }
 	else {
+		dataBuffer[bytesRead] = '\0';
         std::cout << "Read " << bytesRead << " bytes of data." << std::endl;
+		std::cout << "Data: " << std::endl;
+		std::cout << dataBuffer << std::endl;
+		std::cout << "Data length: " << std::strlen(dataBuffer) << std::endl;
 
+		HttpStatusCode::setCurrentStatusCode("200");
 		HttpRequest request;
-
 		parseRequest(clientSocket, dataBuffer, request);
-		/* std::cout << "Data: " << std::endl;
-		std::cout << dataBuffer << std::endl; */
+
+		std::pair<std::string, std::string> statusCode = HttpStatusCode::getCurrentStatusCode();
+		std::cout << statusCode.first << " " << statusCode.second << std::endl;
     }
 
-    // Close the client socket
     close(clientSocket);
 }
 
 bool HttpServer::parseRequest(int clientSocket, char data[], HttpRequest &request) {
 
-	(void)clientSocket;
+	(void) clientSocket;
+
+	if (!HttpRequest::isRequestValid(data)) {
+		return false;
+	}
 
 	std::string dataString(data);
-	std::cout << "Data: " << std::endl;
-	std::cout << dataString << std::endl;
 
 	// Parse the request
 	std::istringstream requestStream(dataString);
@@ -244,10 +250,6 @@ bool HttpServer::parseRequest(int clientSocket, char data[], HttpRequest &reques
 	std::string httpVersion;
 	requestLineStream >> method >> resource >> httpVersion;
 	
-	// Parse the resource
-	std::cout << "Found ?" << std::endl;
-
-	std::map<std::string, std::string> args = std::map<std::string, std::string>();
 	request.readArgs(resource);
 
 	resource = resource.substr(0, resource.find("?"));
@@ -255,9 +257,19 @@ bool HttpServer::parseRequest(int clientSocket, char data[], HttpRequest &reques
 	request.readHeaders(requestStream, request);
 
 	// Parse the body
-	std::string body;
-	while (std::getline(requestStream, line)) {
+	std::string body = "";
+	while (std::getline(requestStream, line) && !line.empty() && line != "\r") {
 		body += line;
+	}
+	
+	if (request.getHeaders().find("Content-Length") != request.getHeaders().end()) {
+		size_t contentLength = std::atoi(request.getHeaders()["Content-Length"].c_str());
+
+		if (contentLength != body.size()) {
+			// set error
+			HttpStatusCode::setCurrentStatusCode("400");
+			return false;
+		}
 	}
 
 	// Set the request properties
@@ -324,6 +336,7 @@ std::ostream& operator<<(std::ostream& os, const HttpRequest& request) {
 	for (std::map<std::string, std::string>::const_iterator it = headers.begin(); it != headers.end(); ++it) {
 		os << "-> " << it->first << ": " << it->second << std::endl;
 	}
+	os << "Body: " << request.getBody() << std::endl;
 
 	os << "Args: " << std::endl;
 	const std::map<std::string, std::string>& args = request.getArgs();
@@ -331,7 +344,6 @@ std::ostream& operator<<(std::ostream& os, const HttpRequest& request) {
 		os << "-> " << it->first << ": " << it->second << std::endl;
 	}
 
-	os << "Body: " << request.getBody() << std::endl;
 
 	return os;
 }

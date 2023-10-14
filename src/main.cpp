@@ -1,6 +1,7 @@
 #include "core/httpServer.hpp"
 #include "config/ConfigParser.hpp"
 #include "config/ServerConfig.hpp"
+#include "core/HttpStatusCode.hpp"
 
 #include <vector>
 
@@ -39,6 +40,8 @@ int main(int argc, char **argv) {
             std::cerr << "Error initializing HttpServer for server block " << (i + 1) << std::endl;
         }
 	}
+
+	HttpStatusCode::initStatusCodes();
 
 	// Start all initialized servers
     for (size_t i = 0; i < httpServers.size(); ++i) {

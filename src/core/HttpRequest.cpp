@@ -1,4 +1,5 @@
 #include "core/HttpRequest.hpp"
+#include "core/HttpStatusCode.hpp"
 
 HttpRequest::HttpRequest() {
 	args = std::map<std::string, std::string>();
@@ -123,6 +124,66 @@ bool HttpRequest::readHeaders(std::istringstream& requestStream, HttpRequest& re
         std::string headerValue;
         std::getline(headerLineStream, headerValue);
         request.headers[headerName] = headerValue;
+		std::cout << headerName << ": " << headerValue << std::endl;
     }
+
+	if (request.headers.find("Host") == request.headers.end()) {
+		HttpStatusCode::setCurrentStatusCode("400");
+		return false;
+	}
+	return true;
+}
+
+bool HttpRequest::isRequestValid(char data[]) {
+	std::string dataString(data);
+	std::istringstream requestStream(dataString);
+	std::string line;
+	std::size_t pos;
+
+	// Parse the request line
+	std::getline(requestStream, line);
+	std::istringstream requestLineStream(line);
+	std::string method;
+	std::string resource;
+	std::string httpVersion;
+	requestLineStream >> method >> resource >> httpVersion;
+
+	if (method.empty() || resource.empty() || httpVersion.empty()) {
+		HttpStatusCode::setCurrentStatusCode("400");
+		return false;
+	}
+	// Check if the request line is valid
+	if (method != "GET" && method != "POST" && method != "DELETE") {
+		std::cout << "Invalid method: " << method << std::endl;
+		HttpStatusCode::setCurrentStatusCode("405");
+		return false;
+	}
+
+	if (httpVersion != "HTTP/1.1") {
+		HttpStatusCode::setCurrentStatusCode("505");
+		return false;
+	}
+
+	// Check if the resource is valid
+	if (resource.empty() || resource[0] != '/') {
+		HttpStatusCode::setCurrentStatusCode("400");
+		return false;
+	}
+
+	// Check if the resource contains a double dot
+	pos = resource.find("..");
+	if (pos != std::string::npos) {
+		HttpStatusCode::setCurrentStatusCode("400");
+		return false;
+	}
+
+	// Check if the resource contains a double slash
+	pos = resource.find("//");
+	if (pos != std::string::npos) {
+		HttpStatusCode::setCurrentStatusCode("400");
+		return false;
+	}
+	
+
 	return true;
 }
