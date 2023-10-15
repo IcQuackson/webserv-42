@@ -8,6 +8,8 @@ class Location {
 private:
 	std::string path;                    // Path of the route
 
+	std::string indexFile;               // Index file for a directory
+
     std::vector<std::string> methods;    // List of accepted HTTP methods
 
     std::string redirection;             // HTTP redirection URL
@@ -34,6 +36,8 @@ public:
 
     std::string getPath() const;
 
+	std::string getIndex() const;
+
     std::vector<std::string> getMethods() const;
 
     std::string getRedirection() const;
@@ -57,6 +61,8 @@ public:
     std::string getUploadPath() const;
 
     void setPath(const std::string& path);
+
+	void setIndex(const std::string& indexFile);
 
     void setMethods(const std::vector<std::string>& methods);
 

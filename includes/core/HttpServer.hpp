@@ -70,7 +70,7 @@ public:
 	int acceptConnection();
 	void handleRequest(int clientSocket);
 	bool parseRequest(int clientSocket, char data[], HttpRequest &request);
-	void sendResponse(int clientSocket, const HttpResponse& response);
+	void sendResponse(int clientSocket, HttpResponse& response);
 	void handleError(int clientSocket, int errorCode);
 	void log(std::string message);
 	void log(const std::string& message, int clientSocket);

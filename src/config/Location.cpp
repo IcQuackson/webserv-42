@@ -3,6 +3,7 @@
 
 Location::Location() {
 	this->methods = std::vector<std::string>();
+	this->indexFile = "";
 	this->redirection = "";
 	this->root = "";
 	this->directoryListing = false;
@@ -15,6 +16,7 @@ Location::Location() {
 
 Location::Location(const std::string& path) : path(path) {
 	this->methods = std::vector<std::string>();
+	this->indexFile = "";
 	this->redirection = "";
 	this->root = "";
 	this->directoryListing = false;
@@ -30,6 +32,10 @@ Location::~Location() {
 
 std::string Location::getPath() const {
 	return this->path;
+}
+
+std::string Location::getIndex() const {
+	return this->indexFile;
 }
 
 std::vector<std::string> Location::getMethods() const {
@@ -70,6 +76,10 @@ std::string Location::getUploadPath() const {
 
 void Location::setPath(const std::string& path) {
 	this->path = path;
+}
+
+void Location::setIndex(const std::string& indexFile) {
+	this->indexFile = indexFile;
 }
 
 void Location::setMethods(const std::vector<std::string>& methods) {

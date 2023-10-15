@@ -289,6 +289,13 @@ void HttpServer::addRouteHandler(const RouteHandler& routeHandler) {
 	routes[routeHandler.getLocation().getPath()] = routeHandler;
 }
 
+void HttpServer::sendResponse(int clientSocket, HttpResponse& response) {
+	response.setStatusCode(HttpStatusCode::getCurrentStatusCode().first);
+	response.setStatusMessage(HttpStatusCode::getCurrentStatusCode().second);
+	std::string responseString = response.toString();
+	send(clientSocket, responseString.c_str(), responseString.size(), 0);
+}
+
 void HttpServer::log(std::string message) {
 
 	if (!enableLogging) {
