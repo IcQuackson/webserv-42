@@ -7,8 +7,11 @@
 class ServerConfig {
 
 private:
+	int nbr;
 	std::string configFilePath;
 	std::string host;
+	std::vector<int> ports;
+	std::vector<std::string> server_names;
 	int port;
 
 	std::vector<Location> locations;
@@ -23,10 +26,16 @@ public:
 	// getters and setters
 	std::string getConfigFilePath();
 	std::string getHost();
+	std::vector<int> getPorts();
+	std::vector<std::string> getServer_names();
+	void addPort(int port);
+	void addServer_name(std::string server_name);
 	int getPort();
+	int getNbr();
 	std::vector<Location> getLocations();
 	void addLocation(Location location);
 	//void setConfigFilePath(const std::string& configFilePath);
 	//void setHost(const std::string& host);
-	//void setPort(int port);
+	void setNbr(int mbr);
+	void setPorts(int ports);
 };

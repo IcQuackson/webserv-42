@@ -12,6 +12,21 @@ int main(int argc, char **argv) {
 		return 1;
 	}
 
+	try
+	{
+		ConfigParser parser(argv[1]);
+		parser.proccess_input();
+		std::cout << parser.getServerConfigVector().back()->getPorts()[0] << std::endl;
+		std::cout << parser.getServerConfigVector().back()->getPorts()[1] << std::endl;
+
+		std::cout << parser.getServerConfigVector().back()->getServer_names()[0] << std::endl;
+		std::cout << parser.getServerConfigVector().back()->getServer_names()[1] << std::endl;
+	}
+	catch(const std::exception& e)
+	{
+		std::cerr << e.what() << '\n';
+	}
+	
 	std::string configFilePath(argv[1]);
 
 	// Parse the configuration file to get server configurations
@@ -35,7 +50,7 @@ int main(int argc, char **argv) {
 
         // Configure the HttpServer instance based on serverConfigs[i]
         httpServer.loadConfig(serverConfigs[i].getConfigFilePath());
-        httpServer.setPort(serverConfigs[i].getPort());
+        httpServer.setPort(serverConfigs[i].getPort());//alterei os ports de int para vector de ints (pode haver varios)
 		httpServer.setHost(serverConfigs[i].getHost());
 
         // Initialize and add to the vector of HttpServers
