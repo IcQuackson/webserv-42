@@ -62,7 +62,7 @@ bool isDigits(std::string& str)
     return (1); 
 }
 
-bool ConfigParser::parse_listen(std::string token, std::stringstream& ss)
+bool ConfigParser::parse_listen(std::string &token, std::stringstream& ss)
 {
     std::string next_token;
     if (token == "listen")
@@ -85,7 +85,7 @@ bool ConfigParser::parse_listen(std::string token, std::stringstream& ss)
     return (0);
 }
 
-bool ConfigParser::parse_server_name(std::string token, std::stringstream& ss)
+bool ConfigParser::parse_server_name(std::string &token, std::stringstream& ss)
 {
     if (token == "server_name")
     {
@@ -110,6 +110,55 @@ bool ConfigParser::parse_server_name(std::string token, std::stringstream& ss)
     return (0);
 }
 
+bool ConfigParser::parse_root(std::string &token, std::stringstream& ss)
+{
+    if (token == "root")
+    {
+        ss >> token;
+        if (token == ";")
+            return (0);
+        if (token[token.length() - 1] == ';')
+        {
+            token.erase(token.size() - 1);
+            this->serverConfigVector.back()->setRoot(token);
+            ss >> token;
+            return (1);
+        }
+        this->serverConfigVector.back()->setRoot(token);
+        ss >> token;
+        if (token == ";")
+        {
+            ss >> token;
+            return (1);
+        }
+        return (0);
+    }
+    return (0);
+}
+
+bool ConfigParser::parse_location(std::string &token, std::stringstream& ss)
+{
+    std::string next_token;
+    if (token == "location")
+    {
+        ss >> token;
+        if (token[0] == '/')
+            this->serverConfigVector.back()->addLocation(new Location(token));
+        ss >> token;
+        if (token != "{")
+            return (0);
+        else
+        {
+            while (token != "}")
+            {
+                ss >> token;
+            };
+            ss >> token;
+        }
+        return (1);
+    }
+    return (0);
+}
 
 bool checkBraces (std::string file)
 {
@@ -208,18 +257,20 @@ void ConfigParser::proccess_input()
         if (!this->server_in)
         {
             if (!checkServer(token, line))
-                throw std::runtime_error("Error: Invalid input near token : " + token);
+                throw std::runtime_error("Error: Invalid input near token 1: " + token);
             continue;
         }
         if (!parse_listen(token, line))
-            throw std::runtime_error("Error: Invalid input near token : " + token);
+            throw std::runtime_error("Error: Invalid input near token 2: " + token);
         else if (see_next_token(line) == "listen")
             continue;
         line >> token;
         try
         {
             parse_server_name(token, line);
-
+            parse_root(token, line);
+            parse_location(token, line);
+            
         }
         catch(const std::exception& e)
         {

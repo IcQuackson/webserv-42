@@ -50,11 +50,15 @@ int ServerConfig::getNbr() {
 	return this->nbr;
 }
 
-std::vector<Location> ServerConfig::getLocations() {
+std::vector<Location*> ServerConfig::getLocations() {
 	return this->locations;
 }
 
-void ServerConfig::addLocation(Location location) {
+std::string ServerConfig::getRoot() {
+	return this->root;
+}
+
+void ServerConfig::addLocation(Location* location) {
 	this->locations.push_back(location);
 }
 
@@ -78,4 +82,9 @@ void ServerConfig::setPorts(int port)
 void ServerConfig::setNbr(int nbr)
 {
 	this->nbr = nbr;
+}
+
+void ServerConfig::setRoot(std::string root)
+{
+	this->root = root;
 }

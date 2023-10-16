@@ -21,6 +21,10 @@ int main(int argc, char **argv) {
 
 		std::cout << parser.getServerConfigVector().back()->getServer_names()[0] << std::endl;
 		std::cout << parser.getServerConfigVector().back()->getServer_names()[1] << std::endl;
+
+		std::cout << parser.getServerConfigVector().back()->getRoot() << std::endl;
+
+		std::cout << parser.getServerConfigVector().back()->getLocations()[0]->getPath() << std::endl;
 	}
 	catch(const std::exception& e)
 	{
@@ -43,7 +47,7 @@ int main(int argc, char **argv) {
 		HttpServer httpServer;
 
 		for (size_t i = 0; i < serverConfig.getLocations().size(); i++) {
-			Location location = serverConfig.getLocations()[i];
+			Location location = *(serverConfig.getLocations()[i]);
 			RouteHandler routeHandler(location);
 			httpServer.addRouteHandler(routeHandler);
 		}
