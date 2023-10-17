@@ -142,6 +142,8 @@ int ConfigParser::verify_error_code(std::string &token, int &flag_code, int &fla
         return (0);
     if (isDigits(token))
     {
+        if (flag_page)
+            return (0);
         double error_code = std::atof(token.c_str());
         if (error_code < 1 || error_code > 599)
             return (0);
@@ -187,6 +189,32 @@ int ConfigParser::parse_error_page(std::string &token, std::stringstream& ss)
     return (-1);
 }
 
+int ConfigParser::parse_client_max_body_size(std::string &token, std::stringstream& ss)
+{
+    if (token == "client_max_body_size")
+    {
+        ss >> token;
+        if (token == ";")
+            return (0);
+        if (token[token.length() - 1] == ';')
+        {
+            token.erase(token.size() - 1);
+            this->serverConfigVector.back()->setClient_max_body_size(token);
+            ss >> token;
+            return (1);
+        }
+        this->serverConfigVector.back()->setClient_max_body_size(token);
+        ss >> token;
+        if (token == ";")
+        {
+            ss >> token;
+            return (1);
+        }
+        return (0);
+    }
+    return (-1);
+}
+
 
 int ConfigParser::parse_location(std::string &token, std::stringstream& ss)
 {
@@ -205,7 +233,6 @@ int ConfigParser::parse_location(std::string &token, std::stringstream& ss)
             {
                 if (!parse_root(token, ss))
                     throw std::runtime_error("Error: Invalid input near token 3: " + token);
-                
                 ss >> token;
             };
             ss >> token;
@@ -324,15 +351,21 @@ void ConfigParser::proccess_input()
         line >> token;
         try
         {
-            parse_server_name(token, line);
-            parse_root(token, line);
-            parse_error_page(token,line);
+            if (!parse_server_name(token, line))
+                throw std::runtime_error("Error: server_name parsing: " + token);
+            if (!parse_root(token, line))
+                throw std::runtime_error("Error: root parsing: " + token);
+            if (!parse_error_page(token,line))
+                throw std::runtime_error("Error: error_page parsing: " + token);
+            if (!parse_client_max_body_size(token,line))
+                throw std::runtime_error("Error: client_max_body_size parsing: " + token);
             parse_location(token, line);
             
         }
         catch(const std::exception& e)
         {
             std::cerr << e.what() << '\n';
+            break;
         }
         if (token == "}")
         {

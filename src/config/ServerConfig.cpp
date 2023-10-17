@@ -66,6 +66,10 @@ std::vector<std::string> ServerConfig::getError_pages() {
 	return this->error_pages;
 }
 
+std::string ServerConfig::getClient_max_body_size() {
+	return this->client_max_body_size;
+}
+
 
 void ServerConfig::addLocation(Location* location) {
 	this->locations.push_back(location);
@@ -103,4 +107,9 @@ void ServerConfig::setNbr(int nbr)
 void ServerConfig::setRoot(std::string root)
 {
 	this->root = root;
+}
+
+void ServerConfig::setClient_max_body_size(std::string client_max_body_size)
+{
+	this->client_max_body_size = client_max_body_size;
 }

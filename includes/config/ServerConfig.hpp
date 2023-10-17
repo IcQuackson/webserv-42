@@ -15,6 +15,7 @@ private:
 	std::vector<int> error_codes;
 	std::vector<std::string> error_pages;
 	std::string root;
+	std::string client_max_body_size;
 	int port;
 
 	std::vector<Location*> locations;
@@ -36,6 +37,7 @@ public:
 	std::vector<std::string> getError_pages();
 	int getPort();
 	int getNbr();
+	std::string getClient_max_body_size();
 	std::vector<Location*> getLocations();
 	void addPort(int port);
 	void addServer_name(std::string server_name);
@@ -47,4 +49,5 @@ public:
 	void setNbr(int nbr);
 	void setPorts(int ports);
 	void setRoot(std::string root);
+	void setClient_max_body_size(std::string client_max_body_size);
 };

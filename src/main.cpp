@@ -28,6 +28,8 @@ int main(int argc, char **argv) {
 
 		std::cout << parser.getServerConfigVector().back()->getError_codes()[0] << std::endl;
 		std::cout << parser.getServerConfigVector().back()->getError_pages()[0] << std::endl;
+
+		std::cout << parser.getServerConfigVector().back()->getClient_max_body_size() << std::endl;
 	}
 	catch(const std::exception& e)
 	{
