@@ -134,6 +134,19 @@ bool HttpRequest::readHeaders(std::istringstream& requestStream, HttpRequest& re
 	return true;
 }
 
+std::string HttpRequest::getTimestamp() const {
+	return timestamp;
+}
+
+void HttpRequest::generateTimestamp() {
+	// Get the current time
+    time_t currentTime;
+    time(&currentTime);
+
+    // Convert the current time to a string representation
+    strftime(this->timestamp, sizeof(this->timestamp), "%Y-%m-%d %H:%M:%S", localtime(&currentTime));
+}
+
 bool HttpRequest::isRequestValid(char data[]) {
 	std::string dataString(data);
 	std::istringstream requestStream(dataString);

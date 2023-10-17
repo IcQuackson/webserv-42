@@ -16,6 +16,7 @@ private:
 	std::map<std::string, std::string> args;
 	std::map<std::string, std::string> headers;
 	std::string body;
+	char timestamp[80];
 
 public:
 	HttpRequest();
@@ -30,6 +31,7 @@ public:
 	std::map<std::string, std::string> getArgs() const;
 	std::map<std::string, std::string> getHeaders() const;
 	std::string getBody() const;
+	std::string getTimestamp() const;
 
 	void setMethod(const std::string& method);
 	void setResource(const std::string& resource);
@@ -40,6 +42,7 @@ public:
 	bool readArgs(const std::string& resource);
 	bool readHeaders(std::istringstream& requestStream, HttpRequest& request);
 	void setBody(const std::string& body);
+	void generateTimestamp();
 	static bool isRequestValid(char data[]);
 };
 

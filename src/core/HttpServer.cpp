@@ -336,6 +336,17 @@ void HttpServer::log(const std::string& message, int clientSocket) {
     std::cout << "[" << timeString.str() << "] [Socket " << clientSocket << "] " << message << std::endl;
 }
 
+void HttpServer::log(int clientSocket, HttpRequest& request) {
+	// Print in the format: server-ip - - [date time] "method resource http-version" status-code content-length
+	if (request.getBody().size() > 0) {
+		request.generateTimestamp();
+		std::cout << this->getHost() << " - Socket:" << clientSocket << " - - [" << request.getTimestamp() << "] \"" \
+				<< request.getMethod() << " " << request.getResource() << " " \
+				<< request.getHttpVersion() << "\" " << HttpStatusCode::getCurrentStatusCode().first << " " \
+				<< HttpStatusCode::getCurrentStatusCode().second << " " << request.getBody().size() << std::endl;
+		}
+}
+
 std::ostream& operator<<(std::ostream& os, const HttpRequest& request) {
 	os << "Method: " << request.getMethod() << std::endl;
 	os << "Resource: " << request.getResource() << std::endl;
@@ -354,7 +365,5 @@ std::ostream& operator<<(std::ostream& os, const HttpRequest& request) {
 	for (std::map<std::string, std::string>::const_iterator it = args.begin(); it != args.end(); ++it) {
 		os << "-> " << it->first << ": " << it->second << std::endl;
 	}
-
-
 	return os;
 }

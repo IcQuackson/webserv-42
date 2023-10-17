@@ -76,6 +76,7 @@ public:
 	void log(const std::string& message, int clientSocket);
 	void run();
 	void stop();
+	void log(int clientSocket, HttpRequest& request);
 	//void serveStaticFile(int clientSocket, const std::string& filePath);
 	//void executeCGI(int clientSocket, const std::string& cgiPath);
 };
