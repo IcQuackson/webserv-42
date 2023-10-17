@@ -142,12 +142,12 @@ void HttpServer::run() {
 		}
 
 		for (int i = 0; i < numEvents; i++) {
-			std::cout << "Event on file descriptor " << events[i].data.fd << std::endl;
+			//std::cout << "Event on file descriptor " << events[i].data.fd << std::endl;
 			if (events[i].data.fd == serverSocket) {
 				// Handle incoming connection
 				int clientSocket = acceptConnection();
 
-				std::cout << "Client socket: " << clientSocket << std::endl;
+				//std::cout << "Client socket: " << clientSocket << std::endl;
 
 				if (clientSocket != -1) {
 					// Set clientSocket to non-blocking mode
@@ -170,7 +170,6 @@ void HttpServer::run() {
 				int clientSocket = events[i].data.fd;
 				handleRequest(clientSocket);
 			}
-			std::cout << std::endl;
 		}
 	}
 
@@ -188,7 +187,7 @@ int HttpServer::acceptConnection() {
         return -1;
     }
 
-    log("New connection accepted", clientSocket);
+    //log("New connection accepted", clientSocket);
 
     return clientSocket;
 }
@@ -212,17 +211,11 @@ void HttpServer::handleRequest(int clientSocket) {
     }
 	else {
 		dataBuffer[bytesRead] = '\0';
-        std::cout << "Read " << bytesRead << " bytes of data." << std::endl;
-		std::cout << "Data: " << std::endl;
-		std::cout << dataBuffer << std::endl;
-		std::cout << "Data length: " << std::strlen(dataBuffer) << std::endl;
-
+        //std::cout << "Read " << bytesRead << " bytes of data." << std::endl;
 		HttpStatusCode::setCurrentStatusCode("200");
 		HttpRequest request;
 		parseRequest(clientSocket, dataBuffer, request);
-
-		std::pair<std::string, std::string> statusCode = HttpStatusCode::getCurrentStatusCode();
-		std::cout << statusCode.first << " " << statusCode.second << std::endl;
+		log("Request received", clientSocket, dataBuffer);
     }
 
     close(clientSocket);
@@ -280,7 +273,7 @@ bool HttpServer::parseRequest(int clientSocket, char data[], HttpRequest &reques
 	request.setBody(body);
 
 	// Print the request
-	std::cout << request << std::endl;
+	//std::cout << request << std::endl;
 
 	return true;
 }
@@ -316,7 +309,7 @@ void HttpServer::log(std::string message) {
     std::cout << "[" << timeString.str() << "] " << message << std::endl;
 }
 
-void HttpServer::log(const std::string& message, int clientSocket) {
+/* void HttpServer::log(const std::string& message, int clientSocket) {
 
     if (!enableLogging) {
         return;
@@ -334,17 +327,42 @@ void HttpServer::log(const std::string& message, int clientSocket) {
 
     // Print log message with timestamp and socket information
     std::cout << "[" << timeString.str() << "] [Socket " << clientSocket << "] " << message << std::endl;
-}
+} */
 
-void HttpServer::log(int clientSocket, HttpRequest& request) {
+void HttpServer::log(const std::string& message, int clientSocket, char data[]) {
+	(void) message;
+	std::string statusCode = HttpStatusCode::getCurrentStatusCode().first;
+	std::string statusMessage = HttpStatusCode::getCurrentStatusCode().second;
+	
 	// Print in the format: server-ip - - [date time] "method resource http-version" status-code content-length
-	if (request.getBody().size() > 0) {
-		request.generateTimestamp();
-		std::cout << this->getHost() << " - Socket:" << clientSocket << " - - [" << request.getTimestamp() << "] \"" \
-				<< request.getMethod() << " " << request.getResource() << " " \
-				<< request.getHttpVersion() << "\" " << HttpStatusCode::getCurrentStatusCode().first << " " \
-				<< HttpStatusCode::getCurrentStatusCode().second << " " << request.getBody().size() << std::endl;
-		}
+	//std::cout << message << std::endl;
+	std::cout << "DEBUG" << std::endl;
+	std::cout << this->getHost() << ":" << this->getPort() << " - Socket:" << clientSocket << " ";
+	
+	if (statusCode == "400") {
+		std::cout << "Bad Request "\
+		<< statusCode << statusMessage << std::endl;
+		return;
+	}
+	// Print first line of request.getbody()
+	std::string logInfo(data);
+	std::istringstream stream(logInfo);
+	std::string line;
+	std::getline(stream, line);
+	logInfo = line;
+
+	// Check if status code indicates success (2xx), informational (1xx), or a redirect (3xx)
+	if (HttpStatusCode::getCurrentStatusCode().first[0] == '2') {
+		// Print status code in green
+		std::cout << logInfo;
+	} else if (HttpStatusCode::getCurrentStatusCode().first[0] == '1' || HttpStatusCode::getCurrentStatusCode().first[0] == '3') {
+		// Print status code in yellow for informational and redirect
+		std::cout << logInfo;
+	} else {
+		// Print status code in red for errors
+		std::cout << logInfo;
+	}
+	std::cout << std::endl;
 }
 
 std::ostream& operator<<(std::ostream& os, const HttpRequest& request) {

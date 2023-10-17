@@ -76,7 +76,8 @@ public:
 	void log(const std::string& message, int clientSocket);
 	void run();
 	void stop();
-	void log(int clientSocket, HttpRequest& request);
+	//void log(int clientSocket, HttpRequest& request);
+	void log(const std::string& message, int clientSocket, char data[MAX_BUFFER_SIZE]);
 	//void serveStaticFile(int clientSocket, const std::string& filePath);
 	//void executeCGI(int clientSocket, const std::string& cgiPath);
 };

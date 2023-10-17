@@ -124,7 +124,7 @@ bool HttpRequest::readHeaders(std::istringstream& requestStream, HttpRequest& re
         std::string headerValue;
         std::getline(headerLineStream, headerValue);
         request.headers[headerName] = headerValue;
-		std::cout << headerName << ": " << headerValue << std::endl;
+		//std::cout << headerName << ": " << headerValue << std::endl;
     }
 
 	if (request.headers.find("Host") == request.headers.end()) {
@@ -167,7 +167,6 @@ bool HttpRequest::isRequestValid(char data[]) {
 	}
 	// Check if the request line is valid
 	if (method != "GET" && method != "POST" && method != "DELETE") {
-		std::cout << "Invalid method: " << method << std::endl;
 		HttpStatusCode::setCurrentStatusCode("405");
 		return false;
 	}
