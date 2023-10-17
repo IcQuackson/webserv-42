@@ -12,6 +12,8 @@ private:
 	std::string host;
 	std::vector<int> ports;
 	std::vector<std::string> server_names;
+	std::vector<int> error_codes;
+	std::vector<std::string> error_pages;
 	std::string root;
 	int port;
 
@@ -30,12 +32,16 @@ public:
 	std::vector<int> getPorts();
 	std::vector<std::string> getServer_names();
 	std::string getRoot();
-	void addPort(int port);
-	void addServer_name(std::string server_name);
+	std::vector<int> getError_codes();
+	std::vector<std::string> getError_pages();
 	int getPort();
 	int getNbr();
 	std::vector<Location*> getLocations();
+	void addPort(int port);
+	void addServer_name(std::string server_name);
 	void addLocation(Location* location);
+	void addError_code(int error_code);
+	void addError_page(std::string error_page);
 	//void setConfigFilePath(const std::string& configFilePath);
 	//void setHost(const std::string& host);
 	void setNbr(int nbr);

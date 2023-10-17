@@ -25,6 +25,9 @@ int main(int argc, char **argv) {
 		std::cout << parser.getServerConfigVector().back()->getRoot() << std::endl;
 
 		std::cout << parser.getServerConfigVector().back()->getLocations()[0]->getPath() << std::endl;
+
+		std::cout << parser.getServerConfigVector().back()->getError_codes()[0] << std::endl;
+		std::cout << parser.getServerConfigVector().back()->getError_pages()[0] << std::endl;
 	}
 	catch(const std::exception& e)
 	{

@@ -85,7 +85,7 @@ bool ConfigParser::parse_listen(std::string &token, std::stringstream& ss)
     return (0);
 }
 
-bool ConfigParser::parse_server_name(std::string &token, std::stringstream& ss)
+int ConfigParser::parse_server_name(std::string &token, std::stringstream& ss)
 {
     if (token == "server_name")
     {
@@ -107,10 +107,10 @@ bool ConfigParser::parse_server_name(std::string &token, std::stringstream& ss)
         ss >> token;
         return (1);
     }
-    return (0);
+    return (-1);
 }
 
-bool ConfigParser::parse_root(std::string &token, std::stringstream& ss)
+int ConfigParser::parse_root(std::string &token, std::stringstream& ss)
 {
     if (token == "root")
     {
@@ -133,10 +133,62 @@ bool ConfigParser::parse_root(std::string &token, std::stringstream& ss)
         }
         return (0);
     }
-    return (0);
+    return (-1);
 }
 
-bool ConfigParser::parse_location(std::string &token, std::stringstream& ss)
+int ConfigParser::verify_error_code(std::string &token, int &flag_code, int &flag_page)
+{
+    if (!isDigits(token) && !flag_code && !flag_page)
+        return (0);
+    if (isDigits(token))
+    {
+        double error_code = std::atof(token.c_str());
+        if (error_code < 1 || error_code > 599)
+            return (0);
+        this->serverConfigVector.back()->addError_code(error_code);
+        flag_code++;
+    }
+    else
+    {
+        this->serverConfigVector.back()->addError_page(token);
+        flag_page++;
+    }
+    return (1);
+} 
+
+int ConfigParser::parse_error_page(std::string &token, std::stringstream& ss)
+{
+    if (token == "error_page")
+    {
+        ss >> token;
+        if (token == ";")
+            return (0);
+        int flag_code = 0;
+        int flag_page = 0;
+        while (token != ";")
+        {
+            if (token[token.length() - 1] == ';')
+            {
+                token.erase(token.size() - 1);
+                if (!verify_error_code(token, flag_code, flag_page))
+                    return (0);
+                break;
+            }
+            else
+            {
+                if (!verify_error_code(token, flag_code, flag_page))
+                    return (0);
+            }
+            ss >> token;
+        }
+        ss >> token;
+        return (1);
+    }
+    return (-1);
+}
+
+
+int ConfigParser::parse_location(std::string &token, std::stringstream& ss)
 {
     std::string next_token;
     if (token == "location")
@@ -151,13 +203,18 @@ bool ConfigParser::parse_location(std::string &token, std::stringstream& ss)
         {
             while (token != "}")
             {
+                if (!parse_root(token, ss))
+                    throw std::runtime_error("Error: Invalid input near token 3: " + token);
+                
                 ss >> token;
             };
             ss >> token;
+            if (token == "location")
+                parse_location(token, ss);
         }
         return (1);
     }
-    return (0);
+    return (-1);
 }
 
 bool checkBraces (std::string file)
@@ -269,6 +326,7 @@ void ConfigParser::proccess_input()
         {
             parse_server_name(token, line);
             parse_root(token, line);
+            parse_error_page(token,line);
             parse_location(token, line);
             
         }

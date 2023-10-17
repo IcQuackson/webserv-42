@@ -29,9 +29,11 @@ public:
 	//Parsing Aux
 	bool checkServer(std::string token, std::stringstream& ss);
     bool parse_listen(std::string &token, std::stringstream& ss);
-    bool parse_server_name(std::string &token, std::stringstream& ss);
-    bool parse_root(std::string &token, std::stringstream& ss);
-    bool parse_location(std::string &token, std::stringstream& ss);
+    int parse_server_name(std::string &token, std::stringstream& ss);
+    int parse_root(std::string &token, std::stringstream& ss);
+    int parse_error_page(std::string &token, std::stringstream& ss);
+    int parse_location(std::string &token, std::stringstream& ss);
+    int verify_error_code(std::string &token, int &flag_code, int &flag_page);
 
 
 
