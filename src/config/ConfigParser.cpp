@@ -110,31 +110,6 @@ int ConfigParser::parse_server_name(std::string &token, std::stringstream& ss)
     return (-1);
 }
 
-int ConfigParser::parse_root(std::string &token, std::stringstream& ss)
-{
-    if (token == "root")
-    {
-        ss >> token;
-        if (token == ";")
-            return (0);
-        if (token[token.length() - 1] == ';')
-        {
-            token.erase(token.size() - 1);
-            this->serverConfigVector.back()->setRoot(token);
-            ss >> token;
-            return (1);
-        }
-        this->serverConfigVector.back()->setRoot(token);
-        ss >> token;
-        if (token == ";")
-        {
-            ss >> token;
-            return (1);
-        }
-        return (0);
-    }
-    return (-1);
-}
 
 int ConfigParser::verify_error_code(std::string &token, int &flag_code, int &flag_page)
 {
@@ -215,6 +190,80 @@ int ConfigParser::parse_client_max_body_size(std::string &token, std::stringstre
     return (-1);
 }
 
+int ConfigParser::parse_root(std::string &token, std::stringstream& ss)
+{
+    if (token == "root")
+    {
+        ss >> token;
+        if (token == ";")
+            return (0);
+        if (token[token.length() - 1] == ';')
+        {
+            token.erase(token.size() - 1);
+            this->serverConfigVector.back()->getLocations().back()->setRoot(token);
+            ss >> token;
+            return (1);
+        }
+        this->serverConfigVector.back()->getLocations().back()->setRoot(token);
+        ss >> token;
+        if (token == ";")
+        {
+            ss >> token;
+            return (1);
+        }
+        return (0);
+    }
+    return (-1);
+}
+
+bool ConfigParser::check_valid_method(std::string token)
+{
+    const char *methods_arr[] = {"GET", "HEAD", "POST", "PUT", "DELETE", "CONNECT", "OPTIONS", "TRACE", "PATCH"};
+    size_t size = sizeof(methods_arr) / sizeof(methods_arr[0]);
+    std::vector<std::string> methods_vector(methods_arr, methods_arr + size);
+
+    std::vector<std::string>::iterator it = std::find(methods_vector.begin(), methods_vector.end(), token);
+
+    if (it == methods_vector.end())
+        return (0);
+    
+    methods_vector = this->serverConfigVector.back()->getLocations().back()->getMethods();
+    it = std::find(methods_vector.begin(), methods_vector.end(), token);
+    if (it != methods_vector.end())
+        return (0);
+    return (1);
+}
+
+int ConfigParser::parse_limit_except(std::string &token, std::stringstream& ss)
+{
+    if (token == "limit_except")
+    {
+        ss >> token;
+        if (token == ";")
+            return (0);
+        while (token != ";")
+        {
+            if (token[token.length() - 1] == ';')
+            {
+                token.erase(token.size() - 1);
+                if (!check_valid_method(token))
+                    return (0);
+                this->serverConfigVector.back()->getLocations().back()->addMethod(token);
+                break;
+            }
+            else
+            {
+                if (!check_valid_method(token))
+                    return (0);
+                this->serverConfigVector.back()->getLocations().back()->addMethod(token);
+            }
+            ss >> token;
+        }
+        ss >> token;
+        return (1);
+    }
+    return (-1);
+}
 
 int ConfigParser::parse_location(std::string &token, std::stringstream& ss)
 {
@@ -229,12 +278,15 @@ int ConfigParser::parse_location(std::string &token, std::stringstream& ss)
             return (0);
         else
         {
+            ss >> token;
             while (token != "}")
             {
                 if (!parse_root(token, ss))
                     throw std::runtime_error("Error: Invalid input near token 3: " + token);
+                if (!parse_limit_except(token, ss))
+                    throw std::runtime_error("Error: Invalid input near token 4: " + token);
                 ss >> token;
-            };
+            }
             ss >> token;
             if (token == "location")
                 parse_location(token, ss);
@@ -353,8 +405,8 @@ void ConfigParser::proccess_input()
         {
             if (!parse_server_name(token, line))
                 throw std::runtime_error("Error: server_name parsing: " + token);
-            if (!parse_root(token, line))
-                throw std::runtime_error("Error: root parsing: " + token);
+            /* if (!parse_root(token, line))
+                throw std::runtime_error("Error: root parsing: " + token); */
             if (!parse_error_page(token,line))
                 throw std::runtime_error("Error: error_page parsing: " + token);
             if (!parse_client_max_body_size(token,line))

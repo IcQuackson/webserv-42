@@ -24,12 +24,17 @@ int main(int argc, char **argv) {
 
 		std::cout << parser.getServerConfigVector().back()->getRoot() << std::endl;
 
-		std::cout << parser.getServerConfigVector().back()->getLocations()[0]->getPath() << std::endl;
 
 		std::cout << parser.getServerConfigVector().back()->getError_codes()[0] << std::endl;
 		std::cout << parser.getServerConfigVector().back()->getError_pages()[0] << std::endl;
 
 		std::cout << parser.getServerConfigVector().back()->getClient_max_body_size() << std::endl;
+
+		std::cout << parser.getServerConfigVector().back()->getLocations()[0]->getPath() << std::endl;
+		std::cout << parser.getServerConfigVector().back()->getLocations()[0]->getRoot() << std::endl;
+
+		std::cout << parser.getServerConfigVector().back()->getLocations().back()->getMethods()[0] << std::endl;
+		std::cout << parser.getServerConfigVector().back()->getLocations().back()->getMethods()[1] << std::endl;
 	}
 	catch(const std::exception& e)
 	{

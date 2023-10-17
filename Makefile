@@ -3,7 +3,7 @@ NAME	=	webserv
 
 # Compiler and flags
 CCXX		=	c++
-CXXFLAGS	=	-Wall -Werror -Wextra -std=c++98 -g -I includes
+CXXFLAGS	=	-Wall -Werror -Wextra -std=c++98 -g -fstandalone-debug -I includes
 
 # Directories
 SRC_DIR = src

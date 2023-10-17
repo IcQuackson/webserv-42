@@ -60,6 +60,8 @@ public:
 
     std::string getUploadPath() const;
 
+    void addMethod(std::string method);
+
     void setPath(const std::string& path);
 
 	void setIndex(const std::string& indexFile);

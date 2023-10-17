@@ -74,6 +74,10 @@ std::string Location::getUploadPath() const {
 	return this->uploadPath;
 }
 
+void Location::addMethod(std::string method) {
+	this->methods.push_back(method);
+}
+
 void Location::setPath(const std::string& path) {
 	this->path = path;
 }
