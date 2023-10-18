@@ -352,13 +352,41 @@ bool endsWithSemicolon(std::string& str)
     return (0);
 }
 
-bool check_semiCollon_between_braces(std::stringstream& ss) 
+bool isWhitespace(std::string& str) 
+{
+    for (std::string::iterator it = str.begin(); it != str.end(); ++it) 
+    {
+        if (!std::isspace(*it))
+            return (0);
+    }
+    return (1);
+}
+
+std::string extractFirstWord(std::string& input) 
+{
+    std::istringstream ss(input);
+    std::string firstWord;
+    
+    ss >> firstWord;
+    
+    return firstWord;
+}
+
+bool ConfigParser::check_config_struct(std::stringstream& ss) 
 {
     std::string line;
     bool insideBraces = 0;
+    int nbr_line = 1;
+    std::ostringstream nbr_stream;
 
     while (std::getline(ss, line)) 
     {
+        this->error_line = line;
+        nbr_line++;
+        nbr_stream.str("");
+        nbr_stream.clear();
+        nbr_stream << nbr_line;
+        this->nbr_line = nbr_stream.str();
         size_t openBracePos = line.find('{');
         size_t closeBracePos = line.find('}');
 
@@ -377,6 +405,8 @@ bool check_semiCollon_between_braces(std::stringstream& ss)
         }
         if (closeBracePos != std::string::npos)
             insideBraces = 0;
+        if (!isWhitespace(line) && extractFirstWord(line) != "server" && !insideBraces)
+            return (0);
     }
     return (1);
 }
@@ -397,10 +427,10 @@ void ConfigParser::proccess_input()
     removeComments(line, '#', '\n');
     buff = line.str();
     std::stringstream tmp_line(buff);
-    if (!check_semiCollon_between_braces(tmp_line))
-        throw std::runtime_error("Error: Lines not finishing in semi collon iniside braces");
     if (!checkBraces(buff))
         throw std::runtime_error("Error: braces are not correctly placed.");
+    if (!check_config_struct(tmp_line))
+        throw std::runtime_error("Error: Invalid argument in line nbr " + this->nbr_line + ": " + this->error_line);
     while (line >> token)
     {
         if (!this->server_in)

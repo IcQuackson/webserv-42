@@ -22,6 +22,8 @@ const char *argv;
 std::vector<ServerConfig*> serverConfigVector;
 int server_in;
 bool location_executed;
+std::string error_line;
+std::string nbr_line;
 
 public:
 	ConfigParser();
@@ -34,6 +36,8 @@ public:
 	void proccess_input (void);
 
 	//Parsing Aux
+    bool check_config_struct(std::stringstream& ss);
+
     int parse_var(std::string &token, std::stringstream& ss, int macro);
     bool parse_var_add(int macro, std::string &token);
 
