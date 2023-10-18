@@ -164,35 +164,35 @@ int ConfigParser::parse_error_page(std::string &token, std::stringstream& ss)
     return (-1);
 }
 
-int ConfigParser::parse_client_max_body_size(std::string &token, std::stringstream& ss)
+bool ConfigParser::parse_var_add(int macro, std::string &token)
 {
-    if (token == "client_max_body_size")
-    {
-        ss >> token;
-        if (token == ";")
-            return (0);
-        if (token[token.length() - 1] == ';')
-        {
-            token.erase(token.size() - 1);
-            this->serverConfigVector.back()->setClient_max_body_size(token);
-            ss >> token;
-            return (1);
-        }
+    if (macro == ROOT)
+        this->serverConfigVector.back()->getLocations().back()->setRoot(token);
+    else if (macro == CLIENT_MAX_BODY_SIZE)
         this->serverConfigVector.back()->setClient_max_body_size(token);
-        ss >> token;
-        if (token == ";")
-        {
-            ss >> token;
-            return (1);
-        }
-        return (0);
+    else if (macro == RETURN)
+        this->serverConfigVector.back()->getLocations().back()->setRedirection(token);
+    else if (macro == AUTOINDEX)
+    {
+        bool directoryListing;
+        if (token == "on")
+            directoryListing = 1;
+        else if (token == "off")
+            directoryListing = 0;
+        else
+            return (0);
+        this->serverConfigVector.back()->getLocations().back()->setDirectoryListing(directoryListing);
     }
-    return (-1);
+    else if (macro == INDEX)
+        this->serverConfigVector.back()->getLocations().back()->setDefaultFile(token);
+    return (1);
 }
 
-int ConfigParser::parse_root(std::string &token, std::stringstream& ss)
+int ConfigParser::parse_var(std::string &token, std::stringstream& ss, int macro)
 {
-    if (token == "root")
+    if ((token == "root" && macro == ROOT) || (token == "client_max_body_size" && macro == CLIENT_MAX_BODY_SIZE) 
+        || (token == "return" && macro == RETURN) || (token == "autoindex" && macro == AUTOINDEX)
+        || (token == "index" && macro == INDEX))
     {
         ss >> token;
         if (token == ";")
@@ -200,18 +200,22 @@ int ConfigParser::parse_root(std::string &token, std::stringstream& ss)
         if (token[token.length() - 1] == ';')
         {
             token.erase(token.size() - 1);
-            this->serverConfigVector.back()->getLocations().back()->setRoot(token);
+            if(!parse_var_add(macro, token))
+                return (0);
             ss >> token;
+            this->location_executed = 1;
             return (1);
         }
-        this->serverConfigVector.back()->getLocations().back()->setRoot(token);
-        ss >> token;
-        if (token == ";")
+        else
         {
+            if(!parse_var_add(macro, token))
+                return (0);
             ss >> token;
-            return (1);
+            this->location_executed = 1;
+            if (token == ";")
+                return (1);
+            return (0);
         }
-        return (0);
     }
     return (-1);
 }
@@ -260,6 +264,7 @@ int ConfigParser::parse_limit_except(std::string &token, std::stringstream& ss)
             ss >> token;
         }
         ss >> token;
+        this->location_executed = 1;
         return (1);
     }
     return (-1);
@@ -281,11 +286,19 @@ int ConfigParser::parse_location(std::string &token, std::stringstream& ss)
             ss >> token;
             while (token != "}")
             {
-                if (!parse_root(token, ss))
-                    throw std::runtime_error("Error: Invalid input near token 3: " + token);
+                this->location_executed = 0;
                 if (!parse_limit_except(token, ss))
+                    throw std::runtime_error("Error: Invalid input near token 3: " + token);
+                if (!parse_var(token, ss, RETURN))
                     throw std::runtime_error("Error: Invalid input near token 4: " + token);
-                ss >> token;
+                if (!parse_var(token, ss, ROOT))
+                    throw std::runtime_error("Error: Invalid input near token 5: " + token);
+                if (!parse_var(token, ss, AUTOINDEX))
+                    throw std::runtime_error("Error: Invalid input near token 6: " + token);
+                if (!parse_var(token, ss, INDEX))
+                    throw std::runtime_error("Error: Invalid input near token 7: " + token);
+                if (!this->location_executed)
+                    ss >> token;
             }
             ss >> token;
             if (token == "location")
@@ -381,12 +394,12 @@ void ConfigParser::proccess_input()
         throw std::runtime_error("Error: could not open file.");
     line << ifile.rdbuf();
     ifile.close();
-    buff = line.str();
-    std::stringstream braces(buff);
     removeComments(line, '#', '\n');
-    if (!check_semiCollon_between_braces(braces))
+    buff = line.str();
+    std::stringstream tmp_line(buff);
+    if (!check_semiCollon_between_braces(tmp_line))
         throw std::runtime_error("Error: Lines not finishing in semi collon iniside braces");
-    if (!checkBraces(line.str()))
+    if (!checkBraces(buff))
         throw std::runtime_error("Error: braces are not correctly placed.");
     while (line >> token)
     {
@@ -403,13 +416,13 @@ void ConfigParser::proccess_input()
         line >> token;
         try
         {
-            if (!parse_server_name(token, line))
+            if (!parse_server_name(token,  line))
                 throw std::runtime_error("Error: server_name parsing: " + token);
             /* if (!parse_root(token, line))
                 throw std::runtime_error("Error: root parsing: " + token); */
-            if (!parse_error_page(token,line))
+            if (!parse_error_page(token, line))
                 throw std::runtime_error("Error: error_page parsing: " + token);
-            if (!parse_client_max_body_size(token,line))
+            if (!parse_var(token, line, CLIENT_MAX_BODY_SIZE))
                 throw std::runtime_error("Error: client_max_body_size parsing: " + token);
             parse_location(token, line);
             
@@ -422,6 +435,8 @@ void ConfigParser::proccess_input()
         if (token == "}")
         {
             this->server_in = 0;
+            if (see_next_token(line) == "server")
+                continue;
             break;
         }
         

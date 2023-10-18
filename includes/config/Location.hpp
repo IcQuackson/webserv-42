@@ -6,6 +6,7 @@
 class Location {
 
 private:
+    
 	std::string path;                    // Path of the route
 
 	std::string indexFile;               // Index file for a directory

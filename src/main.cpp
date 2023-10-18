@@ -18,6 +18,7 @@ int main(int argc, char **argv) {
 		parser.proccess_input();
 		std::cout << parser.getServerConfigVector().back()->getPorts()[0] << std::endl;
 		std::cout << parser.getServerConfigVector().back()->getPorts()[1] << std::endl;
+		std::cout << parser.getServerConfigVector()[0]->getPorts()[0] << std::endl;
 
 		std::cout << parser.getServerConfigVector().back()->getServer_names()[0] << std::endl;
 		std::cout << parser.getServerConfigVector().back()->getServer_names()[1] << std::endl;
@@ -35,6 +36,11 @@ int main(int argc, char **argv) {
 
 		std::cout << parser.getServerConfigVector().back()->getLocations().back()->getMethods()[0] << std::endl;
 		std::cout << parser.getServerConfigVector().back()->getLocations().back()->getMethods()[1] << std::endl;
+
+		std::cout << parser.getServerConfigVector().back()->getLocations().back()->getRedirection() << std::endl;
+		std::cout << parser.getServerConfigVector().back()->getLocations().back()->getDirectoryListing() << std::endl;
+
+		std::cout << parser.getServerConfigVector().back()->getLocations().back()->getDefaultFile() << std::endl;
 	}
 	catch(const std::exception& e)
 	{

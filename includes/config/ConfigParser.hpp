@@ -8,6 +8,12 @@
 #include <algorithm>
 #include "ServerConfig.hpp"
 
+#define ROOT 1
+#define CLIENT_MAX_BODY_SIZE 2
+#define RETURN 3
+#define AUTOINDEX 4
+#define INDEX 5
+
 class ConfigParser {
 
 private:
@@ -15,6 +21,7 @@ private:
 const char *argv;
 std::vector<ServerConfig*> serverConfigVector;
 int server_in;
+bool location_executed;
 
 public:
 	ConfigParser();
@@ -27,14 +34,15 @@ public:
 	void proccess_input (void);
 
 	//Parsing Aux
+    int parse_var(std::string &token, std::stringstream& ss, int macro);
+    bool parse_var_add(int macro, std::string &token);
+
 	bool checkServer(std::string token, std::stringstream& ss);
     bool parse_listen(std::string &token, std::stringstream& ss);
     int parse_server_name(std::string &token, std::stringstream& ss);
-    int parse_root(std::string &token, std::stringstream& ss);
     int parse_error_page(std::string &token, std::stringstream& ss);
     int parse_location(std::string &token, std::stringstream& ss);
     int verify_error_code(std::string &token, int &flag_code, int &flag_page);
-    int parse_client_max_body_size(std::string &token, std::stringstream& ss);
     int parse_limit_except(std::string &token, std::stringstream& ss);
     bool check_valid_method(std::string token);
 };
