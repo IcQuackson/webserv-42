@@ -396,15 +396,16 @@ bool ConfigParser::check_config_struct(std::stringstream& ss)
             continue;
         }
         if (closeBracePos != std::string::npos)
+        {
+            insideBraces = 0;
             continue;
+        }
         if (insideBraces) 
         {
             // Check if the line ends with a semicolon
             if (!line.empty() && !endsWithSemicolon(line))
                 return (0);
         }
-        if (closeBracePos != std::string::npos)
-            insideBraces = 0;
         if (!isWhitespace(line) && extractFirstWord(line) != "server" && !insideBraces)
             return (0);
     }
