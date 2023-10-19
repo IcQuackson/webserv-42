@@ -19,6 +19,7 @@ int main(int argc, char **argv) {
 		std::cout << parser.getServerConfigVector().back()->getPorts()[0] << std::endl;
 		std::cout << parser.getServerConfigVector().back()->getPorts()[1] << std::endl;
 		std::cout << parser.getServerConfigVector()[0]->getPorts()[0] << std::endl;
+		std::cout << parser.getServerConfigVector()[0]->getHosts()[0] << std::endl;
 
 		std::cout << parser.getServerConfigVector().back()->getServer_names()[0] << std::endl;
 		std::cout << parser.getServerConfigVector().back()->getServer_names()[1] << std::endl;
@@ -41,6 +42,10 @@ int main(int argc, char **argv) {
 		std::cout << parser.getServerConfigVector().back()->getLocations().back()->getDirectoryListing() << std::endl;
 
 		std::cout << parser.getServerConfigVector().back()->getLocations().back()->getDefaultFile() << std::endl;
+
+		std::cout << parser.getServerConfigVector().back()->getLocations().back()->getCgiPath() << std::endl;
+		std::cout << parser.getServerConfigVector().back()->getLocations().back()->getCgiExtension() << std::endl;
+
 	}
 	catch(const std::exception& e)
 	{

@@ -9,15 +9,18 @@ class ServerConfig {
 private:
 	int nbr;
 	std::string configFilePath;
-	std::string host;
+	std::vector<std::string> hosts;
 	std::vector<int> ports;
 	std::vector<std::string> server_names;
 	std::vector<int> error_codes;
 	std::vector<std::string> error_pages;
 	std::string root;
 	std::string client_max_body_size;
-	int port;
 
+
+	int port;
+	std::string host;
+	
 	std::vector<Location*> locations;
 
 public:
@@ -30,6 +33,7 @@ public:
 	// getters and setters
 	std::string getConfigFilePath();
 	std::string getHost();
+	std::vector<std::string> getHosts();
 	std::vector<int> getPorts();
 	std::vector<std::string> getServer_names();
 	std::string getRoot();
@@ -39,6 +43,7 @@ public:
 	int getNbr();
 	std::string getClient_max_body_size();
 	std::vector<Location*> getLocations();
+	void addHost(std::string host);
 	void addPort(int port);
 	void addServer_name(std::string server_name);
 	void addLocation(Location* location);

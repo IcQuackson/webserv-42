@@ -62,27 +62,71 @@ bool isDigits(std::string& str)
     return (1); 
 }
 
-bool ConfigParser::parse_listen(std::string &token, std::stringstream& ss)
+bool isValidIPAddress(std::string& ipAddress) 
 {
-    std::string next_token;
-    if (token == "listen")
+    std::vector<int> octets;
+    std::istringstream ss(ipAddress);
+    std::string octet;
+
+    while (std::getline(ss, octet, '.')) 
     {
-        ss >> next_token;
-        if (!isDigits(next_token))
+        int value = std::atoi(octet.c_str());
+        if (value < 0 || value > 255)
+            return 0;
+        octets.push_back(value);
+    }
+    return (octets.size() == 4);
+}
+
+bool check_host_port(std::string &token, int is_port)
+{
+    if (is_port)
+    {
+        if (!isDigits(token))
             return (0);
-        double port = std::atof(next_token.c_str());
+        double port = std::atof(token.c_str());
         if (port < 1 || port > 65535)
             return (0);
-        this->serverConfigVector.back()->addPort(port);
-        if (!(next_token[next_token.length() - 1] == ';'))
-        {
-            ss >> next_token;
-            if (next_token != ";")
-                return (0);
-        }
+    }
+    else
+    {
+        if (!isValidIPAddress(token))
+            return (0);
+    }
+    return (1);
+}
+
+bool ConfigParser::parse_host_port(std::string& host_port, char delimiter)
+{
+    std::string::iterator sep = std::find(host_port.begin(), host_port.end(), delimiter);
+    std::string host;
+    std::string port;
+
+    std::size_t start_pos = std::distance(host_port.begin(), sep);
+    std::size_t sep_pos = std::distance(sep + 1, host_port.end());
+
+    if (sep == host_port.begin())
+        return (0);
+    if (sep != host_port.end())
+    {
+        host = host_port.substr(start_pos, sep_pos - start_pos);
+        port = host_port.substr(sep_pos - start_pos + 1);
+    }
+    else
+        port = host_port;
+    if (!port.empty() && check_host_port(port, 1))
+        this->serverConfigVector.back()->addPort(std::atof(port.c_str()));
+    else
+        return (0);
+    if (host.empty() || host == "localhost")
+    {
+        this->serverConfigVector.back()->addHost("127.0.0.1");
         return (1);
     }
-    return (0);
+    else if (!check_host_port(host, 0))
+        return (0);
+    this->serverConfigVector.back()->addHost(host);
+    return (1);        
 }
 
 int ConfigParser::parse_server_name(std::string &token, std::stringstream& ss)
@@ -166,7 +210,12 @@ int ConfigParser::parse_error_page(std::string &token, std::stringstream& ss)
 
 bool ConfigParser::parse_var_add(int macro, std::string &token)
 {
-    if (macro == ROOT)
+    if (macro == LISTEN)
+    {
+        if (!parse_host_port(token, ':'))
+            return (0);
+    }
+    else if (macro == ROOT)
         this->serverConfigVector.back()->getLocations().back()->setRoot(token);
     else if (macro == CLIENT_MAX_BODY_SIZE)
         this->serverConfigVector.back()->setClient_max_body_size(token);
@@ -185,14 +234,20 @@ bool ConfigParser::parse_var_add(int macro, std::string &token)
     }
     else if (macro == INDEX)
         this->serverConfigVector.back()->getLocations().back()->setDefaultFile(token);
+    else if (macro == CGI_PATH)
+        this->serverConfigVector.back()->getLocations().back()->setCgiPath(token);
+    else if (macro == CGI_EXT)
+        this->serverConfigVector.back()->getLocations().back()->setCgiExtension(token);
     return (1);
 }
 
 int ConfigParser::parse_var(std::string &token, std::stringstream& ss, int macro)
 {
-    if ((token == "root" && macro == ROOT) || (token == "client_max_body_size" && macro == CLIENT_MAX_BODY_SIZE) 
-        || (token == "return" && macro == RETURN) || (token == "autoindex" && macro == AUTOINDEX)
-        || (token == "index" && macro == INDEX))
+    if ((token == "listen" && macro == LISTEN) || (token == "root" && macro == ROOT) 
+        || (token == "client_max_body_size" && macro == CLIENT_MAX_BODY_SIZE) 
+        || (token == "return" && macro == RETURN) 
+        || (token == "autoindex" && macro == AUTOINDEX) || (token == "index" && macro == INDEX) 
+        || (token == "cgi_path" && macro == CGI_PATH) || (token == "cgi_ext" && macro == CGI_EXT))
     {
         ss >> token;
         if (token == ";")
@@ -202,7 +257,8 @@ int ConfigParser::parse_var(std::string &token, std::stringstream& ss, int macro
             token.erase(token.size() - 1);
             if(!parse_var_add(macro, token))
                 return (0);
-            ss >> token;
+            if (macro != LISTEN)
+                ss >> token;
             this->location_executed = 1;
             return (1);
         }
@@ -210,7 +266,8 @@ int ConfigParser::parse_var(std::string &token, std::stringstream& ss, int macro
         {
             if(!parse_var_add(macro, token))
                 return (0);
-            ss >> token;
+            if (macro != LISTEN)
+                ss >> token;
             this->location_executed = 1;
             if (token == ";")
                 return (1);
@@ -296,6 +353,10 @@ int ConfigParser::parse_location(std::string &token, std::stringstream& ss)
                 if (!parse_var(token, ss, AUTOINDEX))
                     throw std::runtime_error("Error: Invalid input near token 6: " + token);
                 if (!parse_var(token, ss, INDEX))
+                    throw std::runtime_error("Error: Invalid input near token 7: " + token);
+                if (!parse_var(token, ss, CGI_PATH))
+                    throw std::runtime_error("Error: Invalid input near token 7: " + token);
+                if (!parse_var(token, ss, CGI_EXT))
                     throw std::runtime_error("Error: Invalid input near token 7: " + token);
                 if (!this->location_executed)
                     ss >> token;
@@ -440,11 +501,11 @@ void ConfigParser::proccess_input()
                 throw std::runtime_error("Error: Invalid input near token 1: " + token);
             continue;
         }
-        if (!parse_listen(token, line))
+        if (!parse_var(token, line, LISTEN))
             throw std::runtime_error("Error: Invalid input near token 2: " + token);
         else if (see_next_token(line) == "listen")
             continue;
-        line >> token;
+        //std::cout << token << std::endl;
         try
         {
             if (!parse_server_name(token,  line))

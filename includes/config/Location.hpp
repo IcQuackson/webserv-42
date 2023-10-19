@@ -20,6 +20,8 @@ private:
 	bool directoryListing;               // Flag to turn on/off directory listing
    
     std::string defaultFile;             // Default file for a directory
+
+    std::string cgiPath;                 // Path for CGI executable
    
     std::string cgiExtension;            // File extension for CGI execution
    
@@ -49,6 +51,8 @@ public:
 
     std::string getDefaultFile() const;
 
+    std::string getCgiPath() const;
+
     std::string getCgiExtension() const;
 
     bool getAcceptGet() const;
@@ -76,6 +80,8 @@ public:
     void setDirectoryListing(bool directoryListing);
 
     void setDefaultFile(const std::string& defaultFile);
+
+    void setCgiPath(const std::string& cgiPath);
 
     void setCgiExtension(const std::string& cgiExtension);
 

@@ -8,11 +8,14 @@
 #include <algorithm>
 #include "ServerConfig.hpp"
 
-#define ROOT 1
-#define CLIENT_MAX_BODY_SIZE 2
-#define RETURN 3
-#define AUTOINDEX 4
-#define INDEX 5
+#define LISTEN 1
+#define ROOT 2
+#define CLIENT_MAX_BODY_SIZE 3
+#define RETURN 4
+#define AUTOINDEX 5
+#define INDEX 6
+#define CGI_PATH 7
+#define CGI_EXT 8
 
 class ConfigParser {
 
@@ -43,6 +46,7 @@ public:
 
 	bool checkServer(std::string token, std::stringstream& ss);
     bool parse_listen(std::string &token, std::stringstream& ss);
+    bool parse_host_port(std::string& host_port, char sep);
     int parse_server_name(std::string &token, std::stringstream& ss);
     int parse_error_page(std::string &token, std::stringstream& ss);
     int parse_location(std::string &token, std::stringstream& ss);

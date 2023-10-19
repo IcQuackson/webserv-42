@@ -33,6 +33,10 @@ std::string ServerConfig::getHost() {
 	return this->host;
 }
 
+std::vector<std::string> ServerConfig::getHosts() {
+	return this->hosts;
+}
+
 std::vector<int> ServerConfig::getPorts() {
 	return this->ports;
 }
@@ -73,6 +77,11 @@ std::string ServerConfig::getClient_max_body_size() {
 
 void ServerConfig::addLocation(Location* location) {
 	this->locations.push_back(location);
+}
+
+void ServerConfig::addHost(std::string host)
+{
+	this->hosts.push_back(host);
 }
 
 void ServerConfig::addPort(int port)

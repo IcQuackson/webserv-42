@@ -58,6 +58,10 @@ std::string Location::getDefaultFile() const {
 	return this->defaultFile;
 }
 
+std::string Location::getCgiPath() const {
+	return this->cgiPath;
+}
+
 std::string Location::getCgiExtension() const {
 	return this->cgiExtension;
 }
@@ -104,6 +108,10 @@ void Location::setDirectoryListing(bool directoryListing) {
 
 void Location::setDefaultFile(const std::string& defaultFile) {
 	this->defaultFile = defaultFile;
+}
+
+void Location::setCgiPath(const std::string& cgiPath) {
+	this->cgiPath = cgiPath;
 }
 
 void Location::setCgiExtension(const std::string& cgiExtension) {
