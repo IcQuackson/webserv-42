@@ -24,7 +24,7 @@ private:
 const char *argv;
 std::vector<ServerConfig*> serverConfigVector;
 int server_in;
-bool location_executed;
+bool executed;
 std::string error_line;
 std::string nbr_line;
 
@@ -36,7 +36,7 @@ public:
 
     std::vector<ServerConfig*> getServerConfigVector();
 
-	void proccess_input (void);
+	bool proccess_input (void);
 
 	//Parsing Aux
     bool check_config_struct(std::stringstream& ss);

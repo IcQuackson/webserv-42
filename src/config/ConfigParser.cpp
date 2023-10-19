@@ -149,6 +149,7 @@ int ConfigParser::parse_server_name(std::string &token, std::stringstream& ss)
             ss >> token;
         }
         ss >> token;
+        this->executed = 1;
         return (1);
     }
     return (-1);
@@ -203,6 +204,7 @@ int ConfigParser::parse_error_page(std::string &token, std::stringstream& ss)
             ss >> token;
         }
         ss >> token;
+        this->executed = 1;
         return (1);
     }
     return (-1);
@@ -259,7 +261,7 @@ int ConfigParser::parse_var(std::string &token, std::stringstream& ss, int macro
                 return (0);
             if (macro != LISTEN)
                 ss >> token;
-            this->location_executed = 1;
+            this->executed = 1;
             return (1);
         }
         else
@@ -268,7 +270,7 @@ int ConfigParser::parse_var(std::string &token, std::stringstream& ss, int macro
                 return (0);
             if (macro != LISTEN)
                 ss >> token;
-            this->location_executed = 1;
+            this->executed = 1;
             if (token == ";")
                 return (1);
             return (0);
@@ -321,7 +323,7 @@ int ConfigParser::parse_limit_except(std::string &token, std::stringstream& ss)
             ss >> token;
         }
         ss >> token;
-        this->location_executed = 1;
+        this->executed = 1;
         return (1);
     }
     return (-1);
@@ -341,9 +343,10 @@ int ConfigParser::parse_location(std::string &token, std::stringstream& ss)
         else
         {
             ss >> token;
+            int loops = 0;
             while (token != "}")
             {
-                this->location_executed = 0;
+                this->executed = 0;
                 if (!parse_limit_except(token, ss))
                     throw std::runtime_error("Error: Invalid input near token 3: " + token);
                 if (!parse_var(token, ss, RETURN))
@@ -355,11 +358,17 @@ int ConfigParser::parse_location(std::string &token, std::stringstream& ss)
                 if (!parse_var(token, ss, INDEX))
                     throw std::runtime_error("Error: Invalid input near token 7: " + token);
                 if (!parse_var(token, ss, CGI_PATH))
-                    throw std::runtime_error("Error: Invalid input near token 7: " + token);
+                    throw std::runtime_error("Error: Invalid input near token 8: " + token);
                 if (!parse_var(token, ss, CGI_EXT))
-                    throw std::runtime_error("Error: Invalid input near token 7: " + token);
-                if (!this->location_executed)
+                    throw std::runtime_error("Error: Invalid input near token 9: " + token);
+                if (!this->executed)
+                    throw std::runtime_error("Error: Invalid input near token 10: " + token);
+                loops++;
+                if (loops > 1 || token == ";")
+                {
+                    loops = 0;
                     ss >> token;
+                }
             }
             ss >> token;
             if (token == "location")
@@ -464,7 +473,7 @@ bool ConfigParser::check_config_struct(std::stringstream& ss)
         if (insideBraces) 
         {
             // Check if the line ends with a semicolon
-            if (!line.empty() && !endsWithSemicolon(line))
+            if (!line.empty() && !isWhitespace(line) && !endsWithSemicolon(line))
                 return (0);
         }
         if (!isWhitespace(line) && extractFirstWord(line) != "server" && !insideBraces)
@@ -473,7 +482,7 @@ bool ConfigParser::check_config_struct(std::stringstream& ss)
     return (1);
 }
 
-void ConfigParser::proccess_input()
+bool ConfigParser::proccess_input()
 {
     std::ifstream ifile;
     std::stringstream line;
@@ -505,24 +514,29 @@ void ConfigParser::proccess_input()
             throw std::runtime_error("Error: Invalid input near token 2: " + token);
         else if (see_next_token(line) == "listen")
             continue;
-        //std::cout << token << std::endl;
+        line >> token;
         try
         {
-            if (!parse_server_name(token,  line))
-                throw std::runtime_error("Error: server_name parsing: " + token);
-            /* if (!parse_root(token, line))
-                throw std::runtime_error("Error: root parsing: " + token); */
-            if (!parse_error_page(token, line))
-                throw std::runtime_error("Error: error_page parsing: " + token);
-            if (!parse_var(token, line, CLIENT_MAX_BODY_SIZE))
-                throw std::runtime_error("Error: client_max_body_size parsing: " + token);
-            parse_location(token, line);
+            this->executed = 1;
+            while (this->executed)
+            {
+                this->executed = 0;
+                if (!parse_server_name(token,  line))
+                    throw std::runtime_error("Error: server_name parsing: " + token);
+                /* if (!parse_root(token, line))
+                    throw std::runtime_error("Error: root parsing: " + token); */
+                if (!parse_error_page(token, line))
+                    throw std::runtime_error("Error: error_page parsing: " + token);
+                if (!parse_var(token, line, CLIENT_MAX_BODY_SIZE))
+                    throw std::runtime_error("Error: client_max_body_size parsing: " + token);
+                parse_location(token, line);
+            }
             
         }
         catch(const std::exception& e)
         {
             std::cerr << e.what() << '\n';
-            break;
+            return (0);
         }
         if (token == "}")
         {
@@ -531,8 +545,11 @@ void ConfigParser::proccess_input()
                 continue;
             break;
         }
+        else
+            throw std::runtime_error("Error: Invalid input near token 11: " + token);
         
     }
+    return (1);
 }
 
 std::vector<ServerConfig*> ConfigParser::getServerConfigVector()

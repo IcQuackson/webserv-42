@@ -15,7 +15,9 @@ int main(int argc, char **argv) {
 	try
 	{
 		ConfigParser parser(argv[1]);
-		parser.proccess_input();
+
+		if(!parser.proccess_input())
+			return (0);
 		std::cout << parser.getServerConfigVector().back()->getPorts()[0] << std::endl;
 		std::cout << parser.getServerConfigVector().back()->getPorts()[1] << std::endl;
 		std::cout << parser.getServerConfigVector()[0]->getPorts()[0] << std::endl;
