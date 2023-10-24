@@ -195,7 +195,6 @@ bool HttpRequest::isRequestValid(char data[]) {
 		HttpStatusCode::setCurrentStatusCode("400");
 		return false;
 	}
-	
 
 	return true;
 }

@@ -66,9 +66,11 @@ public:
 
 	bool init();
 	bool loadConfig(const std::string& configFilePath);
-	void addRouteHandler(const RouteHandler& routeHandler);
+	void addRouteHandler(const RouteHandler routeHandler);
+	const std::map<std::string, RouteHandler> getRouteHandlers();
 	int acceptConnection();
 	void handleRequest(int clientSocket);
+	void processRequest();
 	bool parseRequest(int clientSocket, char data[], HttpRequest &request);
 	void sendResponse(int clientSocket, HttpResponse& response);
 	void handleError(int clientSocket, int errorCode);
@@ -77,7 +79,7 @@ public:
 	void run();
 	void stop();
 	//void log(int clientSocket, HttpRequest& request);
-	void log(const std::string& message, int clientSocket, char data[MAX_BUFFER_SIZE]);
+	void log(const std::string& message, int clientSocket, HttpRequest& request);
 	//void serveStaticFile(int clientSocket, const std::string& filePath);
 	//void executeCGI(int clientSocket, const std::string& cgiPath);
 };

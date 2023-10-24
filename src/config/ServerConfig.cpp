@@ -102,8 +102,11 @@ void ServerConfig::addError_page(std::string error_page) {
 	this->error_pages.push_back(error_page);
 }
 
+void ServerConfig::setHost(std::string host) {
+	this->host = host;
+}
 
-void ServerConfig::setPorts(int port)
+void ServerConfig::setPort(int port)
 {
 	this->port = port;
 }
@@ -122,3 +125,21 @@ void ServerConfig::setClient_max_body_size(std::string client_max_body_size)
 {
 	this->client_max_body_size = client_max_body_size;
 }
+
+void ServerConfig::setDefaultServer(ServerConfig &serverConfig) {
+	Location *location;
+
+	std::string host("localhost");
+	serverConfig.setHost(host);
+	serverConfig.setPort(8080);
+	location = new Location();
+	location->addMethod("GET");
+	location->addMethod("POST");
+	location->addMethod("DELETE");
+	location->setAcceptUploads(true);
+	location->setDirectoryListing(true);
+	location->setRoot("./root"); // É Suposto haver root no server cofig e na location? acho que so na location
+	location->setPath("/resource");
+	serverConfig.addLocation(location);
+}
+

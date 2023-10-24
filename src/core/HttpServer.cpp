@@ -1,5 +1,6 @@
 #include "core/HttpServer.hpp"
 #include "core/HttpStatusCode.hpp"
+#include "core/Utils.hpp"
 
 int epollFd = -1;
 bool HttpServer::enableLogging = true;
@@ -33,6 +34,10 @@ HttpServer &HttpServer::operator=(HttpServer const &httpServer) {
 
 int HttpServer::getPort() {
 	return this->port;
+}
+
+const std::map<std::string, RouteHandler> HttpServer::getRouteHandlers() {
+	return this->routes;
 }
 
 std::string HttpServer::getHost() {
@@ -213,11 +218,19 @@ void HttpServer::handleRequest(int clientSocket) {
 		dataBuffer[bytesRead] = '\0';
         //std::cout << "Read " << bytesRead << " bytes of data." << std::endl;
 		HttpStatusCode::setCurrentStatusCode("200");
+
 		HttpRequest request;
 		parseRequest(clientSocket, dataBuffer, request);
-		log("Request received", clientSocket, dataBuffer);
-    }
 
+		std::cout << "-----------" << std::endl;
+		Utils::printYellow("Request:");
+		std::cout << dataBuffer << std::endl;
+
+		HttpResponse response;
+		routes[request.getResource()].handleRequest(request, response);
+		log("Request received", clientSocket, request);
+		std::cout << "-----------" << std::endl;
+    }
     close(clientSocket);
 }
 
@@ -278,7 +291,8 @@ bool HttpServer::parseRequest(int clientSocket, char data[], HttpRequest &reques
 	return true;
 }
 
-void HttpServer::addRouteHandler(const RouteHandler& routeHandler) {
+void HttpServer::addRouteHandler(const RouteHandler routeHandler) {
+	std::cout << "ADDED LOCATION: " << routeHandler.getLocation() << std::endl;
 	routes[routeHandler.getLocation().getPath()] = routeHandler;
 }
 
@@ -329,40 +343,35 @@ void HttpServer::log(std::string message) {
     std::cout << "[" << timeString.str() << "] [Socket " << clientSocket << "] " << message << std::endl;
 } */
 
-void HttpServer::log(const std::string& message, int clientSocket, char data[]) {
+void HttpServer::log(const std::string& message, int clientSocket, HttpRequest& request) {
 	(void) message;
 	std::string statusCode = HttpStatusCode::getCurrentStatusCode().first;
 	std::string statusMessage = HttpStatusCode::getCurrentStatusCode().second;
 	
-	// Print in the format: server-ip - - [date time] "method resource http-version" status-code content-length
-	//std::cout << message << std::endl;
-	std::cout << "DEBUG" << std::endl;
-	std::cout << this->getHost() << ":" << this->getPort() << " - Socket:" << clientSocket << " ";
+	std::cout << this->getHost() << ":" << this->getPort() << " - Socket:" << clientSocket << " - ";
 	
-	if (statusCode == "400") {
-		std::cout << "Bad Request "\
-		<< statusCode << statusMessage << std::endl;
+	// Check if status code indicates an error (4xx or 5xx)
+	if (statusCode[0] == '4' || statusCode[0] == '5') {
+		Utils::printRed(statusCode + " " + statusMessage);
 		return;
 	}
 	// Print first line of request.getbody()
-	std::string logInfo(data);
-	std::istringstream stream(logInfo);
-	std::string line;
-	std::getline(stream, line);
-	logInfo = line;
+	std::string logInfo = request.getMethod() + " " + request.getResource()\
+				  + " " + request.getHttpVersion() + " " + statusCode\
+				  + " " + statusMessage;
 
 	// Check if status code indicates success (2xx), informational (1xx), or a redirect (3xx)
-	if (HttpStatusCode::getCurrentStatusCode().first[0] == '2') {
+	if (statusCode[0] == '2') {
 		// Print status code in green
-		std::cout << logInfo;
-	} else if (HttpStatusCode::getCurrentStatusCode().first[0] == '1' || HttpStatusCode::getCurrentStatusCode().first[0] == '3') {
-		// Print status code in yellow for informational and redirect
-		std::cout << logInfo;
-	} else {
-		// Print status code in red for errors
-		std::cout << logInfo;
+		Utils::printGreen(logInfo);
 	}
-	std::cout << std::endl;
+	else if (statusCode[0] == '1' || statusCode[0] == '3') {
+		// Print status code in yellow for informational and redirect
+		Utils::printYellow(logInfo);
+	}
+	else {
+		Utils::printRed(logInfo);
+	}
 }
 
 std::ostream& operator<<(std::ostream& os, const HttpRequest& request) {

@@ -20,10 +20,11 @@ SRCS := \
 	$(SRC_DIR)/core/HttpRequest.cpp \
 	$(SRC_DIR)/core/HttpStatusCode.cpp \
 	$(SRC_DIR)/core/RouteHandler.cpp \
+	$(SRC_DIR)/core/Utils.cpp \
 	$(SRC_DIR)/main.cpp
 
 OBJS	=	$(patsubst $(SRC_DIR)/%.cpp, $(BIN_DIR)/%.o, $(SRCS))
-ARGS	= 	""
+ARGS	= 	"configFiles/test1.conf"
 
 # Colors
 
@@ -90,6 +91,8 @@ test:
 		@echo "\nTesting server with invalid request (Invalid URL)..."
 		curl -X GET "http://localhost:8080/resource?param1=value1&param2" -H "Host: example.com"
 
+		@echo "Testing server using GET to retrieve a file"
+		curl -X GET "http://localhost:8080/resource/file" -H "Host: example.com"
 
 run: all
 	 ./$(NAME) $(ARGS)

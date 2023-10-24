@@ -28,9 +28,12 @@ void RouteHandler::handleRequest(HttpRequest& request, HttpResponse& response) {
 	std::vector<std::string> methods = this->location.getMethods();
 	std::vector<std::string>::iterator it = std::find(methods.begin(), methods.end(), request.getMethod());
 	
-	// Check if methiod is allowed
-	if (it != location.getMethods().end()) {
+	std::cout << "handleRequest " << this->location << std::endl;
+
+	// Check if method is allowed
+	if (it == location.getMethods().end()) {
 		HttpStatusCode::setCurrentStatusCode("405");
+		response.setStatusCode("405");
 		return;
 	}
 	if (request.getMethod() == "GET") {
@@ -67,9 +70,12 @@ void RouteHandler::handleGet(HttpRequest& request, HttpResponse& response) {
 	std::string path = root + resource;
 	std::string indexPath = root + index;
 
+	std::cout << "HANDLE GET LOCATION: " << location << std::endl;
+
 	if (!resourceExists(path)) {
-		std::cerr << "Resource does not exist" << std::endl;
+		std::cerr << "Resource does not exist: " << path << std::endl;
 		HttpStatusCode::setCurrentStatusCode("404");
+		response.setStatusCode("404");
 		return;
 	}
 
@@ -78,6 +84,7 @@ void RouteHandler::handleGet(HttpRequest& request, HttpResponse& response) {
 		if (!location.getDirectoryListing()) {
 			std::cerr << "Directory listing is disabled" << std::endl;
 			HttpStatusCode::setCurrentStatusCode("403");
+			response.setStatusCode("403");
 			return;
 		}
 		// Check if the index file exists
@@ -97,7 +104,7 @@ void RouteHandler::handleGet(HttpRequest& request, HttpResponse& response) {
 	}
 	else {
 		std::cerr << "Regular file" << std::endl;
-		handleRegularFile(path, request, response);
+		//handleRegularFile(path, request, response);
 	}
 }
 

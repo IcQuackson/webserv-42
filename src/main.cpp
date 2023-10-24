@@ -59,7 +59,9 @@ int main(int argc, char **argv) {
 	// Parse the configuration file to get server configurations
     //ConfigParser configParser;
     std::vector<ServerConfig> serverConfigs;
-	ServerConfig serverConfig("config/server.conf", "localhost", 8080);
+	ServerConfig serverConfig;
+
+	ServerConfig::setDefaultServer(serverConfig);
 
 	serverConfigs.push_back(serverConfig);
 
@@ -71,6 +73,7 @@ int main(int argc, char **argv) {
 
 		for (size_t i = 0; i < serverConfig.getLocations().size(); i++) {
 			Location location = *(serverConfig.getLocations()[i]);
+			std::cout << "setup location: " << location << std::endl;
 			RouteHandler routeHandler(location);
 			httpServer.addRouteHandler(routeHandler);
 		}
@@ -88,6 +91,15 @@ int main(int argc, char **argv) {
             std::cerr << "Error initializing HttpServer for server block " << (i + 1) << std::endl;
         }
 	}
+
+	std::map<std::string, RouteHandler> routes = httpServers.at(0).getRouteHandlers();
+	//RouteHandler handler = routes["/resources"];
+
+	std::map<std::string, RouteHandler>::iterator it;
+	for (it = routes.begin(); it != routes.end(); ++it) {
+		std::cout << "Key: " << it->first << ", Value: " << std::endl << it->second.getLocation() << std::endl;
+	}
+	//std::cout << "debug: " << handler.getLocation() << std::endl;
 
 	HttpStatusCode::initStatusCodes();
 

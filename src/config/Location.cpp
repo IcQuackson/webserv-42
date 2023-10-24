@@ -129,3 +129,27 @@ void Location::setUploadEndpoint(const std::string& uploadEndpoint) {
 void Location::setUploadPath(const std::string& uploadPath) {
 	this->uploadPath = uploadPath;
 }
+
+std::ostream& operator<<(std::ostream& os, const Location& location) {
+	os << "Path: " << location.getPath() << std::endl;
+	os << "Index: " << location.getIndex() << std::endl;
+
+	os << "Methods: ";
+	std::vector<std::string> methods = location.getMethods();
+	for (std::vector<std::string>::const_iterator it = methods.begin(); it != methods.end(); it++) {
+		os << *it << " ";
+	}
+	std::cout << std::endl;
+
+	os << "redirection: " << location.getRedirection() << std::endl;
+	os << "directory listing: " << location.getDirectoryListing() << std::endl;
+	os << "default file: " << location.getDefaultFile() << std::endl;
+	os << "cgiPath: " << location.getCgiPath() << std::endl;
+	os << "cgiExtension: " << location.getCgiExtension() << std::endl;
+	os << "accept uploads: " << location.getAcceptUploads() << std::endl;
+	os << "upload endpoint: " << location.getUploadEndpoint() << std::endl;
+	os << "upload path: " << location.getUploadPath() << std::endl;
+
+	return os;
+}
+

@@ -1,4 +1,5 @@
 #include <string>
+#include <iostream>
 #include <vector>
 
 #pragma once
@@ -97,3 +98,5 @@ public:
 
 
 };
+
+std::ostream& operator<<(std::ostream& os, const Location& location);
