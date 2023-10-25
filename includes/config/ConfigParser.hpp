@@ -16,6 +16,7 @@
 #define INDEX 6
 #define CGI_PATH 7
 #define CGI_EXT 8
+#define UPLOAD_STORE 9
 
 class ConfigParser {
 

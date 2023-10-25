@@ -5,8 +5,8 @@ ServerConfig::ServerConfig() {
 
 ServerConfig::ServerConfig(const std::string& configFilePath, const std::string& host, int port) {
 	this->configFilePath = configFilePath;
-	this->host = host;
 	this->port = port;
+	this->host = host;
 }
 
 ServerConfig::~ServerConfig() {
@@ -18,9 +18,15 @@ ServerConfig::ServerConfig(ServerConfig const &serverConfig) {
 
 ServerConfig &ServerConfig::operator=(ServerConfig const &serverConfig) {
 	if (this != &serverConfig) {
+		this->nbr = serverConfig.nbr;
 		this->configFilePath = serverConfig.configFilePath;
 		this->host = serverConfig.host;
 		this->port = serverConfig.port;
+		this->server_names = serverConfig.server_names;
+		this->error_codes = serverConfig.error_codes;
+		this->error_pages = serverConfig.error_pages;
+		this->client_max_body_size = serverConfig.client_max_body_size;
+		this->locations = serverConfig.locations;
 	}
 	return *this;
 }
@@ -33,13 +39,6 @@ std::string ServerConfig::getHost() {
 	return this->host;
 }
 
-std::vector<std::string> ServerConfig::getHosts() {
-	return this->hosts;
-}
-
-std::vector<int> ServerConfig::getPorts() {
-	return this->ports;
-}
 
 std::vector<std::string> ServerConfig::getServer_names(){
 	return this->server_names;
@@ -58,10 +57,6 @@ std::vector<Location*> ServerConfig::getLocations() {
 	return this->locations;
 }
 
-std::string ServerConfig::getRoot() {
-	return this->root;
-}
-
 std::vector<int> ServerConfig::getError_codes() {
 	return this->error_codes;
 }
@@ -77,16 +72,6 @@ std::string ServerConfig::getClient_max_body_size() {
 
 void ServerConfig::addLocation(Location* location) {
 	this->locations.push_back(location);
-}
-
-void ServerConfig::addHost(std::string host)
-{
-	this->hosts.push_back(host);
-}
-
-void ServerConfig::addPort(int port)
-{
-	this->ports.push_back(port);
 }
 
 void ServerConfig::addServer_name(std::string server_name)
@@ -116,11 +101,6 @@ void ServerConfig::setNbr(int nbr)
 	this->nbr = nbr;
 }
 
-void ServerConfig::setRoot(std::string root)
-{
-	this->root = root;
-}
-
 void ServerConfig::setClient_max_body_size(std::string client_max_body_size)
 {
 	this->client_max_body_size = client_max_body_size;
@@ -138,7 +118,7 @@ void ServerConfig::setDefaultServer(ServerConfig &serverConfig) {
 	location->addMethod("DELETE");
 	location->setAcceptUploads(true);
 	location->setDirectoryListing(true);
-	location->setRoot("./root"); // É Suposto haver root no server cofig e na location? acho que so na location
+	//location->setRoot("./root"); // É Suposto haver root no server cofig e na location? acho que so na location
 	location->setPath("/resource");
 	serverConfig.addLocation(location);
 }

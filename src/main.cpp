@@ -12,16 +12,17 @@ int main(int argc, char **argv) {
 		return 1;
 	}
 
-	try
-	{
-		ConfigParser parser(argv[1]);
+	ConfigParser parser(argv[1]);
 
+	try
+	{	
 		if(!parser.proccess_input())
 			return (0);
-		std::cout << parser.getServerConfigVector().back()->getPorts()[0] << std::endl;
-		std::cout << parser.getServerConfigVector().back()->getPorts()[1] << std::endl;
-		std::cout << parser.getServerConfigVector()[0]->getPorts()[0] << std::endl;
-		std::cout << parser.getServerConfigVector()[0]->getHosts()[0] << std::endl;
+
+		/* std::cout << parser.getServerConfigVector().back()->getPort() << std::endl;
+		std::cout << parser.getServerConfigVector().back()->getPort() << std::endl;
+		std::cout << parser.getServerConfigVector()[0]->getPort() << std::endl;
+		std::cout << parser.getServerConfigVector()[0]->getHost() << std::endl;
 
 		std::cout << parser.getServerConfigVector().back()->getServer_names()[0] << std::endl;
 		std::cout << parser.getServerConfigVector().back()->getServer_names()[1] << std::endl;
@@ -47,11 +48,12 @@ int main(int argc, char **argv) {
 
 		std::cout << parser.getServerConfigVector().back()->getLocations().back()->getCgiPath() << std::endl;
 		std::cout << parser.getServerConfigVector().back()->getLocations().back()->getCgiExtension() << std::endl;
-
+ */
 	}
 	catch(const std::exception& e)
 	{
 		std::cerr << e.what() << '\n';
+		return (0);
 	}
 	
 	std::string configFilePath(argv[1]);
@@ -61,8 +63,9 @@ int main(int argc, char **argv) {
     std::vector<ServerConfig> serverConfigs;
 	ServerConfig serverConfig;
 
-	ServerConfig::setDefaultServer(serverConfig);
+	//ServerConfig::setDefaultServer(serverConfig);
 
+	serverConfig = *parser.getServerConfigVector()[0];
 	serverConfigs.push_back(serverConfig);
 
 	// Create and initialize instances of HttpServer based on server configurations
@@ -80,7 +83,7 @@ int main(int argc, char **argv) {
 
         // Configure the HttpServer instance based on serverConfigs[i]
         httpServer.loadConfig(serverConfigs[i].getConfigFilePath());
-        httpServer.setPort(serverConfigs[i].getPort());//alterei os ports de int para vector de ints (pode haver varios)
+        httpServer.setPort(serverConfigs[i].getPort());
 		httpServer.setHost(serverConfigs[i].getHost());
 
         // Initialize and add to the vector of HttpServers

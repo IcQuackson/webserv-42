@@ -115,17 +115,17 @@ bool ConfigParser::parse_host_port(std::string& host_port, char delimiter)
     else
         port = host_port;
     if (!port.empty() && check_host_port(port, 1))
-        this->serverConfigVector.back()->addPort(std::atof(port.c_str()));
+        this->serverConfigVector.back()->setPort(std::atof(port.c_str()));
     else
         return (0);
     if (host.empty() || host == "localhost")
     {
-        this->serverConfigVector.back()->addHost("127.0.0.1");
+        this->serverConfigVector.back()->setHost("127.0.0.1");
         return (1);
     }
     else if (!check_host_port(host, 0))
         return (0);
-    this->serverConfigVector.back()->addHost(host);
+    this->serverConfigVector.back()->setHost(host);
     return (1);        
 }
 
@@ -240,6 +240,13 @@ bool ConfigParser::parse_var_add(int macro, std::string &token)
         this->serverConfigVector.back()->getLocations().back()->setCgiPath(token);
     else if (macro == CGI_EXT)
         this->serverConfigVector.back()->getLocations().back()->setCgiExtension(token);
+    else if (macro == UPLOAD_STORE)
+    {
+        this->serverConfigVector.back()->getLocations().back()->setAcceptUploads(true);
+        std::string UploadEndpoint = this->serverConfigVector.back()->getLocations().back()->getPath();
+        this->serverConfigVector.back()->getLocations().back()->setUploadEndpoint(UploadEndpoint);
+        this->serverConfigVector.back()->getLocations().back()->setUploadPath(token);
+    }
     return (1);
 }
 
@@ -247,9 +254,9 @@ int ConfigParser::parse_var(std::string &token, std::stringstream& ss, int macro
 {
     if ((token == "listen" && macro == LISTEN) || (token == "root" && macro == ROOT) 
         || (token == "client_max_body_size" && macro == CLIENT_MAX_BODY_SIZE) 
-        || (token == "return" && macro == RETURN) 
-        || (token == "autoindex" && macro == AUTOINDEX) || (token == "index" && macro == INDEX) 
-        || (token == "cgi_path" && macro == CGI_PATH) || (token == "cgi_ext" && macro == CGI_EXT))
+        || (token == "return" && macro == RETURN) || (token == "autoindex" && macro == AUTOINDEX) 
+        || (token == "index" && macro == INDEX) || (token == "cgi_path" && macro == CGI_PATH) 
+        || (token == "cgi_ext" && macro == CGI_EXT) || (token == "upload_store" && macro == UPLOAD_STORE))
     {
         ss >> token;
         if (token == ";")
@@ -361,8 +368,10 @@ int ConfigParser::parse_location(std::string &token, std::stringstream& ss)
                     throw std::runtime_error("Error: Invalid input near token 8: " + token);
                 if (!parse_var(token, ss, CGI_EXT))
                     throw std::runtime_error("Error: Invalid input near token 9: " + token);
-                if (!this->executed)
+                if (!parse_var(token, ss, UPLOAD_STORE))
                     throw std::runtime_error("Error: Invalid input near token 10: " + token);
+                if (!this->executed)
+                    throw std::runtime_error("Error: Invalid input near token 11: " + token);
                 loops++;
                 if (loops > 1 || token == ";")
                 {
@@ -512,8 +521,8 @@ bool ConfigParser::proccess_input()
         }
         if (!parse_var(token, line, LISTEN))
             throw std::runtime_error("Error: Invalid input near token 2: " + token);
-        else if (see_next_token(line) == "listen")
-            continue;
+        /* else if (see_next_token(line) == "listen")
+            continue; */
         line >> token;
         try
         {
@@ -546,7 +555,7 @@ bool ConfigParser::proccess_input()
             break;
         }
         else
-            throw std::runtime_error("Error: Invalid input near token 11: " + token);
+            throw std::runtime_error("Error: Invalid input near token 12: " + token);
         
     }
     return (1);
