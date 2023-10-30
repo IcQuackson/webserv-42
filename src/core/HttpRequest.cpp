@@ -11,6 +11,7 @@ HttpRequest::~HttpRequest() {}
 HttpRequest::HttpRequest(const HttpRequest &httpRequest) {
     method = httpRequest.method;
     resource = httpRequest.resource;
+	route = httpRequest.route;
     httpVersion = httpRequest.httpVersion;
     host = httpRequest.host;
     args = httpRequest.args;
@@ -21,12 +22,21 @@ HttpRequest &HttpRequest::operator=(const HttpRequest &httpRequest) {
     if (this != &httpRequest) {
         method = httpRequest.method;
         resource = httpRequest.resource;
+		route = httpRequest.route;
         httpVersion = httpRequest.httpVersion;
         host = httpRequest.host;
         args = httpRequest.args;
 		headers = httpRequest.headers;
     }
     return *this;
+}
+
+std::string HttpRequest::getRoute() const {
+	return route;
+}
+
+void HttpRequest::setRoute(const std::string& newRoute) {
+	route = newRoute;
 }
 
 std::string HttpRequest::getMethod() const {
@@ -85,19 +95,19 @@ void HttpRequest::setBody(const std::string& newBody) {
 	body = newBody;
 }
 
-bool HttpRequest::readArgs(const std::string& resource) {
+bool HttpRequest::readArgs(const std::string& path) {
 	std::string argString;
 
 	(void) args;
 
 	// Find the position of the first question mark
-	std::size_t pos = resource.find("?");
+	std::size_t pos = path.find("?");
 	if (pos == std::string::npos) {
 		return false;
 	}
 
 	// Get the argument string
-	argString = resource.substr(pos + 1);
+	argString = path.substr(pos + 1);
 
 	// Parse the argument string
 	std::istringstream argStream(argString);
@@ -114,6 +124,7 @@ bool HttpRequest::readArgs(const std::string& resource) {
 	return true;
 }
 
+// needs request argument to set status code
 bool HttpRequest::readHeaders(std::istringstream& requestStream, HttpRequest& request) {
     std::string line;
 
@@ -165,8 +176,11 @@ bool HttpRequest::isRequestValid(char data[]) {
 		HttpStatusCode::setCurrentStatusCode("400");
 		return false;
 	}
+
+	std::cout << "method: " << method << std::endl;
 	// Check if the request line is valid
 	if (method != "GET" && method != "POST" && method != "DELETE") {
+		std::cout << "method not valid" << std::endl;
 		HttpStatusCode::setCurrentStatusCode("405");
 		return false;
 	}
@@ -198,3 +212,4 @@ bool HttpRequest::isRequestValid(char data[]) {
 
 	return true;
 }
+

@@ -10,6 +10,7 @@ class HttpRequest {
 
 private:
 	std::string method;
+	std::string route;
 	std::string resource;
 	std::string httpVersion;
 	std::string host;
@@ -25,6 +26,7 @@ public:
 	HttpRequest &operator=(const HttpRequest &httpRequest);
 	
 	std::string getMethod() const;
+	std::string getRoute() const;
 	std::string getResource() const;
 	std::string getHttpVersion() const;
 	std::string getHost() const;
@@ -34,6 +36,7 @@ public:
 	std::string getTimestamp() const;
 
 	void setMethod(const std::string& method);
+	void setRoute(const std::string& route);
 	void setResource(const std::string& resource);
 	void setHttpVersion(const std::string& httpVersion);
 	void setHost(const std::string& host);

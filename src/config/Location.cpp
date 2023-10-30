@@ -12,6 +12,7 @@ Location::Location() {
 	this->acceptUploads = false;
 	this->uploadEndpoint = "";
 	this->uploadPath = "";
+	this->clientBodySize = 0;
 }
 
 Location::Location(const std::string& path) : path(path) {
@@ -25,6 +26,7 @@ Location::Location(const std::string& path) : path(path) {
 	this->acceptUploads = false;
 	this->uploadEndpoint = "";
 	this->uploadPath = "";
+	this->clientBodySize = 0;
 }
 
 Location::~Location() {
@@ -76,6 +78,10 @@ std::string Location::getUploadEndpoint() const {
 
 std::string Location::getUploadPath() const {
 	return this->uploadPath;
+}
+
+int Location::getClientBodySize() const {
+	return this->clientBodySize;
 }
 
 void Location::addMethod(std::string method) {
@@ -130,6 +136,10 @@ void Location::setUploadPath(const std::string& uploadPath) {
 	this->uploadPath = uploadPath;
 }
 
+void Location::setClientBodySize(int clientBodySize) {
+	this->clientBodySize = clientBodySize;
+}
+
 std::ostream& operator<<(std::ostream& os, const Location& location) {
 	os << "Path: " << location.getPath() << std::endl;
 	os << "Index: " << location.getIndex() << std::endl;
@@ -149,6 +159,7 @@ std::ostream& operator<<(std::ostream& os, const Location& location) {
 	os << "accept uploads: " << location.getAcceptUploads() << std::endl;
 	os << "upload endpoint: " << location.getUploadEndpoint() << std::endl;
 	os << "upload path: " << location.getUploadPath() << std::endl;
+	os << "client body size: " << location.getClientBodySize() << std::endl;
 
 	return os;
 }

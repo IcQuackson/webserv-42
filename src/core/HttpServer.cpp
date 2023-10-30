@@ -28,6 +28,7 @@ HttpServer &HttpServer::operator=(HttpServer const &httpServer) {
 		this->serverSocket = httpServer.serverSocket;
 		this->maxConnections = httpServer.maxConnections;
 		this->routes = httpServer.routes;
+		this->clientBodySize = httpServer.clientBodySize;
 	}
 	return *this;
 }
@@ -48,6 +49,10 @@ int HttpServer::getMaxConnections() {
 	return this->maxConnections;
 }
 
+int HttpServer::getClientBodySize() {
+	return this->clientBodySize;
+}
+
 void HttpServer::setPort(int port) {
 	this->port = port;
 }
@@ -58,6 +63,10 @@ void HttpServer::setHost(const std::string& host) {
 
 void HttpServer::setMaxConnections(int maxConnections) {
 	this->maxConnections = maxConnections;
+}
+
+void HttpServer::setClientBodySize(int clientBodySize) {
+	this->clientBodySize = clientBodySize;
 }
 
 bool HttpServer::loadConfig(const std::string& configFilePath) {
@@ -200,13 +209,12 @@ int HttpServer::acceptConnection() {
 void HttpServer::handleRequest(int clientSocket) {
     // Acknowledge the connection
     const char* acknowledgment = "HTTP/1.1 200 OK\r\nContent-Length: 0\r\nConnection: close\r\n\r\n";
-    send(clientSocket, acknowledgment, std::strlen(acknowledgment), 0);
 
 	// Buffer to read incoming data
-    char dataBuffer[MAX_BUFFER_SIZE];
+    char * dataBuffer = new char[MAX_BUFFER_SIZE];
 
     // Read incoming data
-    ssize_t bytesRead = recv(clientSocket, dataBuffer, sizeof(dataBuffer), 0);
+    ssize_t bytesRead = recv(clientSocket, dataBuffer, sizeof(char) * MAX_BUFFER_SIZE, 0);
 
     if (bytesRead == -1) {
         perror("Error reading data");
@@ -218,19 +226,32 @@ void HttpServer::handleRequest(int clientSocket) {
 		dataBuffer[bytesRead] = '\0';
         //std::cout << "Read " << bytesRead << " bytes of data." << std::endl;
 		HttpStatusCode::setCurrentStatusCode("200");
-
-		HttpRequest request;
-		parseRequest(clientSocket, dataBuffer, request);
-
 		std::cout << "-----------" << std::endl;
 		Utils::printYellow("Request:");
 		std::cout << dataBuffer << std::endl;
 
+		HttpRequest request;
 		HttpResponse response;
-		routes[request.getResource()].handleRequest(request, response);
+		bool isValidRequest = parseRequest(clientSocket, dataBuffer, request);
+
+		if (isValidRequest) {
+			// Check if the requested resource exists
+			if (!parseResource(request.getResource(), request)) {
+				HttpStatusCode::setCurrentStatusCode("404");
+				response.setStatusCode("404");
+			}
+			else {
+				routes[request.getRoute()].handleRequest(request, response);
+			}
+		}
 		log("Request received", clientSocket, request);
-		std::cout << "-----------" << std::endl;
     }
+	std::cout << "-----------" << std::endl;
+	std::cout << std::endl;
+	delete[] dataBuffer;
+	//std::cout << "Response:" << std::endl;
+	//std::cout << acknowledgment << std::endl;
+    send(clientSocket, acknowledgment, std::strlen(acknowledgment), 0);
     close(clientSocket);
 }
 
@@ -260,7 +281,10 @@ bool HttpServer::parseRequest(int clientSocket, char data[], HttpRequest &reques
 
 	resource = resource.substr(0, resource.find("?"));
 
-	request.readHeaders(requestStream, request);
+	//request.readHeaders(requestStream, request);
+	if (!request.readHeaders(requestStream, request)) {
+		return false;
+	}
 
 	// Parse the body
 	std::string body = "";
@@ -292,8 +316,9 @@ bool HttpServer::parseRequest(int clientSocket, char data[], HttpRequest &reques
 }
 
 void HttpServer::addRouteHandler(const RouteHandler routeHandler) {
-	std::cout << "ADDED LOCATION: " << routeHandler.getLocation() << std::endl;
 	routes[routeHandler.getLocation().getPath()] = routeHandler;
+	std::cout << "Route added: " << routeHandler.getLocation().getPath() << std::endl;
+	std::cout << "Location added: " <<routeHandler.getLocation() << std::endl;
 }
 
 void HttpServer::sendResponse(int clientSocket, HttpResponse& response) {
@@ -372,6 +397,32 @@ void HttpServer::log(const std::string& message, int clientSocket, HttpRequest& 
 	else {
 		Utils::printRed(logInfo);
 	}
+}
+
+bool HttpServer::parseResource(const std::string& path, HttpRequest& request) {
+	std::string routePath = path;
+	std::string requestedPath = "";
+
+	while (!routePath.empty()) {
+		// Check if the current path is a valid endpoint
+		if (routes.find(routePath) != routes.end()) {
+			request.setRoute(routePath);
+			request.setResource(requestedPath);
+			std::cout << "Endpoint found: " << routePath << std::endl;
+			std::cout << "Requested path: " << requestedPath << std::endl;
+			return true;
+		}
+
+		// Remove the last slash + string combination
+		std::size_t lastSlash = routePath.find_last_of('/');
+		if (lastSlash == std::string::npos) {
+			break;  // No more parts to check
+		}
+		requestedPath += "/" + routePath.substr(lastSlash + 1); 
+		routePath = routePath.substr(0, lastSlash);
+	}
+
+	return false;
 }
 
 std::ostream& operator<<(std::ostream& os, const HttpRequest& request) {

@@ -5,7 +5,7 @@
 RouteHandler::RouteHandler() {
 }
 
-RouteHandler::RouteHandler(const Location& location) : location(location) {
+RouteHandler::RouteHandler(const Location location) : location(location) {
 }
 
 RouteHandler::~RouteHandler() {
@@ -28,7 +28,15 @@ void RouteHandler::handleRequest(HttpRequest& request, HttpResponse& response) {
 	std::vector<std::string> methods = this->location.getMethods();
 	std::vector<std::string>::iterator it = std::find(methods.begin(), methods.end(), request.getMethod());
 	
-	std::cout << "handleRequest " << this->location << std::endl;
+	//print methods
+	
+	//std::cout << "handleRequest: " << this->location.getMethods() << std::endl;
+
+	std::cout << "Methods:";
+	for (std::vector<std::string>::iterator it = methods.begin(); it != methods.end(); ++it) {
+		std::cout << ' ' << *it;
+	}
+	std::cout << '\n';
 
 	// Check if method is allowed
 	if (it == location.getMethods().end()) {
@@ -70,7 +78,8 @@ void RouteHandler::handleGet(HttpRequest& request, HttpResponse& response) {
 	std::string path = root + resource;
 	std::string indexPath = root + index;
 
-	std::cout << "HANDLE GET LOCATION: " << location << std::endl;
+	//std::cout << "HANDLE GET LOCATION: " << location << std::endl;
+	std::cout << path << std::endl;
 
 	if (!resourceExists(path)) {
 		std::cerr << "Resource does not exist: " << path << std::endl;
@@ -80,6 +89,7 @@ void RouteHandler::handleGet(HttpRequest& request, HttpResponse& response) {
 	}
 
 	if (isDirectory(path)) {
+		std::cout << "Directory" << std::endl;
 		// Check if directory listing is enabled
 		if (!location.getDirectoryListing()) {
 			std::cerr << "Directory listing is disabled" << std::endl;
@@ -93,12 +103,12 @@ void RouteHandler::handleGet(HttpRequest& request, HttpResponse& response) {
 		}
 		else {
 			//handleDirectoryListing(request, response);
+			std::cout << "Directory listing" << std::endl;
 			return;
 		}
 	}
-
 	// Check if the resource is a CGI script
-	if (path.substr(path.find_last_of(".") + 1) == location.getCgiExtension()) {
+	else if (path.substr(path.find_last_of(".") + 1) == location.getCgiExtension()) {
 		std::cerr << "CGI script" << std::endl;
 		//handleCgi(request, response);
 	}

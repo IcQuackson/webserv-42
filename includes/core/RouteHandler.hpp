@@ -21,7 +21,7 @@ public:
 
 	RouteHandler();
 
-	RouteHandler(const Location& location);
+	RouteHandler(const Location location);
 
 	~RouteHandler();
 

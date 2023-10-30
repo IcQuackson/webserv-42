@@ -12,25 +12,27 @@ private:
 
 	std::string indexFile;               // Index file for a directory
 
-    std::vector<std::string> methods;    // List of accepted HTTP methods
+	std::vector<std::string> methods;    // List of accepted HTTP methods
 
-    std::string redirection;             // HTTP redirection URL
+	std::string redirection;             // HTTP redirection URL
 
-    std::string root;                    // Directory or file from where files should be searched
-    
+	std::string root;                    // Directory or file from where files should be searched
+	
 	bool directoryListing;               // Flag to turn on/off directory listing
-   
-    std::string defaultFile;             // Default file for a directory
 
-    std::string cgiPath;                 // Path for CGI executable
-   
-    std::string cgiExtension;            // File extension for CGI execution
-   
-    bool acceptUploads;                  // Flag to accept uploaded files
-   
-    std::string uploadEndpoint;          // Endpoint for handling uploaded files
-   
-    std::string uploadPath;              // Directory where uploaded files should be saved
+	std::string defaultFile;             // Default file for a directory
+
+	std::string cgiPath;                 // Path for CGI executable
+
+	std::string cgiExtension;            // File extension for CGI execution
+
+	bool acceptUploads;                  // Flag to accept uploaded files
+
+	std::string uploadEndpoint;          // Endpoint for handling uploaded files
+
+	std::string uploadPath;              // Directory where uploaded files should be saved
+
+	int clientBodySize;		 	 // Max size of the body of a request
 
 public:
 
@@ -66,6 +68,8 @@ public:
 
     std::string getUploadPath() const;
 
+	int getClientBodySize() const;
+
     void addMethod(std::string method);
 
     void setPath(const std::string& path);
@@ -96,6 +100,7 @@ public:
 
     void setUploadPath(const std::string& uploadPath);
 
+	void setClientBodySize(int clientBodySize);
 
 };
 

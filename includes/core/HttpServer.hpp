@@ -22,8 +22,8 @@
 #include "core/HttpResponse.hpp"
 #include "core/RouteHandler.hpp"
 
-#define MAX_BUFFER_SIZE 1024
 #define MAX_EVENTS 64
+#define MAX_BUFFER_SIZE 5000
 
 class HttpServer {
 
@@ -34,6 +34,7 @@ private:
 
 	// Configuration
 	std::string configFilePath;
+	int clientBodySize;
 
 	// Socket Information
 	int serverSocket;
@@ -43,7 +44,7 @@ private:
 	std::map<std::string, RouteHandler> routes;
 
 	// Request and Response Buffers
-	char buffer[MAX_BUFFER_SIZE];
+	char buffer[];
 
 	// Logging
 	static bool enableLogging;
@@ -59,9 +60,11 @@ public:
 	int getPort();
 	std::string getHost();
 	int getMaxConnections();
+	int getClientBodySize();
 	void setPort(int port);
 	void setHost(const std::string& host);
 	void setMaxConnections(int maxConnections);
+	void setClientBodySize(int clientBodySize);
 
 
 	bool init();
@@ -74,6 +77,7 @@ public:
 	bool parseRequest(int clientSocket, char data[], HttpRequest &request);
 	void sendResponse(int clientSocket, HttpResponse& response);
 	void handleError(int clientSocket, int errorCode);
+	bool parseResource(const std::string& path, HttpRequest& request);
 	void log(std::string message);
 	void log(const std::string& message, int clientSocket);
 	void run();

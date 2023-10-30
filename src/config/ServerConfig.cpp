@@ -118,8 +118,9 @@ void ServerConfig::setDefaultServer(ServerConfig &serverConfig) {
 	location->addMethod("DELETE");
 	location->setAcceptUploads(true);
 	location->setDirectoryListing(true);
-	//location->setRoot("./root"); // É Suposto haver root no server cofig e na location? acho que so na location
+	location->setRoot("./YoupiBanane"); // É Suposto haver root no server cofig e na location? acho que so na location
 	location->setPath("/resource");
+	location->setClientBodySize(3000);
 	serverConfig.addLocation(location);
 }
 

@@ -24,7 +24,7 @@ SRCS := \
 	$(SRC_DIR)/main.cpp
 
 OBJS	=	$(patsubst $(SRC_DIR)/%.cpp, $(BIN_DIR)/%.o, $(SRCS))
-ARGS	= 	"configFiles/test1.conf"
+ARGS	= 	
 
 # Colors
 
@@ -66,6 +66,9 @@ re:			fclean all
 test:
 		@echo "Testing server with valid request..."
 		curl -X GET "http://localhost:8080/resource" -H "Host: example.com"
+
+		@echo "Testing server with invalid resource..."
+		curl -X GET "http://localhost:8080/lol" -H "Host: example.com"
 
 		@echo "\nTesting server with POST request..."
 		curl -X POST "http://localhost:8080/resource?param1=value1&param2=value2" -H "Host: example.com"
