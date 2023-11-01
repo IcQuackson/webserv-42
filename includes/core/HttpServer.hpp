@@ -74,7 +74,7 @@ public:
 	int acceptConnection();
 	void handleRequest(int clientSocket);
 	void processRequest();
-	bool parseRequest(int clientSocket, char data[], HttpRequest &request);
+	bool parseRequest(int clientSocket, char data[], HttpRequest &request, HttpResponse &response);
 	void sendResponse(int clientSocket, HttpResponse& response);
 	void handleError(int clientSocket, int errorCode);
 	bool parseResource(const std::string& path, HttpRequest& request);
@@ -83,7 +83,7 @@ public:
 	void run();
 	void stop();
 	//void log(int clientSocket, HttpRequest& request);
-	void log(const std::string& message, int clientSocket, HttpRequest& request);
+	void log(const std::string& message, int clientSocket, HttpRequest& request, HttpResponse& response);
 	//void serveStaticFile(int clientSocket, const std::string& filePath);
 	//void executeCGI(int clientSocket, const std::string& cgiPath);
 };

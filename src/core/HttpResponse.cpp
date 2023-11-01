@@ -1,6 +1,5 @@
 
 #include "core/HttpResponse.hpp"
-#include "core/HttpStatusCode.hpp"
 
 HttpResponse::HttpResponse() {
 	this->statusCode = "";
@@ -76,7 +75,7 @@ void HttpResponse::addHeader(const std::string header, const std::string value) 
 }
 
 std::string HttpResponse::toString() const {
-	std::string response = httpVersion + " " + statusCode + " " + statusMessage + "\r\n";
+	std::string response = "HTTP/1.1 " + statusCode + " " + statusMessage + "\r\n";
 	for (std::map<std::string, std::string>::const_iterator it = headers.begin(); it != headers.end(); ++it) {
 		response += it->first + ": " + it->second + "\r\n";
 	}

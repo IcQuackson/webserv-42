@@ -4,6 +4,7 @@
 #include <sstream>
 #include <string>
 #include <map>
+#include "core/HttpStatusCode.hpp"
 
 class HttpResponse {
 

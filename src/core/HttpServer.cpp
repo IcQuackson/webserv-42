@@ -208,7 +208,7 @@ int HttpServer::acceptConnection() {
 
 void HttpServer::handleRequest(int clientSocket) {
     // Acknowledge the connection
-    const char* acknowledgment = "HTTP/1.1 200 OK\r\nContent-Length: 0\r\nConnection: close\r\n\r\n";
+    //const char* acknowledgment = "HTTP/1.1 200 OK\r\nContent-Length: 0\r\nConnection: close\r\n\r\n";
 
 	// Buffer to read incoming data
     char * dataBuffer = new char[MAX_BUFFER_SIZE];
@@ -216,50 +216,53 @@ void HttpServer::handleRequest(int clientSocket) {
     // Read incoming data
     ssize_t bytesRead = recv(clientSocket, dataBuffer, sizeof(char) * MAX_BUFFER_SIZE, 0);
 
+	HttpResponse response;
+
     if (bytesRead == -1) {
         perror("Error reading data");
+		response.setStatusCode("500");
+		response.setBody("Error reading data");
     }
 	else if (bytesRead == 0) {
         std::cout << "Connection closed by client." << std::endl;
+		return ;
     }
 	else {
 		dataBuffer[bytesRead] = '\0';
         //std::cout << "Read " << bytesRead << " bytes of data." << std::endl;
-		HttpStatusCode::setCurrentStatusCode("200");
+		response.setStatusCode("200");
 		std::cout << "-----------" << std::endl;
 		Utils::printYellow("Request:");
 		std::cout << dataBuffer << std::endl;
 
 		HttpRequest request;
-		HttpResponse response;
-		bool isValidRequest = parseRequest(clientSocket, dataBuffer, request);
+		bool isValidRequest = parseRequest(clientSocket, dataBuffer, request, response);
 
 		if (isValidRequest) {
 			// Check if the requested resource exists
 			if (!parseResource(request.getResource(), request)) {
-				HttpStatusCode::setCurrentStatusCode("404");
 				response.setStatusCode("404");
+				//response.setBody("Resource does not exist");
 			}
 			else {
 				routes[request.getRoute()].handleRequest(request, response);
 			}
 		}
-		log("Request received", clientSocket, request);
+		log("Request received", clientSocket, request, response);
     }
 	std::cout << "-----------" << std::endl;
 	std::cout << std::endl;
 	delete[] dataBuffer;
-	//std::cout << "Response:" << std::endl;
-	//std::cout << acknowledgment << std::endl;
-    send(clientSocket, acknowledgment, std::strlen(acknowledgment), 0);
+	sendResponse(clientSocket, response);
+    //send(clientSocket, acknowledgment, std::strlen(acknowledgment), 0);
     close(clientSocket);
 }
 
-bool HttpServer::parseRequest(int clientSocket, char data[], HttpRequest &request) {
+bool HttpServer::parseRequest(int clientSocket, char data[], HttpRequest &request, HttpResponse& response) {
 
 	(void) clientSocket;
 
-	if (!HttpRequest::isRequestValid(data)) {
+	if (!HttpRequest::isRequestValid(data, response)) {
 		return false;
 	}
 
@@ -282,7 +285,7 @@ bool HttpServer::parseRequest(int clientSocket, char data[], HttpRequest &reques
 	resource = resource.substr(0, resource.find("?"));
 
 	//request.readHeaders(requestStream, request);
-	if (!request.readHeaders(requestStream, request)) {
+	if (!request.readHeaders(requestStream, request, response)) {
 		return false;
 	}
 
@@ -297,7 +300,7 @@ bool HttpServer::parseRequest(int clientSocket, char data[], HttpRequest &reques
 
 		if (contentLength != body.size()) {
 			// set error
-			HttpStatusCode::setCurrentStatusCode("400");
+			response.setStatusCode("400");
 			return false;
 		}
 	}
@@ -322,9 +325,10 @@ void HttpServer::addRouteHandler(const RouteHandler routeHandler) {
 }
 
 void HttpServer::sendResponse(int clientSocket, HttpResponse& response) {
-	response.setStatusCode(HttpStatusCode::getCurrentStatusCode().first);
-	response.setStatusMessage(HttpStatusCode::getCurrentStatusCode().second);
+	response.setStatusMessage(HttpStatusCode::getHttpStatusCode(response.getStatusCode()));
 	std::string responseString = response.toString();
+
+	std::cout << "Response: " << std::endl << responseString << std::endl;
 	send(clientSocket, responseString.c_str(), responseString.size(), 0);
 }
 
@@ -368,10 +372,10 @@ void HttpServer::log(std::string message) {
     std::cout << "[" << timeString.str() << "] [Socket " << clientSocket << "] " << message << std::endl;
 } */
 
-void HttpServer::log(const std::string& message, int clientSocket, HttpRequest& request) {
+void HttpServer::log(const std::string& message, int clientSocket, HttpRequest& request, HttpResponse& response) {
 	(void) message;
-	std::string statusCode = HttpStatusCode::getCurrentStatusCode().first;
-	std::string statusMessage = HttpStatusCode::getCurrentStatusCode().second;
+	std::string statusCode = response.getStatusCode();
+	std::string statusMessage = HttpStatusCode::getHttpStatusCode(statusCode);
 	
 	std::cout << this->getHost() << ":" << this->getPort() << " - Socket:" << clientSocket << " - ";
 	

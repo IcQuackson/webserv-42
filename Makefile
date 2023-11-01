@@ -95,7 +95,7 @@ test:
 		curl -X GET "http://localhost:8080/resource?param1=value1&param2" -H "Host: example.com"
 
 		@echo "Testing server using GET to retrieve a file"
-		curl -X GET "http://localhost:8080/resource/file" -H "Host: example.com"
+		curl -X GET "http://localhost:8080/resource/file1.txt" -H "Host: example.com"
 
 run: all
 	 ./$(NAME) $(ARGS)

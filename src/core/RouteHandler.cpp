@@ -40,7 +40,6 @@ void RouteHandler::handleRequest(HttpRequest& request, HttpResponse& response) {
 
 	// Check if method is allowed
 	if (it == location.getMethods().end()) {
-		HttpStatusCode::setCurrentStatusCode("405");
 		response.setStatusCode("405");
 		return;
 	}
@@ -83,7 +82,6 @@ void RouteHandler::handleGet(HttpRequest& request, HttpResponse& response) {
 
 	if (!resourceExists(path)) {
 		std::cerr << "Resource does not exist: " << path << std::endl;
-		HttpStatusCode::setCurrentStatusCode("404");
 		response.setStatusCode("404");
 		return;
 	}
@@ -93,12 +91,14 @@ void RouteHandler::handleGet(HttpRequest& request, HttpResponse& response) {
 		// Check if directory listing is enabled
 		if (!location.getDirectoryListing()) {
 			std::cerr << "Directory listing is disabled" << std::endl;
-			HttpStatusCode::setCurrentStatusCode("403");
 			response.setStatusCode("403");
+			response.setBody("Directory listing is disabled");
 			return;
 		}
 		// Check if the index file exists
-		if (resourceExists(indexPath)) {
+		if (!index.empty() && resourceExists(indexPath) && !isDirectory(indexPath)) {
+			std::cout << "Index file exists" << std::endl;
+			std::cout << "Index file: " << indexPath << std::endl;
 			path = indexPath;
 		}
 		else {
@@ -114,7 +114,7 @@ void RouteHandler::handleGet(HttpRequest& request, HttpResponse& response) {
 	}
 	else {
 		std::cerr << "Regular file" << std::endl;
-		//handleRegularFile(path, request, response);
+		handleRegularFile(path, request, response);
 	}
 }
 
@@ -125,8 +125,8 @@ void RouteHandler::handleRegularFile(const std::string filePath, HttpRequest& re
 
     if (!fileStream) {
         std::cerr << "Failed to open file: " << filePath << std::endl;
-        HttpStatusCode::setCurrentStatusCode("500");
 		response.setStatusCode("500");
+		response.setBody("Failed to open file");
         return;
     }
 
@@ -139,6 +139,7 @@ void RouteHandler::handleRegularFile(const std::string filePath, HttpRequest& re
 	// Read the file into the response body
 	std::string fileContent((std::istreambuf_iterator<char>(fileStream)), std::istreambuf_iterator<char>());
 	response.setBody(fileContent);
+	std::cout << "File Content: " << fileContent << std::endl;
 
 	fileStream.close();
 }

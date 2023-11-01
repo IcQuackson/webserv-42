@@ -5,6 +5,8 @@
 #include <sstream>
 #include <string>
 #include <map>
+#include "core/HttpResponse.hpp"
+#include "core/HttpStatusCode.hpp"
 
 class HttpRequest {
 
@@ -43,10 +45,10 @@ public:
 	void setArgs(const std::map<std::string, std::string> args);
 	void setHeaders(const std::map<std::string, std::string> & headers);
 	bool readArgs(const std::string& resource);
-	bool readHeaders(std::istringstream& requestStream, HttpRequest& request);
+	bool readHeaders(std::istringstream& requestStream, HttpRequest& request, HttpResponse& response);
 	void setBody(const std::string& body);
 	void generateTimestamp();
-	static bool isRequestValid(char data[]);
+	static bool isRequestValid(char data[], HttpResponse& response);
 };
 
 std::ostream& operator<<(std::ostream& os, const HttpRequest& request);

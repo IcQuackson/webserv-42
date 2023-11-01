@@ -1,5 +1,6 @@
 #include "core/HttpRequest.hpp"
 #include "core/HttpStatusCode.hpp"
+#include "core/HttpResponse.hpp"
 
 HttpRequest::HttpRequest() {
 	args = std::map<std::string, std::string>();
@@ -125,7 +126,7 @@ bool HttpRequest::readArgs(const std::string& path) {
 }
 
 // needs request argument to set status code
-bool HttpRequest::readHeaders(std::istringstream& requestStream, HttpRequest& request) {
+bool HttpRequest::readHeaders(std::istringstream& requestStream, HttpRequest& request, HttpResponse& response) {
     std::string line;
 
     while (std::getline(requestStream, line) && line != "\r") {
@@ -139,7 +140,8 @@ bool HttpRequest::readHeaders(std::istringstream& requestStream, HttpRequest& re
     }
 
 	if (request.headers.find("Host") == request.headers.end()) {
-		HttpStatusCode::setCurrentStatusCode("400");
+		response.setStatusCode("400");
+		response.setBody("Bad Request");
 		return false;
 	}
 	return true;
@@ -158,7 +160,7 @@ void HttpRequest::generateTimestamp() {
     strftime(this->timestamp, sizeof(this->timestamp), "%Y-%m-%d %H:%M:%S", localtime(&currentTime));
 }
 
-bool HttpRequest::isRequestValid(char data[]) {
+bool HttpRequest::isRequestValid(char data[], HttpResponse& response) {
 	std::string dataString(data);
 	std::istringstream requestStream(dataString);
 	std::string line;
@@ -173,7 +175,7 @@ bool HttpRequest::isRequestValid(char data[]) {
 	requestLineStream >> method >> resource >> httpVersion;
 
 	if (method.empty() || resource.empty() || httpVersion.empty()) {
-		HttpStatusCode::setCurrentStatusCode("400");
+		response.setStatusCode("400");
 		return false;
 	}
 
@@ -181,32 +183,32 @@ bool HttpRequest::isRequestValid(char data[]) {
 	// Check if the request line is valid
 	if (method != "GET" && method != "POST" && method != "DELETE") {
 		std::cout << "method not valid" << std::endl;
-		HttpStatusCode::setCurrentStatusCode("405");
+		response.setStatusCode("405");
 		return false;
 	}
 
 	if (httpVersion != "HTTP/1.1") {
-		HttpStatusCode::setCurrentStatusCode("505");
+		response.setStatusCode("505");
 		return false;
 	}
 
 	// Check if the resource is valid
 	if (resource.empty() || resource[0] != '/') {
-		HttpStatusCode::setCurrentStatusCode("400");
+		response.setStatusCode("400");
 		return false;
 	}
 
 	// Check if the resource contains a double dot
 	pos = resource.find("..");
 	if (pos != std::string::npos) {
-		HttpStatusCode::setCurrentStatusCode("400");
+		response.setStatusCode("400");
 		return false;
 	}
 
 	// Check if the resource contains a double slash
 	pos = resource.find("//");
 	if (pos != std::string::npos) {
-		HttpStatusCode::setCurrentStatusCode("400");
+		response.setStatusCode("400");
 		return false;
 	}
 
