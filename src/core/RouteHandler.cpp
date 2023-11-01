@@ -67,6 +67,41 @@ bool RouteHandler::isDirectory(const std::string& path) {
 	return false;
 }
 
+void RouteHandler::generateDirectoryListing(const std::string& root, const std::string& path, std::ostringstream& response) {
+	response << "Directory Listing:\n";
+
+	DIR* dir;
+	struct dirent* entry;
+
+	if ((dir = opendir((root + path).c_str())) != NULL) {
+		while ((entry = readdir(dir)) != NULL) {
+			if (entry->d_type == DT_REG || entry->d_type == DT_DIR) {
+				response << entry->d_name;
+				if (entry->d_type == DT_DIR) {
+					response << "/";
+				}
+				response << "\n";
+			}
+		}
+		closedir(dir);
+	}
+}
+
+void RouteHandler::handleDirectoryListing(HttpResponse& response, const std::string& root, const std::string& resource) {
+	std::ostringstream responseStream;
+	std::cout << "Directory listing" << std::endl;
+	response.setStatusCode("200");
+
+	generateDirectoryListing(root, resource, responseStream);
+
+	// Set up response
+	std::string contentType = "text/html";
+	std::string directoryListing = responseStream.str();
+
+	response.setBody(directoryListing);
+	response.addHeader("Content-Type", contentType);
+	response.addHeader("Content-Length", numberToString(directoryListing.length()));
+}
 
 
 void RouteHandler::handleGet(HttpRequest& request, HttpResponse& response) {
@@ -102,8 +137,7 @@ void RouteHandler::handleGet(HttpRequest& request, HttpResponse& response) {
 			path = indexPath;
 		}
 		else {
-			//handleDirectoryListing(request, response);
-			std::cout << "Directory listing" << std::endl;
+			handleDirectoryListing(response, root, resource);
 			return;
 		}
 	}

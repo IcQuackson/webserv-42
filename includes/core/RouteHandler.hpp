@@ -11,6 +11,8 @@
 #include "config/Location.hpp"
 #include "core/HttpRequest.hpp"
 #include "core/HttpResponse.hpp"
+#include <dirent.h>
+
 
 class RouteHandler {
 
@@ -50,6 +52,10 @@ public:
 	void handleCgi(const std::string filePath, HttpRequest& request, HttpResponse& response);
 
 	long getFileSize(const std::string& filePath);
+
+	void handleDirectoryListing(HttpResponse& response, const std::string& root, const std::string& resource);
+
+	void generateDirectoryListing(const std::string& root, const std::string& path, std::ostringstream& response);
 
 	std::string getContentType(const std::string& filePath);
 
