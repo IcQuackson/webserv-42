@@ -53,6 +53,11 @@ int HttpServer::getClientBodySize() {
 	return this->clientBodySize;
 }
 
+ssize_t HttpServer::getFileBytes() {
+	return this->fileBytes;
+}
+
+
 void HttpServer::setPort(int port) {
 	this->port = port;
 }
@@ -212,7 +217,7 @@ void HttpServer::handleRequest(int clientSocket) {
 
 	// Buffer to read incoming data
     char *dataBuffer = new char[MAX_BUFFER_SIZE]();
-	char *dataBuffer1 = new char[MAX_BUFFER_SIZE]();
+	char *fileBuffer = new char[MAX_BUFFER_SIZE]();
 	char *concatBuffer  = new char[MAX_BUFFER_SIZE]();
 
     // Read incoming data
@@ -231,13 +236,14 @@ void HttpServer::handleRequest(int clientSocket) {
     }
 	else {
 		std::system("sleep 0.5");
-		ssize_t bytesRead1 = recv(clientSocket, dataBuffer1, sizeof(char) * MAX_BUFFER_SIZE, 0);
+		ssize_t bytesFyle = recv(clientSocket, fileBuffer, sizeof(char) * MAX_BUFFER_SIZE, 0);
+		this->fileBytes = bytesFyle;
 		// Copy the data from dataBuffer and dataBuffer1 to the new buffer
-		if (bytesRead1 > 0)
+		if (fileBytes > 0)
 		{
 			dataBuffer[bytesRead] = '\0';
 			strcpy(concatBuffer, dataBuffer);
-			strcat(concatBuffer, dataBuffer1);
+			strcat(concatBuffer, fileBuffer);
 		}
 		else
 			strcpy(concatBuffer, dataBuffer);
@@ -265,7 +271,7 @@ void HttpServer::handleRequest(int clientSocket) {
 	std::cout << "-----------" << std::endl;
 	std::cout << std::endl;
 	delete[] dataBuffer;
-	delete[] dataBuffer1;
+	delete[] fileBuffer;
 	delete[] concatBuffer;
 	sendResponse(clientSocket, response);
     //send(clientSocket, acknowledgment, std::strlen(acknowledgment), 0);
@@ -303,20 +309,21 @@ bool HttpServer::parseRequest(int clientSocket, char data[], HttpRequest &reques
 		return false;
 	}
 
+	bool is_file = 0;
+	
 	if (request.getHeaders().find("Content-Type") != request.getHeaders().end())
 	{
 		std::map<std::string, std::string> headers = request.getHeaders();
 		std::map<std::string, std::string>::iterator it = headers.find("Content-Type");
-		if (it->second.find("boundary") != std::string::npos)
+		if (it != headers.end() && it->second.find("boundary") != std::string::npos)
 		{
+			is_file = 1;
 			size_t pos = it->second.find(';');
 			it->second = it->second.substr(0, pos);
+			std::getline(requestStream, line);
+			if (!request.readHeaders(requestStream, request, response))
+				return false;
 		}
-		std::getline(requestStream, line);
-		if (!request.readHeaders(requestStream, request, response)) {
-			return false;
-		}
-		std::cout << request.getHeaders().find("Content-Disposition")->second << std::endl;
 	}
 
 	// Parse the body
@@ -329,12 +336,14 @@ bool HttpServer::parseRequest(int clientSocket, char data[], HttpRequest &reques
 			count_lines++;
 		flag = 1;
 	}
-	std::cout << body << std::endl;
-	
-	if (request.getHeaders().find("Content-Length") != request.getHeaders().end()) {
-		size_t contentLength = std::atoi(request.getHeaders()["Content-Length"].c_str());
 
-		if (contentLength != (body.size() + count_lines)) {
+	if (is_file == 0)
+		this->fileBytes = (body.size() + count_lines);
+
+	if (request.getHeaders().find("Content-Length") != request.getHeaders().end()) {
+		ssize_t contentLength = std::atoi(request.getHeaders()["Content-Length"].c_str());
+
+		if (contentLength != this->fileBytes) {
 			// set error
 			response.setStatusCode("400");
 			return false;

@@ -35,6 +35,7 @@ private:
 	// Configuration
 	std::string configFilePath;
 	int clientBodySize;
+	int fileBytes;
 
 	// Socket Information
 	int serverSocket;
@@ -61,6 +62,7 @@ public:
 	std::string getHost();
 	int getMaxConnections();
 	int getClientBodySize();
+	ssize_t getFileBytes();
 	void setPort(int port);
 	void setHost(const std::string& host);
 	void setMaxConnections(int maxConnections);

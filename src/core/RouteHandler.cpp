@@ -242,8 +242,9 @@ void RouteHandler::handlePost(HttpRequest& request, HttpResponse& response) {
 	std::string path = root + resource;
 	std::string indexPath = root + index;
 
-	std::cout << "asd:  " << request << std::endl;
-	std::cout << "qwe:  " << response << std::endl;
+	(void) response;
+
+	std::cout << "POST METHOD(need to be done):  " << request.getBody() << std::endl;
 
 	//std::cout << "HANDLE GET LOCATION: " << location << std::endl;
 	/* std::cout << path << std::endl;
