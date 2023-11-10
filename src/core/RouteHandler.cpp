@@ -46,7 +46,7 @@ void RouteHandler::handleRequest(HttpRequest& request, HttpResponse& response) {
 	if (request.getMethod() == "GET") {
 		this->handleGet(request, response);
 	} else if (request.getMethod() == "POST") {
-		//this->handlePost(request, response);
+		this->handlePost(request, response);
 	} else if (request.getMethod() == "DELETE") {
 		//this->handleDelete(request, response);
 	}
@@ -233,3 +233,54 @@ std::string RouteHandler::numberToString(T number) {
 	return oss.str();
 }
 
+
+void RouteHandler::handlePost(HttpRequest& request, HttpResponse& response) {
+	Location location = getLocation();
+	std::string resource = request.getResource();
+	std::string root = location.getRoot();
+	std::string index = location.getIndex();
+	std::string path = root + resource;
+	std::string indexPath = root + index;
+
+	std::cout << "asd:  " << request << std::endl;
+	std::cout << "qwe:  " << response << std::endl;
+
+	//std::cout << "HANDLE GET LOCATION: " << location << std::endl;
+	/* std::cout << path << std::endl;
+
+	if (!resourceExists(path)) {
+		std::cerr << "Resource does not exist: " << path << std::endl;
+		response.setStatusCode("404");
+		return;
+	}
+
+	if (isDirectory(path)) {
+		std::cout << "Directory" << std::endl;
+		// Check if directory listing is enabled
+		if (!location.getDirectoryListing()) {
+			std::cerr << "Directory listing is disabled" << std::endl;
+			response.setStatusCode("403");
+			response.setBody("Directory listing is disabled");
+			return;
+		}
+		// Check if the index file exists
+		if (!index.empty() && resourceExists(indexPath) && !isDirectory(indexPath)) {
+			std::cout << "Index file exists" << std::endl;
+			std::cout << "Index file: " << indexPath << std::endl;
+			path = indexPath;
+		}
+		else {
+			handleDirectoryListing(response, root, resource);
+			return;
+		}
+	}
+	// Check if the resource is a CGI script
+	else if (path.substr(path.find_last_of(".") + 1) == location.getCgiExtension()) {
+		std::cerr << "CGI script" << std::endl;
+		//handleCgi(request, response);
+	}
+	else {
+		std::cerr << "Regular file" << std::endl;
+		handleRegularFile(path, request, response);
+	} */
+}

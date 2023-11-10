@@ -248,7 +248,7 @@ void HttpServer::handleRequest(int clientSocket) {
 		Utils::printYellow("Request:");
 		std::cout << concatBuffer << std::endl;
 		HttpRequest request;
-		bool isValidRequest = parseRequest(clientSocket, dataBuffer, request, response);
+		bool isValidRequest = parseRequest(clientSocket, concatBuffer, request, response);
 
 		if (isValidRequest) {
 			// Check if the requested resource exists
@@ -303,6 +303,22 @@ bool HttpServer::parseRequest(int clientSocket, char data[], HttpRequest &reques
 		return false;
 	}
 
+	if (request.getHeaders().find("Content-Type") != request.getHeaders().end())
+	{
+		std::map<std::string, std::string> headers = request.getHeaders();
+		std::map<std::string, std::string>::iterator it = headers.find("Content-Type");
+		if (it->second.find("boundary") != std::string::npos)
+		{
+			size_t pos = it->second.find(';');
+			it->second = it->second.substr(0, pos);
+		}
+		std::getline(requestStream, line);
+		if (!request.readHeaders(requestStream, request, response)) {
+			return false;
+		}
+		std::cout << request.getHeaders().find("Content-Disposition")->second << std::endl;
+	}
+
 	// Parse the body
 	std::string body = "";
 	int flag = 0;
@@ -313,6 +329,7 @@ bool HttpServer::parseRequest(int clientSocket, char data[], HttpRequest &reques
 			count_lines++;
 		flag = 1;
 	}
+	std::cout << body << std::endl;
 	
 	if (request.getHeaders().find("Content-Length") != request.getHeaders().end()) {
 		size_t contentLength = std::atoi(request.getHeaders()["Content-Length"].c_str());
