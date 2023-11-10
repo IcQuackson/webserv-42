@@ -211,7 +211,9 @@ void HttpServer::handleRequest(int clientSocket) {
     //const char* acknowledgment = "HTTP/1.1 200 OK\r\nContent-Length: 0\r\nConnection: close\r\n\r\n";
 
 	// Buffer to read incoming data
-    char * dataBuffer = new char[MAX_BUFFER_SIZE];
+    char *dataBuffer = new char[MAX_BUFFER_SIZE]();
+	char *dataBuffer1 = new char[MAX_BUFFER_SIZE]();
+	char *concatBuffer  = new char[MAX_BUFFER_SIZE]();
 
     // Read incoming data
     ssize_t bytesRead = recv(clientSocket, dataBuffer, sizeof(char) * MAX_BUFFER_SIZE, 0);
@@ -228,13 +230,23 @@ void HttpServer::handleRequest(int clientSocket) {
 		return ;
     }
 	else {
-		dataBuffer[bytesRead] = '\0';
+		std::system("sleep 0.5");
+		ssize_t bytesRead1 = recv(clientSocket, dataBuffer1, sizeof(char) * MAX_BUFFER_SIZE, 0);
+		// Copy the data from dataBuffer and dataBuffer1 to the new buffer
+		if (bytesRead1 > 0)
+		{
+			dataBuffer[bytesRead] = '\0';
+			strcpy(concatBuffer, dataBuffer);
+			strcat(concatBuffer, dataBuffer1);
+		}
+		else
+			strcpy(concatBuffer, dataBuffer);
+
         //std::cout << "Read " << bytesRead << " bytes of data." << std::endl;
 		response.setStatusCode("200");
 		std::cout << "-----------" << std::endl;
 		Utils::printYellow("Request:");
-		std::cout << dataBuffer << std::endl;
-
+		std::cout << concatBuffer << std::endl;
 		HttpRequest request;
 		bool isValidRequest = parseRequest(clientSocket, dataBuffer, request, response);
 
@@ -253,6 +265,8 @@ void HttpServer::handleRequest(int clientSocket) {
 	std::cout << "-----------" << std::endl;
 	std::cout << std::endl;
 	delete[] dataBuffer;
+	delete[] dataBuffer1;
+	delete[] concatBuffer;
 	sendResponse(clientSocket, response);
     //send(clientSocket, acknowledgment, std::strlen(acknowledgment), 0);
     close(clientSocket);
@@ -291,14 +305,19 @@ bool HttpServer::parseRequest(int clientSocket, char data[], HttpRequest &reques
 
 	// Parse the body
 	std::string body = "";
+	int flag = 0;
+	int count_lines = 0;
 	while (std::getline(requestStream, line) && !line.empty() && line != "\r") {
 		body += line;
+		if (flag)
+			count_lines++;
+		flag = 1;
 	}
 	
 	if (request.getHeaders().find("Content-Length") != request.getHeaders().end()) {
 		size_t contentLength = std::atoi(request.getHeaders()["Content-Length"].c_str());
 
-		if (contentLength != body.size()) {
+		if (contentLength != (body.size() + count_lines)) {
 			// set error
 			response.setStatusCode("400");
 			return false;
