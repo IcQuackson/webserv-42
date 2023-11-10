@@ -97,6 +97,12 @@ test:
 		@echo "Testing server using GET to retrieve a file"
 		curl -X GET "http://localhost:8080/resource/file1.txt" -H "Host: example.com"
 
+		@echo "Testing POST file upload to server"
+		curl -X POST http://localhost:8080/resource -F "file=@YoupiBanane/file1.txt"
+
+		@echo "Testing POST text upload to server"
+		curl -X POST http://localhost:8080/resource -d "example of body"
+
 run: all
 	 ./$(NAME) $(ARGS)
 
