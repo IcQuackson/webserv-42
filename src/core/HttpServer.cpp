@@ -278,6 +278,23 @@ void HttpServer::handleRequest(int clientSocket) {
     close(clientSocket);
 }
 
+bool read_request_content(std::string &input)
+{
+	std::istringstream iss(input);
+    std::string token;
+    std::string separator = "\r";  // Change this to your desired separator
+
+    size_t pos = 0;
+    while ((pos = input.find(separator)) != std::string::npos) {
+        // Extract the token before the separator
+        token = input.substr(0, pos);
+        // Remove the processed token and the separator from the input
+        input.erase(pos, separator.length());
+		return (0);
+    }
+	return (1);
+}
+
 bool HttpServer::parseRequest(int clientSocket, char data[], HttpRequest &request, HttpResponse& response) {
 
 	(void) clientSocket;
@@ -331,6 +348,13 @@ bool HttpServer::parseRequest(int clientSocket, char data[], HttpRequest &reques
 	int flag = 0;
 	int count_lines = 0;
 	while (std::getline(requestStream, line) && !line.empty() && line != "\r") {
+		if (is_file && flag)
+			body += '\n';
+		if (is_file && !read_request_content(line))
+		{
+			body += line;
+			break;
+		}
 		body += line;
 		if (flag)
 			count_lines++;

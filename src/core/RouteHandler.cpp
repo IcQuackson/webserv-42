@@ -233,6 +233,29 @@ std::string RouteHandler::numberToString(T number) {
 	return oss.str();
 }
 
+bool extract_filename (HttpRequest& request, std::string &filename)
+{
+	std::string inputString = request.getHeaders().find("Content-Disposition")->second;
+	std::string filenameKey = "filename=\"";
+	
+	size_t filenamePos = inputString.find(filenameKey);
+	if (filenamePos != std::string::npos) 
+	{
+		// Extract the content after the filename key
+		filenamePos += filenameKey.length();
+		size_t endPos = inputString.find("\"", filenamePos);
+
+		if (endPos != std::string::npos)
+		{
+			filename = inputString.substr(filenamePos, endPos - filenamePos);
+			return (1);
+		}
+		else
+			return (0);
+	}
+	else
+		return (0);
+}
 
 void RouteHandler::handlePost(HttpRequest& request, HttpResponse& response) {
 	Location location = getLocation();
@@ -241,10 +264,68 @@ void RouteHandler::handlePost(HttpRequest& request, HttpResponse& response) {
 	std::string index = location.getIndex();
 	std::string path = root + resource;
 	std::string indexPath = root + index;
+	std::string filename;
 
 	(void) response;
 
 	std::cout << "POST METHOD(need to be done):  " << request.getBody() << std::endl;
+
+	std::string upload_abs_path = location.getRoot() + location.getUploadPath();
+
+	if (!isDirectory(upload_abs_path)) {
+		std::cerr << "Upload path does not exist: " << path << std::endl;
+		response.setStatusCode("404");
+		return;
+	}
+	else
+	{
+		if (!extract_filename(request, filename))
+		{
+			std::cerr << "Error: Filename key not found." << std::endl;
+			response.setStatusCode("400");
+			return ;
+		}
+		else
+		{
+			std::ofstream ofile;
+
+			ofile.open((upload_abs_path + "/" + filename).c_str());
+			// Check if the file is open
+			if (ofile.is_open()) 
+			{
+				if(!(ofile.is_open()))
+				{
+					std::cerr << "Failed to open file: " << (upload_abs_path + "/" + filename) << std::endl;
+					response.setStatusCode("500");
+					response.setBody("Failed to open file");
+					return ;
+				}
+    			ofile << request.getBody();
+    			ofile.close();
+
+				std::cout << "Data appended to the file." << std::endl;
+			} else {
+				std::cerr << "Error opening the file for appending." << std::endl;
+			}
+		}
+
+		
+		/* std::ofstream fileStream(upload_abs_path, std::ios::app);
+
+		// Check if the file is open
+		if (fileStream.is_open()) {
+			// Write to the file
+			fileStream << "This line will be appended to the file.\n";
+
+			// Close the file
+			fileStream.close();
+
+			std::cout << "Data appended to the file." << std::endl;
+		} else {
+			std::cerr << "Error opening the file for appending." << std::endl;
+		} */
+	}
+
 
 	//std::cout << "HANDLE GET LOCATION: " << location << std::endl;
 	/* std::cout << path << std::endl;
