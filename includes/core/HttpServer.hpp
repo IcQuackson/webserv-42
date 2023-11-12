@@ -42,6 +42,7 @@ private:
 	int maxConnections;
 
 	// Routes and Handlers
+	// TODO guardar servers em vez de endpoints
 	std::map<std::string, RouteHandler> routes;
 
 	// Request and Response Buffers

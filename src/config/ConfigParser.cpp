@@ -342,8 +342,14 @@ int ConfigParser::parse_location(std::string &token, std::stringstream& ss)
     if (token == "location")
     {
         ss >> token;
+        // TODO root
         if (token[0] == '/')
-            this->serverConfigVector.back()->addLocation(new Location(token));
+        {
+            Location *location = new Location(token);
+            int maxClientBodySize = std::atoi(this->serverConfigVector.back()->getClient_max_body_size().c_str());
+            location->setClientBodySize(maxClientBodySize);
+            this->serverConfigVector.back()->addLocation(location);
+        }
         ss >> token;
         if (token != "{")
             return (0);
@@ -500,19 +506,33 @@ bool ConfigParser::proccess_input()
     std::string next_token;
 
     ifile.open(argv);
+
     if (!(ifile.is_open()))
+    {
         throw std::runtime_error("Error: could not open file.");
+    }
+
     line << ifile.rdbuf();
     ifile.close();
     removeComments(line, '#', '\n');
     buff = line.str();
     std::stringstream tmp_line(buff);
+
     if (!checkBraces(buff))
+    {
         throw std::runtime_error("Error: braces are not correctly placed.");
+    }
+
+    // Check for ; at the end of each configuration
     if (!check_config_struct(tmp_line))
+    {
         throw std::runtime_error("Error: Invalid argument in line nbr " + this->nbr_line + ": " + this->error_line);
+    }
+
+    // Parse the configuration
     while (line >> token)
     {
+        // Check if the token is a server
         if (!this->server_in)
         {
             if (!checkServer(token, line))
@@ -524,6 +544,8 @@ bool ConfigParser::proccess_input()
         /* else if (see_next_token(line) == "listen")
             continue; */
         line >> token;
+
+        // Stores configurations
         try
         {
             this->executed = 1;

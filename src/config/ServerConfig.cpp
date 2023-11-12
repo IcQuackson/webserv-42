@@ -121,7 +121,7 @@ void ServerConfig::setDefaultServer(ServerConfig &serverConfig) {
 	location->setRoot("./YoupiBanane"); // É Suposto haver root no server cofig e na location? acho que so na location
 	location->setUploadPath("/upload");
 	location->setPath("/resource");
-	location->setClientBodySize(3000);
+	location->setClientBodySize(10);
 	serverConfig.addLocation(location);
 }
 

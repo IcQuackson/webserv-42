@@ -215,3 +215,10 @@ bool HttpRequest::isRequestValid(char data[], HttpResponse& response) {
 	return true;
 }
 
+/* int HttpRequest::getContentLength() const {
+	std::map<std::string, std::string>::const_iterator it = headers.find("Content-Length");
+	if (it == headers.end()) {
+		return -1;
+	}
+	return std::stoi(it->second);
+} */

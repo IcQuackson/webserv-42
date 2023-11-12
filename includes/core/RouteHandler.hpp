@@ -59,6 +59,8 @@ public:
 
 	std::string getContentType(const std::string& filePath);
 
+	bool extract_filename(HttpRequest& request, std::string &filename);
+
 	template <typename T>
 	static std::string numberToString(T number);
 };

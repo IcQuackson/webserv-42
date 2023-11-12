@@ -186,6 +186,7 @@ void HttpServer::run() {
 			}
 			else {
 				// Handle data on client socket
+				// TODO remove cliente if error
 				int clientSocket = events[i].data.fd;
 				handleRequest(clientSocket);
 			}
@@ -235,7 +236,7 @@ void HttpServer::handleRequest(int clientSocket) {
 		return ;
     }
 	else {
-		std::system("sleep 0.5");
+		std::system("sleep 0.001");
 		ssize_t bytesFyle = recv(clientSocket, fileBuffer, sizeof(char) * MAX_BUFFER_SIZE, 0);
 		this->fileBytes = bytesFyle;
 		// Copy the data from dataBuffer and dataBuffer1 to the new buffer
@@ -380,6 +381,9 @@ bool HttpServer::parseRequest(int clientSocket, char data[], HttpRequest &reques
 	request.setHttpVersion(httpVersion);
 	request.setHost(request.getHeaders()["Host"]);
 	request.setBody(body);
+
+	std::cout << "BODY" << std::endl;
+	std::cout << body << std::endl;
 
 	// Print the request
 	//std::cout << request << std::endl;

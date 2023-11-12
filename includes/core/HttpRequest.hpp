@@ -36,6 +36,7 @@ public:
 	std::map<std::string, std::string> getHeaders() const;
 	std::string getBody() const;
 	std::string getTimestamp() const;
+	int getContentLength() const;
 
 	void setMethod(const std::string& method);
 	void setRoute(const std::string& route);
@@ -47,6 +48,7 @@ public:
 	bool readArgs(const std::string& resource);
 	bool readHeaders(std::istringstream& requestStream, HttpRequest& request, HttpResponse& response);
 	void setBody(const std::string& body);
+	void setContentLength(int contentLength);
 	void generateTimestamp();
 	static bool isRequestValid(char data[], HttpResponse& response);
 };

@@ -233,7 +233,7 @@ std::string RouteHandler::numberToString(T number) {
 	return oss.str();
 }
 
-bool extract_filename (HttpRequest& request, std::string &filename)
+bool RouteHandler::extract_filename(HttpRequest& request, std::string &filename)
 {
 	std::string inputString = request.getHeaders().find("Content-Disposition")->second;
 	std::string filenameKey = "filename=\"";
@@ -265,8 +265,8 @@ void RouteHandler::handlePost(HttpRequest& request, HttpResponse& response) {
 	std::string path = root + resource;
 	std::string indexPath = root + index;
 	std::string filename;
-
-	(void) response;
+	//bool isFileUpload = false;
+	
 
 	std::cout << "POST METHOD(need to be done):  " << request.getBody() << std::endl;
 
@@ -308,7 +308,26 @@ void RouteHandler::handlePost(HttpRequest& request, HttpResponse& response) {
 				std::cerr << "Error opening the file for appending." << std::endl;
 			}
 		}
+	}
+	// TODO Acabar de implementar o POST
+/*
+	TODO clientBodySize isClientBdyValid()
 
+	if (!location.getAcceptUploads() && isFileUpload)
+	{
+		std::cerr << "Uploads are not allowed" << std::endl;
+		response.setStatusCode("403");
+		response.setBody("Uploads are not allowed");
+		return ;
+	}
+
+	if (location.getAcceptUploads() && !isFileUpload)
+	{
+		std::cerr << "Uploads are allowed" << std::endl;
+		response.setStatusCode("200");
+		response.setBody("Uploads are allowed");
+		return ;
+	} */
 		
 		/* std::ofstream fileStream(upload_abs_path, std::ios::app);
 
@@ -324,7 +343,6 @@ void RouteHandler::handlePost(HttpRequest& request, HttpResponse& response) {
 		} else {
 			std::cerr << "Error opening the file for appending." << std::endl;
 		} */
-	}
 
 
 	//std::cout << "HANDLE GET LOCATION: " << location << std::endl;
