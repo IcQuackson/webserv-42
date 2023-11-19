@@ -11,6 +11,7 @@ BIN_DIR   = bin
 
 # Files
 SRCS := \
+	$(SRC_DIR)/cgi/CgiHandler.cpp \
 	$(SRC_DIR)/config/ConfigParser.cpp \
 	$(SRC_DIR)/config/ServerConfig.cpp \
 	$(SRC_DIR)/config/Location.cpp \

@@ -27,16 +27,25 @@ CGI will give result to web-server and web-server will make response based on th
 
 #pragma once
 
+#include <iostream>
+#include <sstream>
+#include <string>
+#include <map>
+#include <algorithm>
+#include "core/HttpServer.hpp"
+#include "core/RouteHandler.hpp"
+#include "core/HttpRequest.hpp"
+
 class CgiHandler {
 
 private:
-    std::map<std::string, std::string> Cgi_Env;
+    std::map<std::string, std::string> cgi_Env;
 
 public:
     int	fd_in[2];
 	int	fd_out[2];
 
-    void initCgi_Env();
+    void initCgi_Env(HttpRequest& request, HttpServer& server, RouteHandler &route);
     void executeCgi_Script();
 	
 };

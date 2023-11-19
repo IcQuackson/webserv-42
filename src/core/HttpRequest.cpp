@@ -89,12 +89,22 @@ void HttpRequest::setHeaders(const std::map<std::string, std::string>& newHeader
 }
 
 std::string HttpRequest::getBody() const {
-	return body;
+	return this->body;
 }
 
 void HttpRequest::setBody(const std::string& newBody) {
-	body = newBody;
+	this->body = newBody;
 }
+
+void HttpRequest::setQueryString(const std::string& query) {
+	this->queryString = query;
+}
+
+
+std::string HttpRequest::getQueryString() const{
+	return this->queryString;
+}
+
 
 bool HttpRequest::readArgs(const std::string& path) {
 	std::string argString;
@@ -109,6 +119,7 @@ bool HttpRequest::readArgs(const std::string& path) {
 
 	// Get the argument string
 	argString = path.substr(pos + 1);
+	this->queryString = argString;
 
 	// Parse the argument string
 	std::istringstream argStream(argString);
