@@ -76,5 +76,5 @@ void             ft::CGI::execute(HttpRequest& request, int fd, )
             close(pipe_in[0]);
             return ;
         }
-
+    }
 }
