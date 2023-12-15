@@ -106,12 +106,12 @@ void ServerConfig::setClient_max_body_size(std::string client_max_body_size)
 	this->client_max_body_size = client_max_body_size;
 }
 
-void ServerConfig::setDefaultServer(ServerConfig &serverConfig) {
+void ServerConfig::setDefaultServer(ServerConfig *serverConfig) {
 	Location *location;
 
 	std::string host("localhost");
-	serverConfig.setHost(host);
-	serverConfig.setPort(8080);
+	serverConfig->setHost(host);
+	serverConfig->setPort(8080);
 	location = new Location();
 	location->addMethod("GET");
 	location->addMethod("POST");
@@ -122,6 +122,6 @@ void ServerConfig::setDefaultServer(ServerConfig &serverConfig) {
 	location->setUploadPath("/upload");
 	location->setPath("/resource");
 	location->setClientBodySize(10);
-	serverConfig.addLocation(location);
+	serverConfig->addLocation(location);
 }
 

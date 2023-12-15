@@ -3,7 +3,7 @@ NAME	=	webserv
 
 # Compiler and flags
 CCXX		=	c++
-CXXFLAGS	=	-Wall -Werror -Wextra -std=c++98 -g -I includes -fstandalone-debug
+CXXFLAGS	=	-Wall -Werror -Wextra -std=c++98 -g -I includes #-fstandalone-debug
 
 # Directories
 SRC_DIR = src
@@ -11,7 +11,6 @@ BIN_DIR   = bin
 
 # Files
 SRCS := \
-	$(SRC_DIR)/cgi/CgiHandler.cpp \
 	$(SRC_DIR)/config/ConfigParser.cpp \
 	$(SRC_DIR)/config/ServerConfig.cpp \
 	$(SRC_DIR)/config/Location.cpp \
@@ -23,6 +22,7 @@ SRCS := \
 	$(SRC_DIR)/core/RouteHandler.cpp \
 	$(SRC_DIR)/core/Utils.cpp \
 	$(SRC_DIR)/main.cpp
+	#$(SRC_DIR)/cgi/CgiHandler.cpp \
 
 OBJS	=	$(patsubst $(SRC_DIR)/%.cpp, $(BIN_DIR)/%.o, $(SRCS))
 ARGS	= 	

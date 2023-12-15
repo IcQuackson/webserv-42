@@ -12,8 +12,8 @@ int main(int argc, char **argv) {
 		return 1;
 	}
 
-	std::vector<ServerConfig> serverConfigs;
-	ServerConfig serverConfig;
+	std::vector<ServerConfig*> serverConfigs;
+	ServerConfig *serverConfig;
 
 	if (argc == 2) {
 		ConfigParser parser(argv[1]);
@@ -61,7 +61,7 @@ int main(int argc, char **argv) {
 		}
 		
 		//std::string configFilePath(argv[1]);
-		serverConfig = *parser.getServerConfigVector()[0];
+		serverConfigs = parser.getServerConfigVector();
 	}
 	else {
 
@@ -78,17 +78,18 @@ int main(int argc, char **argv) {
 	for (size_t i = 0; i < serverConfigs.size(); i++) {
 		HttpServer httpServer;
 
-		for (size_t i = 0; i < serverConfig.getLocations().size(); i++) {
-			Location *location = serverConfig.getLocations()[i];
+		for (size_t j = 0; j < serverConfigs[i]->getLocations().size(); j++) {
+			std::cout << serverConfigs[i]->getLocations().size() << std::endl;
+			Location *location = serverConfigs[i]->getLocations()[j];
 			RouteHandler routeHandler(*location);
 			//delete location;
 			httpServer.addRouteHandler(routeHandler);
 		}
 
         // Configure the HttpServer instance based on serverConfigs[i]
-        httpServer.loadConfig(serverConfigs[i].getConfigFilePath());
-        httpServer.setPort(serverConfigs[i].getPort());
-		httpServer.setHost(serverConfigs[i].getHost());
+        httpServer.loadConfig(serverConfigs[i]->getConfigFilePath());
+        httpServer.setPort(serverConfigs[i]->getPort());
+		httpServer.setHost(serverConfigs[i]->getHost());
 
         // Initialize and add to the vector of HttpServers
         if (httpServer.init()) {
