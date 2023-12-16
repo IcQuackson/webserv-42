@@ -5,13 +5,14 @@
 RouteHandler::RouteHandler() {
 }
 
-RouteHandler::RouteHandler(const Location location) : location(location) {
+RouteHandler::RouteHandler(const ServerConfig serverConfig, const Location location) : serverConfig(serverConfig),location(location) {
 }
 
 RouteHandler::~RouteHandler() {
 }
 
 RouteHandler &RouteHandler::operator=(RouteHandler const &routeHandler) {
+	this->serverConfig = routeHandler.serverConfig;
 	this->location = routeHandler.location;
 	return *this;
 }
@@ -23,6 +24,15 @@ Location RouteHandler::getLocation() const {
 void RouteHandler::setLocation(const Location& location) {
 	this->location = location;
 }
+
+ServerConfig RouteHandler::getServerConfig() const {
+	return this->serverConfig;
+}
+
+void RouteHandler::setServerConfig(const ServerConfig& serverConfig) {
+	this->serverConfig = serverConfig;
+}
+
 
 void RouteHandler::handleRequest(HttpRequest& request, HttpResponse& response) {
 	std::vector<std::string> methods = this->location.getMethods();
@@ -235,9 +245,16 @@ std::string RouteHandler::numberToString(T number) {
 
 bool RouteHandler::extract_filename(HttpRequest& request, std::string &filename)
 {
-	std::string inputString = request.getHeaders().find("Content-Disposition")->second;
+	std::string inputString;
 	std::string filenameKey = "filename=\"";
 	
+	
+	if (request.getHeaders().find("Content-Disposition") != request.getHeaders().end()
+		&& !request.getHeaders()["Content-Disposition"].empty()) {
+		inputString = request.getHeaders().find("Content-Disposition")->second;
+	}
+	else
+		return (0);
 	size_t filenamePos = inputString.find(filenameKey);
 	if (filenamePos != std::string::npos) 
 	{

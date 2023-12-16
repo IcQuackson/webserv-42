@@ -108,6 +108,7 @@ bool HttpServer::init() {
         return false;
     }
 
+	maxConnections = SOMAXCONN;
 	// Listen for incoming connections
     if (listen(serverSocket, maxConnections) == -1) {
         perror("Error listening for connections");

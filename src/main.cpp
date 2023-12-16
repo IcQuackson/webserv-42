@@ -81,7 +81,7 @@ int main(int argc, char **argv) {
 		for (size_t j = 0; j < serverConfigs[i]->getLocations().size(); j++) {
 			std::cout << serverConfigs[i]->getLocations().size() << std::endl;
 			Location *location = serverConfigs[i]->getLocations()[j];
-			RouteHandler routeHandler(*location);
+			RouteHandler routeHandler(*serverConfigs[i],*location);
 			//delete location;
 			httpServer.addRouteHandler(routeHandler);
 		}

@@ -8,6 +8,7 @@
 #include <sys/stat.h>
 #include <fstream>
 
+#include "config/ServerConfig.hpp"
 #include "config/Location.hpp"
 #include "core/HttpRequest.hpp"
 #include "core/HttpResponse.hpp"
@@ -17,17 +18,22 @@
 class RouteHandler {
 
 private:
+	ServerConfig serverConfig;
 	Location location;
 
 public:
 
 	RouteHandler();
 
-	RouteHandler(const Location location);
+	RouteHandler(const ServerConfig serverConfig, const Location location);
 
 	~RouteHandler();
 
 	RouteHandler &operator=(RouteHandler const &routeHandler);
+
+	ServerConfig getServerConfig() const;
+
+	void setServerConfig(const ServerConfig& serverConfig);
 
 	Location getLocation() const;
 
