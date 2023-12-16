@@ -13,7 +13,7 @@ int main(int argc, char **argv) {
 	}
 
 	std::vector<ServerConfig*> serverConfigs;
-	ServerConfig *serverConfig;
+	ServerConfig *serverConfig = new ServerConfig();
 
 	if (argc == 2) {
 		ConfigParser parser(argv[1]);
