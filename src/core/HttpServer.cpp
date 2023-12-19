@@ -256,6 +256,8 @@ void HttpServer::handleRequest(int clientSocket) {
 			this->fileBytes = std::atoi(word.c_str());
             break;
         }
+		else
+			this->fileBytes = 0;
     }
 
 	HttpResponse response;
@@ -385,7 +387,6 @@ bool HttpServer::parseRequest(int clientSocket, char data[], HttpRequest &reques
 	/* if (is_file == 0)
 		this->fileBytes = (body.size() + count_lines); */
 
-	std::cout << "asdbody:" << body << std::endl;
 
 	if (request.getHeaders().find("Content-Length") != request.getHeaders().end()) {
 		ssize_t contentLength = std::atoi(request.getHeaders()["Content-Length"].c_str());
