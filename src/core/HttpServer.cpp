@@ -213,6 +213,15 @@ int HttpServer::acceptConnection() {
     return clientSocket;
 }
 
+bool isBufferEmpty(const char* buffer) {
+    for (size_t i = 0; i < MAX_BUFFER_SIZE; i++) {
+        if (buffer[i] != 0) {
+            return false;  // Buffer is not empty
+        }
+    }
+    return true;  // Buffer is empty
+}
+
 void HttpServer::handleRequest(int clientSocket) {
     // Acknowledge the connection
     //const char* acknowledgment = "HTTP/1.1 200 OK\r\nContent-Length: 0\r\nConnection: close\r\n\r\n";
@@ -222,12 +231,36 @@ void HttpServer::handleRequest(int clientSocket) {
 	char *fileBuffer = new char[MAX_BUFFER_SIZE]();
 	char *concatBuffer  = new char[MAX_BUFFER_SIZE]();
 
+	memset(concatBuffer, 0, MAX_BUFFER_SIZE);
+	memset(dataBuffer, 0, MAX_BUFFER_SIZE);
     // Read incoming data
-    ssize_t bytesRead = recv(clientSocket, dataBuffer, sizeof(char) * MAX_BUFFER_SIZE, 0);
+    ssize_t bytesRead;
+	int read = 0;
+	int bytesCount = 0;
+    while ((bytesRead = recv(clientSocket, dataBuffer, sizeof(char) * MAX_BUFFER_SIZE, 0)) > 0) {
+			read = 1;
+			dataBuffer[bytesRead] = '\0';
+			strcat(concatBuffer, dataBuffer);
+			memset(dataBuffer, 0, MAX_BUFFER_SIZE);
+			bytesCount += bytesRead;
+			std::cout << "NbytesRead" << bytesRead << std::endl;
+			std::cout << "Nbytes" << bytesCount << std::endl;
+	}
+
+	std::istringstream concatStream(concatBuffer);
+	std::string word;
+
+	while (concatStream >> word) {
+        if (word == "Content-Length:") {
+			concatStream >> word;
+			this->fileBytes = std::atoi(word.c_str());
+            break;
+        }
+    }
 
 	HttpResponse response;
 
-    if (bytesRead == -1) {
+    if (bytesRead == -1 && !read) {
         perror("Error reading data");
 		response.setStatusCode("500");
 		response.setBody("Error reading data");
@@ -237,24 +270,10 @@ void HttpServer::handleRequest(int clientSocket) {
 		return ;
     }
 	else {
-		std::system("sleep 0.001");
-		ssize_t bytesFyle = recv(clientSocket, fileBuffer, sizeof(char) * MAX_BUFFER_SIZE, 0);
-		this->fileBytes = bytesFyle;
-		// Copy the data from dataBuffer and dataBuffer1 to the new buffer
-		if (fileBytes > 0)
-		{
-			dataBuffer[bytesRead] = '\0';
-			strcpy(concatBuffer, dataBuffer);
-			strcat(concatBuffer, fileBuffer);
-		}
-		else
-			strcpy(concatBuffer, dataBuffer);
-
         //std::cout << "Read " << bytesRead << " bytes of data." << std::endl;
 		response.setStatusCode("200");
 		std::cout << "-----------" << std::endl;
 		Utils::printYellow("Request:");
-		std::cout << concatBuffer << std::endl;
 		HttpRequest request;
 		bool isValidRequest = parseRequest(clientSocket, concatBuffer, request, response);
 
@@ -349,7 +368,7 @@ bool HttpServer::parseRequest(int clientSocket, char data[], HttpRequest &reques
 	std::string body = "";
 	int flag = 0;
 	int count_lines = 0;
-	while (std::getline(requestStream, line) && !line.empty() && line != "\r") {
+	while (std::getline(requestStream, line) && line != "\r") {
 		if (is_file && flag)
 			body += '\n';
 		if (is_file && !read_request_content(line))
@@ -363,8 +382,10 @@ bool HttpServer::parseRequest(int clientSocket, char data[], HttpRequest &reques
 		flag = 1;
 	}
 
-	if (is_file == 0)
-		this->fileBytes = (body.size() + count_lines);
+	/* if (is_file == 0)
+		this->fileBytes = (body.size() + count_lines); */
+
+	std::cout << "asdbody:" << body << std::endl;
 
 	if (request.getHeaders().find("Content-Length") != request.getHeaders().end()) {
 		ssize_t contentLength = std::atoi(request.getHeaders()["Content-Length"].c_str());
@@ -374,7 +395,7 @@ bool HttpServer::parseRequest(int clientSocket, char data[], HttpRequest &reques
 			response.setStatusCode("400");
 			return false;
 		}
-	}
+	} 
 
 	// Set the request properties
 	request.setMethod(method);

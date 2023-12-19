@@ -23,7 +23,7 @@
 #include "core/RouteHandler.hpp"
 
 #define MAX_EVENTS 64
-#define MAX_BUFFER_SIZE 5000
+#define MAX_BUFFER_SIZE 500000
 
 class HttpServer {
 

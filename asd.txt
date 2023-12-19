@@ -1,0 +1,43 @@
+NbytesRead97
+Nbytes97
+-----------
+[1;33mRequest:[0m
+method: GET
+asdbody:
+BODY
+
+Endpoint found: /resource
+Requested path: /file1.txt
+Methods: GET POST DELETE
+./YoupiBanane/file1.txt
+localhost:8080 - Socket:12 - [1;31m404 Not Found[0m
+-----------
+
+Response: 
+HTTP/1.1 404 Not Found
+
+
+
+NbytesRead99
+Nbytes99
+-----------
+[1;33mRequest:[0m
+method: GET
+asdbody:
+BODY
+
+Endpoint found: /resource
+Requested path: /file123.txt
+Methods: GET POST DELETE
+./YoupiBanane/file123.txt
+File Content: ASDASD
+localhost:8080 - Socket:12 - [1;32mGET /file123.txt HTTP/1.1 200 OK[0m
+-----------
+
+Response: 
+HTTP/1.1 200 OK
+Content-Length: 6
+Content-Type: text/plain
+
+ASDASD
+

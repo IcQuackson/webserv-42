@@ -288,6 +288,7 @@ void RouteHandler::handlePost(HttpRequest& request, HttpResponse& response) {
 	std::cout << "POST METHOD(need to be done):  " << request.getBody() << std::endl;
 
 	std::string upload_abs_path = location.getRoot() + location.getUploadPath();
+	std::cout << upload_abs_path << std::endl;
 
 	if (!isDirectory(upload_abs_path)) {
 		std::cerr << "Upload path does not exist: " << path << std::endl;
@@ -296,12 +297,16 @@ void RouteHandler::handlePost(HttpRequest& request, HttpResponse& response) {
 	}
 	else
 	{
-		if (!extract_filename(request, filename))
+		if (!request.getBody().empty())
+			filename = "default.txt";
+		else if (!extract_filename(request, filename))
 		{
 			std::cerr << "Error: Filename key not found." << std::endl;
 			response.setStatusCode("400");
 			return ;
 		}
+		if (filename.empty())
+			return ;
 		else
 		{
 			std::ofstream ofile;
