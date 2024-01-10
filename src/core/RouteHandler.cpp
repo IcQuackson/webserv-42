@@ -299,11 +299,16 @@ void RouteHandler::handlePost(HttpRequest& request, HttpResponse& response) {
 	{
 		if (!request.getBody().empty())
 			filename = "default.txt";
-		else if (!extract_filename(request, filename))
+		if (!extract_filename(request, filename))
 		{
-			std::cerr << "Error: Filename key not found." << std::endl;
-			response.setStatusCode("400");
-			return ;
+			if (!request.getBody().empty())
+				filename = "default.txt";
+			else
+			{
+				std::cerr << "Error: Filename key not found." << std::endl;
+				response.setStatusCode("400");
+				return ;
+			}
 		}
 		if (filename.empty())
 			return ;
