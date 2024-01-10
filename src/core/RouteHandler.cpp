@@ -1,4 +1,3 @@
-
 #include "core/RouteHandler.hpp"
 #include "core/HttpStatusCode.hpp"
 
@@ -58,7 +57,7 @@ void RouteHandler::handleRequest(HttpRequest& request, HttpResponse& response) {
 	} else if (request.getMethod() == "POST") {
 		this->handlePost(request, response);
 	} else if (request.getMethod() == "DELETE") {
-		//this->handleDelete(request, response);
+		this->handleDelete(request, response);
 	}
 }
 
@@ -285,7 +284,7 @@ void RouteHandler::handlePost(HttpRequest& request, HttpResponse& response) {
 	//bool isFileUpload = false;
 	
 
-	std::cout << "POST METHOD(need to be done):  " << request.getBody() << std::endl;
+	std::cout << "POST METHOD(body):  " << request.getBody() << std::endl;
 
 	std::string upload_abs_path = location.getRoot() + location.getUploadPath();
 	std::cout << upload_abs_path << std::endl;
@@ -336,7 +335,91 @@ void RouteHandler::handlePost(HttpRequest& request, HttpResponse& response) {
 			}
 		}
 	}
-	// TODO Acabar de implementar o POST
+	// TODO Acabar de implementar o POST	
+}
+
+bool deleteDirectory(const char* path) {
+    DIR* dir = opendir(path);
+
+    if (dir == NULL) {
+        std::cerr << "Error opening directory: " << strerror(errno) << std::endl;
+        return false;
+    }
+
+    struct dirent* entry;
+
+    while ((entry = readdir(dir)) != NULL) {
+        if (strcmp(entry->d_name, ".") != 0 && strcmp(entry->d_name, "..") != 0) {
+            std::string filePath = std::string(path) + "/" + entry->d_name;
+
+            if (entry->d_type == DT_DIR) {
+                if (!deleteDirectory(filePath.c_str()))
+                    return false;
+            } else {
+                if (remove(filePath.c_str()) != 0) {
+                    std::cerr << "Error deleting file: " << strerror(errno) << std::endl;
+                    return false;
+                }
+            }
+        }
+    }
+
+    closedir(dir);
+
+    if (rmdir(path) != 0) {
+        std::cerr << "Error deleting directory: " << strerror(errno) << std::endl;
+        return false;
+    }
+
+    return true;
+}
+
+/* int main() {
+    const char* directoryPath = "/path/to/your/directory";
+
+    if (deleteDirectory(directoryPath)) {
+        std::cout << "Directory deleted successfully." << std::endl;
+    } else {
+        std::cerr << "Error deleting directory." << std::endl;
+    }
+
+    return 0;
+}
+ */
+void RouteHandler::handleDelete(HttpRequest& request, HttpResponse& response) {
+	Location location = getLocation();
+	std::string resource = request.getResource();
+	std::string root = location.getRoot();
+	std::string path = root + resource;
+
+	if (!resourceExists(path)) {
+		std::cerr << "Resource does not exist: " << path << std::endl;
+		response.setStatusCode("404");
+		return;
+	}
+
+	if (isDirectory(path)) {
+		if (deleteDirectory(path.c_str())) {
+        	std::cout << "Directory deleted successfully." << std::endl;
+			response.setStatusCode("204");
+    	} else {
+        	std::cerr << "Error removing directory." << std::endl;
+			response.setStatusCode("500");
+			response.setBody("Failed to remove directory");
+    	}
+	}
+	else {
+        // If it's a regular file, delete it using remove
+        if (remove(path.c_str()) != 0) {
+            std::cerr << "Error removing file: " << strerror(errno) << std::endl;
+            response.setStatusCode("500");
+			response.setBody("Failed to remove file");
+        }
+		std::cout << "File removed successfully." << std::endl;
+        response.setStatusCode("204");
+    }
+}
+
 /*
 	TODO clientBodySize isClientBdyValid()
 
@@ -410,4 +493,3 @@ void RouteHandler::handlePost(HttpRequest& request, HttpResponse& response) {
 		std::cerr << "Regular file" << std::endl;
 		handleRegularFile(path, request, response);
 	} */
-}

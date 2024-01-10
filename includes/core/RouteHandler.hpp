@@ -2,18 +2,20 @@
 #pragma once
 
 #include <string>
+#include <cstring>
 #include <vector>
 #include <algorithm>
 #include <unistd.h>
 #include <sys/stat.h>
+#include <sys/types.h>
 #include <fstream>
+#include <cerrno>
 
 #include "config/ServerConfig.hpp"
 #include "config/Location.hpp"
 #include "core/HttpRequest.hpp"
 #include "core/HttpResponse.hpp"
 #include <dirent.h>
-
 
 class RouteHandler {
 
