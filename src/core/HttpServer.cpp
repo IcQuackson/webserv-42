@@ -504,6 +504,7 @@ bool HttpServer::parseResource(const std::string& path, HttpRequest& request) {
 	std::string requestedPath = "";
 
 	while (!routePath.empty()) {
+		std::cout << "Requested path: " << requestedPath << std::endl;
 		// Check if the current path is a valid endpoint
 		if (routes.find(routePath) != routes.end()) {
 			request.setRoute(routePath);
@@ -518,7 +519,7 @@ bool HttpServer::parseResource(const std::string& path, HttpRequest& request) {
 		if (lastSlash == std::string::npos) {
 			break;  // No more parts to check
 		}
-		requestedPath += "/" + routePath.substr(lastSlash + 1);
+		requestedPath = "/" + routePath.substr(lastSlash + 1) + requestedPath;
 		routePath = routePath.substr(0, lastSlash);
 	}
 

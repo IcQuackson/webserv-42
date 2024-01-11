@@ -392,6 +392,7 @@ void RouteHandler::handleDelete(HttpRequest& request, HttpResponse& response) {
 	std::string root = location.getRoot();
 	std::string path = root + resource;
 
+	std::cout << resource << std::endl;
 	if (!resourceExists(path)) {
 		std::cerr << "Resource does not exist: " << path << std::endl;
 		response.setStatusCode("404");
