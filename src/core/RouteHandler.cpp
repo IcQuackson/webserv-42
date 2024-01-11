@@ -36,9 +36,8 @@ void RouteHandler::setServerConfig(const ServerConfig& serverConfig) {
 void RouteHandler::handleRequest(HttpRequest& request, HttpResponse& response) {
 	std::vector<std::string> methods = this->location.getMethods();
 	std::vector<std::string>::iterator it = std::find(methods.begin(), methods.end(), request.getMethod());
-	
 	//print methods
-	
+
 	//std::cout << "handleRequest: " << this->location.getMethods() << std::endl;
 
 	std::cout << "Methods:";
@@ -48,7 +47,7 @@ void RouteHandler::handleRequest(HttpRequest& request, HttpResponse& response) {
 	std::cout << '\n';
 
 	// Check if method is allowed
-	if (it == location.getMethods().end()) {
+	if (it == methods.end()) {
 		response.setStatusCode("405");
 		return;
 	}
