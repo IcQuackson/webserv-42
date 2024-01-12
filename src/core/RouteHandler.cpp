@@ -1,5 +1,6 @@
 #include "core/RouteHandler.hpp"
 #include "core/HttpStatusCode.hpp"
+#include "cgi/CgiHandler.hpp"
 
 RouteHandler::RouteHandler() {
 }
@@ -122,13 +123,13 @@ void RouteHandler::handleGet(HttpRequest& request, HttpResponse& response) {
 
 	//std::cout << "HANDLE GET LOCATION: " << location << std::endl;
 	std::cout << path << std::endl;
-
+	std::cout << "asd::" << path.substr(path.find_last_of(".") + 1)<< std::endl;
 	if (!resourceExists(path)) {
 		std::cerr << "Resource does not exist: " << path << std::endl;
 		response.setStatusCode("404");
 		return;
 	}
-
+	
 	if (isDirectory(path)) {
 		std::cout << "Directory" << std::endl;
 		// Check if directory listing is enabled
@@ -287,6 +288,14 @@ void RouteHandler::handlePost(HttpRequest& request, HttpResponse& response) {
 
 	std::string upload_abs_path = location.getRoot() + location.getUploadPath();
 	std::cout << upload_abs_path << std::endl;
+	std::cout << path << std::endl;
+	std::cout << resource << std::endl;
+	if(root == "./cgi_bin")
+	{
+		CgiHandler cgi;
+		cgi.exec_cgi_py(request,response, *this);
+		return;
+	}
 
 	if (!isDirectory(upload_abs_path)) {
 		std::cerr << "Upload path does not exist: " << path << std::endl;

@@ -247,6 +247,7 @@ void HttpServer::handleRequest(int clientSocket) {
 			std::cout << "Nbytes" << bytesCount << std::endl;
 	}
 
+	//std::cout << concatBuffer << std::endl;
 	std::istringstream concatStream(concatBuffer);
 	std::string word;
 

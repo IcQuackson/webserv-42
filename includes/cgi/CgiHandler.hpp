@@ -32,20 +32,27 @@ CGI will give result to web-server and web-server will make response based on th
 #include <string>
 #include <map>
 #include <algorithm>
+#include <unistd.h>
+#include <sys/wait.h>
 #include "core/HttpServer.hpp"
 #include "core/RouteHandler.hpp"
 #include "core/HttpRequest.hpp"
+#include "config/Location.hpp"
+#include "config/ServerConfig.hpp"
+
 
 class CgiHandler {
 
 private:
     std::map<std::string, std::string> cgi_Env;
+    std::string script_path;
 
 public:
     int	fd_in[2];
 	int	fd_out[2];
 
-    void initCgi_Env(HttpRequest& request, HttpServer& server, RouteHandler &route);
-    void executeCgi_Script();
+    void exec_cgi_py(HttpRequest& request, HttpResponse& response, RouteHandler& routehandler);
+    void initCgi_Env(RouteHandler& route, HttpRequest& request);
+    void execute_script(HttpRequest& request, HttpResponse& response, RouteHandler& route);
 	
 };
