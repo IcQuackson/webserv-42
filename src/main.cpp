@@ -92,12 +92,7 @@ int main(int argc, char **argv) {
 		httpServer.setHost(serverConfigs[i]->getHost());
 
         // Initialize and add to the vector of HttpServers
-        if (httpServer.init()) {
-            httpServers.push_back(httpServer);
-        }
-		else {
-            std::cerr << "Error initializing HttpServer for server block " << (i + 1) << std::endl;
-        }
+        httpServers.push_back(httpServer);
 	}
 
 	std::map<std::string, RouteHandler> routes = httpServers.at(0).getRouteHandlers();
@@ -109,9 +104,7 @@ int main(int argc, char **argv) {
 	//std::cout << "debug: " << handler.getLocation() << std::endl;
 
 	HttpStatusCode::initStatusCodes();
-
+	HttpServer::setupServers(httpServers);
+	HttpServer::runServers(httpServers);
 	// Start all initialized servers
-    for (size_t i = 0; i < httpServers.size(); ++i) {
-        httpServers[i].run();
-    }
 }

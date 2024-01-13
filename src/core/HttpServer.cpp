@@ -45,6 +45,10 @@ std::string HttpServer::getHost() {
 	return this->host;
 }
 
+int HttpServer::getServerSocket() {
+	return this->serverSocket;
+}
+
 int HttpServer::getMaxConnections() {
 	return this->maxConnections;
 }
@@ -79,72 +83,117 @@ bool HttpServer::loadConfig(const std::string& configFilePath) {
 	return true;
 }
 
+void HttpServer::setupServers(std::vector<HttpServer> servers) {
+	for (size_t i = 0; i < servers.size(); ++i) {
+        if (!servers[i].init()) {
+            std::cerr << "Failed to initialize server on port " << servers[i].getPort() << std::endl;
+            exit(1);
+        }
+		std::cout << "Server initialized on port " << servers[i].getPort() << std::endl;
+    }
+}
+
+void HttpServer::runServers(std::vector<HttpServer> servers) {
+	std::vector<pollfd> pollSet(servers.size());
+
+	std::cout << "Running servers" << std::endl;
+	std::cout << "Size: " << servers.size() << std::endl;
+
+    // Populate the poll set
+    for (size_t i = 0; i < servers.size(); ++i) {
+        pollSet[i].fd = servers[i].getServerSocket();
+        pollSet[i].events = POLLIN | POLLOUT;
+        pollSet[i].revents = 0;
+    }
+
+    // Main event loop
+    while (true) {
+        int numReady = poll(&pollSet[0], pollSet.size(), 200);
+        if (numReady == -1) {
+            perror("Error in poll");
+            exit(1);
+        }
+
+        // Handle events for each server
+        for (size_t i = 0; i < servers.size(); ++i) {
+			//std::cout << "Searching for event on server " << servers[i].getPort() << std::endl;
+            if (pollSet[i].revents & POLLIN) {
+				std::cout << "Received event on server " << servers[i].getPort() << std::endl;
+                servers[i].handleEvents();
+            }
+        }
+    }
+}
+
+void HttpServer::handleEvents() {
+        // Check if there is a pending connection
+        int clientSocket = accept(serverSocket, NULL, NULL);
+		std::cout << "Accepting connection in server " << this->port << std::endl;
+		std::cout << "Client socket: " << clientSocket << std::endl;
+
+        if (clientSocket == -1) {
+            if (errno != EWOULDBLOCK && errno != EAGAIN) {
+                perror("Error accepting connection");
+            }
+			std::cout << "No incoming connection, or it's a non-blocking error" << std::endl;
+            // No incoming connection, or it's a non-blocking error
+        } else {
+			std::cout << "Handling request in server " << this->port << std::endl;
+            this->handleRequest(clientSocket);
+
+            // Close the client socket when done
+            close(clientSocket);
+        }
+    }
+
 bool HttpServer::init() {
 	// Create a socket
-    serverSocket = socket(AF_INET, SOCK_STREAM, 0);
-    if (serverSocket == -1) {
-        perror("Error creating server socket");
-        return false;
-    }
+	serverSocket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+	if (serverSocket == -1) {
+		perror("Error creating server socket");
+		return false;
+	}
 
 	// Set socket options to reuse address
-    int reuseAddr = 1;
-    if (setsockopt(serverSocket, SOL_SOCKET, SO_REUSEADDR, &reuseAddr, sizeof(reuseAddr)) == -1) {
-        perror("Error setting socket options");
-        close(serverSocket);
-        return false;
-    }
+	int reuseAddr = 1;
+	if (setsockopt(serverSocket, SOL_SOCKET, SO_REUSEADDR, &reuseAddr, sizeof(reuseAddr)) == -1) {
+		perror("Error setting socket options");
+		close(serverSocket);
+		return false;
+	}
 
 	// Initialize server address structure
-    struct sockaddr_in serverAddr;
-    serverAddr.sin_family = AF_INET;
-    serverAddr.sin_port = htons(this->port);
-    serverAddr.sin_addr.s_addr = INADDR_ANY;
+	sockaddr_in serverAddr;
+	memset(&serverAddr, 0, sizeof(serverAddr));
+	serverAddr.sin_family = AF_INET;
+	serverAddr.sin_addr.s_addr = INADDR_ANY;
+	serverAddr.sin_port = htons(port);
 
 	// Bind the socket to the server address
-    if (bind(this->serverSocket, reinterpret_cast<struct sockaddr*>(&serverAddr), sizeof(serverAddr)) == -1) {
-        perror("Error binding server socket");
-        close(this->serverSocket);
-        return false;
-    }
+	if (bind(serverSocket, (struct sockaddr*)&serverAddr, sizeof(serverAddr)) == -1) {
+		perror("Error binding server socket");
+		close(serverSocket);
+		return false;
+	}
 
-	maxConnections = SOMAXCONN;
 	// Listen for incoming connections
-    if (listen(serverSocket, maxConnections) == -1) {
-        perror("Error listening for connections");
-        close(serverSocket);
-        return false;
-    }
+	if (listen(serverSocket, SOMAXCONN) == -1) {
+		perror("Error listening for connections");
+		close(serverSocket);
+		return false;
+	}
 
-	// Set server socket to non-blocking mode
-    int flags = fcntl(serverSocket, F_GETFL, 0);
-    if (flags == -1 || fcntl(serverSocket, F_SETFL, flags | O_NONBLOCK) == -1) {
-        perror("Error setting server socket to non-blocking mode");
-        close(serverSocket);
-        return false;
-    }
+	std::cout << "Server listening on port " << port << std::endl;
 
-	// Initialize epoll
-    epollFd = epoll_create(1);
-    if (epollFd == -1) {
-        perror("Error creating epoll");
-        close(serverSocket);
-        return false;
-    }
+/* 	// Set server socket to non-blocking mode
+	int flags = fcntl(serverSocket, F_GETFL, 0);
+	if (flags == -1 || fcntl(serverSocket, F_SETFL, flags | O_NONBLOCK) == -1) {
+		perror("Error setting server socket to non-blocking mode");
+		close(serverSocket);
+		return false;
+	} */
 
-	// Add server socket to epoll
-    struct epoll_event serverEvent;
-    serverEvent.events = EPOLLIN | EPOLLET;  // Edge-triggered mode
-    serverEvent.data.fd = serverSocket;
-
-	if (epoll_ctl(epollFd, EPOLL_CTL_ADD, serverSocket, &serverEvent) == -1) {
-        perror("Error adding server socket to epoll");
-        close(serverSocket);
-        close(epollFd);
-        return false;
-    }
-
-    return true;
+	return true;
 }
 
 void HttpServer::run() {

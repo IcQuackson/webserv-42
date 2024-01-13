@@ -6,10 +6,11 @@
 #include <cstdlib>
 #include <map>
 #include <sys/types.h>
-#include <sys/socket.h>
 #include <sys/epoll.h>
+#include <sys/socket.h>
 #include <netinet/in.h>
-#include <arpa/inet.h>
+#include <fcntl.h>
+#include <poll.h>
 #include <unistd.h>
 #include <stdio.h>
 #include <fcntl.h>
@@ -61,6 +62,7 @@ public:
 
 	int getPort();
 	std::string getHost();
+	int getServerSocket();
 	int getMaxConnections();
 	int getClientBodySize();
 	ssize_t getFileBytes();
@@ -71,6 +73,9 @@ public:
 
 
 	bool init();
+	static void setupServers(std::vector<HttpServer> servers);
+	static void runServers(std::vector<HttpServer> servers);
+	void handleEvents();
 	bool loadConfig(const std::string& configFilePath);
 	void addRouteHandler(const RouteHandler routeHandler);
 	const std::map<std::string, RouteHandler> getRouteHandlers();
