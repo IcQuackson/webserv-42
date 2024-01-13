@@ -123,7 +123,13 @@ void RouteHandler::handleGet(HttpRequest& request, HttpResponse& response) {
 
 	//std::cout << "HANDLE GET LOCATION: " << location << std::endl;
 	std::cout << path << std::endl;
-	std::cout << "asd::" << path.substr(path.find_last_of(".") + 1)<< std::endl;
+	
+	if(root == "./cgi_bin")
+	{
+		CgiHandler cgi;
+		cgi.exec_cgi_py(request,response, *this, 0);
+		return;
+	}
 	if (!resourceExists(path)) {
 		std::cerr << "Resource does not exist: " << path << std::endl;
 		response.setStatusCode("404");
@@ -293,7 +299,7 @@ void RouteHandler::handlePost(HttpRequest& request, HttpResponse& response) {
 	if(root == "./cgi_bin")
 	{
 		CgiHandler cgi;
-		cgi.exec_cgi_py(request,response, *this);
+		cgi.exec_cgi_py(request,response, *this, 1);
 		return;
 	}
 

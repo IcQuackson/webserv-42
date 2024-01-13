@@ -64,11 +64,11 @@ void CgiHandler::initCgi_Env(RouteHandler& route, HttpRequest& request)
     this->createArgvAndEnvp(envVars);
     this->runScript(); */
 
-void CgiHandler::exec_cgi_py(HttpRequest& request, HttpResponse& response, RouteHandler& route)
+void CgiHandler::exec_cgi_py(HttpRequest& request, HttpResponse& response, RouteHandler& route, int type)
 {
-    std::string full_path = route.getLocation().getRoot() + request.getResource();
+    std::string full_path = route.getLocation().getCgiPath();
     size_t lastSlashPos = request.getResource().find_last_of('/');
-    std::string scriptName = request.getResource().substr(lastSlashPos + 1);
+    std::string scriptName = route.getLocation().getCgiPath().substr(lastSlashPos + 1);
 
     std::cout << "filename:" << scriptName << std::endl;
     if(scriptName.empty())
@@ -101,10 +101,10 @@ void CgiHandler::exec_cgi_py(HttpRequest& request, HttpResponse& response, Route
         return ;
     }
     initCgi_Env(route, request);
-    execute_script(request,response,route);
+    execute_script(request,response,route,type);
 }
 
-void    CgiHandler::execute_script(HttpRequest& request, HttpResponse& response, RouteHandler& route)
+void    CgiHandler::execute_script(HttpRequest& request, HttpResponse& response, RouteHandler& route, int type)
 {
     pid_t   pid;
     int     pipes[2];
@@ -116,8 +116,18 @@ void    CgiHandler::execute_script(HttpRequest& request, HttpResponse& response,
         response.setStatusCode("500");
         return ;
     }
-    write(pipes[1], request.getBody().c_str(), request.getBody().length());
-    close(pipes[1]);
+
+    if (type)
+    {
+        fcntl(pipes[1], F_SETPIPE_SZ, request.getBody().length());
+        write(pipes[1], request.getBody().c_str(), request.getBody().length());
+        close(pipes[1]);
+    }
+    else
+    {
+        write(pipes[1], request.getBody().c_str(), 0);
+        close(pipes[1]);
+    }
     pid = fork();
     if (pid == 0)
     {
@@ -132,7 +142,10 @@ void    CgiHandler::execute_script(HttpRequest& request, HttpResponse& response,
         char **argv = new char*[4];
         argv[0] = strdup("python");
         argv[1] = strdup(route.getLocation().getCgiPath().c_str());
-        argv[2] = strdup(route.getLocation().getUploadPath().c_str());
+        if (type)
+            argv[2] = strdup(route.getLocation().getUploadPath().c_str());
+        else
+            argv[2] = strdup("");
         argv[3] = NULL;
 
         char **env_vars = new char*[this->cgi_Env.size() + 1];

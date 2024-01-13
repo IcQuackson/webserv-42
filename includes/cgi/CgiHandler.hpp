@@ -51,8 +51,8 @@ public:
     int	fd_in[2];
 	int	fd_out[2];
 
-    void exec_cgi_py(HttpRequest& request, HttpResponse& response, RouteHandler& routehandler);
+    void exec_cgi_py(HttpRequest& request, HttpResponse& response, RouteHandler& routehandler, int type);
     void initCgi_Env(RouteHandler& route, HttpRequest& request);
-    void execute_script(HttpRequest& request, HttpResponse& response, RouteHandler& route);
+    void execute_script(HttpRequest& request, HttpResponse& response, RouteHandler& route, int type);
 	
 };
