@@ -107,34 +107,26 @@ void CgiHandler::exec_cgi_py(HttpRequest& request, HttpResponse& response, Route
 void    CgiHandler::execute_script(HttpRequest& request, HttpResponse& response, RouteHandler& route)
 {
     pid_t   pid;
-    int     pipe_in[2];
-    int     pipe_out[2];
+    int     pipes[2];
     int     status;
 
-    if (pipe(pipe_in) < 0)
+    if (pipe(pipes) < 0)
     {
         std::cerr << "pipe failed\n";
         response.setStatusCode("500");
         return ;
     }
-    if (pipe(pipe_out) < 0)
-    {
-        std::cerr << "pipe failed\n";
-        close(pipe_in[0]);
-        close(pipe_in[1]);
-        response.setStatusCode("500");
-        return ;
-    }
+    write(pipes[1], request.getBody().c_str(), request.getBody().length());
+    close(pipes[1]);
     pid = fork();
     if (pid == 0)
     {
-        dup2(pipe_in[0], STDIN_FILENO);
-        dup2(pipe_out[1], STDOUT_FILENO);
-        write(pipe_in[1], request.getBody().c_str(), atoi(this->cgi_Env["CONTENT_LENGTH"].c_str()));
-        close(pipe_in[0]);
-        //close(pipe_in[1]);
-        //close(pipe_out[0]);
-        close(pipe_out[1]);
+        dup2(pipes[0], STDIN_FILENO);
+        close(pipes[0]);
+
+        dup2(pipes[1], STDOUT_FILENO);
+        close(pipes[1]);
+        
         std::string python_exe = "/usr/bin/python";
 
         char **argv = new char*[4];
@@ -157,16 +149,10 @@ void    CgiHandler::execute_script(HttpRequest& request, HttpResponse& response,
         response.setStatusCode("500");
         exit(status);
     }
-    else if (pid > 0){
-
-        close(pipe_in[1]);
+    else
+    {
+        close(pipes[0]);
+        close(pipes[1]);
         waitpid(pid, &status, 0);
-        close(pipe_out[1]);
-        if (status < 0)
-        {
-            close(pipe_out[0]);
-            close(pipe_in[0]);
-            return ;
-        }
     }
 }
