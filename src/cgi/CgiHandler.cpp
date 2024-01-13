@@ -119,6 +119,7 @@ void    CgiHandler::execute_script(HttpRequest& request, HttpResponse& response,
 
     if (type)
     {
+        std::cout << "body:" << request.getBody().length() << std::endl;
         fcntl(pipes[1], F_SETPIPE_SZ, request.getBody().length());
         write(pipes[1], request.getBody().c_str(), request.getBody().length());
         close(pipes[1]);
@@ -147,6 +148,8 @@ void    CgiHandler::execute_script(HttpRequest& request, HttpResponse& response,
         else
             argv[2] = strdup("");
         argv[3] = NULL;
+
+        std::cout << argv[2] << std::endl;
 
         char **env_vars = new char*[this->cgi_Env.size() + 1];
 
