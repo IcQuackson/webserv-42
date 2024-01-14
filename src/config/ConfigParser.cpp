@@ -336,6 +336,15 @@ int ConfigParser::parse_limit_except(std::string &token, std::stringstream& ss)
     return (-1);
 }
 
+std::string see_next_token(std::stringstream& line)
+{
+    std::streampos startPosition = line.tellg();
+    std::string next_token;
+    line >> next_token;
+    line.seekg(startPosition);
+    return (next_token);
+}
+
 int ConfigParser::parse_location(std::string &token, std::stringstream& ss)
 {
     std::string next_token;
@@ -385,7 +394,8 @@ int ConfigParser::parse_location(std::string &token, std::stringstream& ss)
                     ss >> token;
                 }
             }
-            ss >> token;
+            if (see_next_token(ss) != "server")
+                ss >> token;
             if (token == "location")
                 parse_location(token, ss);
         }
@@ -415,15 +425,6 @@ bool checkBraces (std::string file)
     if (braces_open)
         return (0);
     return (1);
-}
-
-std::string see_next_token(std::stringstream& line)
-{
-    std::streampos startPosition = line.tellg();
-    std::string next_token;
-    line >> next_token;
-    line.seekg(startPosition);
-    return (next_token);
 }
 
 bool endsWithSemicolon(std::string& str) 

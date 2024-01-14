@@ -109,7 +109,21 @@ void    CgiHandler::execute_script(HttpRequest& request, HttpResponse& response,
     pid_t   pid;
     int     pipes[2];
     int     status;
+    std::string cgi_output = route.getLocation().getUploadPath() + "/" + "cgi_output";
+    int out_fd;
 
+    if (type)
+    {
+        out_fd = open(cgi_output.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0644);
+        // Check if the file is open
+        if (out_fd == -1) 
+        {
+            std::cerr << "Failed to open file: " << cgi_output << std::endl;
+            response.setStatusCode("500");
+            response.setBody("Failed to open file");
+            return ;
+        }
+    }
     if (pipe(pipes) < 0)
     {
         std::cerr << "pipe failed\n";
@@ -119,6 +133,7 @@ void    CgiHandler::execute_script(HttpRequest& request, HttpResponse& response,
 
     if (type)
     {
+        std::cout << "body:" << request.getBody() << std::endl;
         std::cout << "body:" << request.getBody().length() << std::endl;
         fcntl(pipes[1], F_SETPIPE_SZ, request.getBody().length());
         write(pipes[1], request.getBody().c_str(), request.getBody().length());
@@ -135,18 +150,31 @@ void    CgiHandler::execute_script(HttpRequest& request, HttpResponse& response,
         dup2(pipes[0], STDIN_FILENO);
         close(pipes[0]);
 
-        dup2(pipes[1], STDOUT_FILENO);
-        close(pipes[1]);
+        if (!type)
+        {
+            dup2(pipes[1], STDOUT_FILENO);
+            close(pipes[1]);
+        }
+        else
+        {
+            dup2(out_fd, STDOUT_FILENO);
+            close(out_fd);
+        }
         
         std::string python_exe = "/usr/bin/python";
 
         char **argv = new char*[4];
         argv[0] = strdup("python");
-        argv[1] = strdup(route.getLocation().getCgiPath().c_str());
         if (type)
+        {
+            argv[1] = strdup(route.getLocation().getCgiPath().c_str());
             argv[2] = strdup(route.getLocation().getUploadPath().c_str());
+        }
         else
+        {
+            argv[1] = strdup((route.getLocation().getRoot() + "/GET.py").c_str());
             argv[2] = strdup("");
+        }
         argv[3] = NULL;
 
         std::cout << argv[2] << std::endl;
@@ -168,7 +196,10 @@ void    CgiHandler::execute_script(HttpRequest& request, HttpResponse& response,
     else
     {
         close(pipes[0]);
-        close(pipes[1]);
+        if (!type)
+            close(pipes[1]);
+        else
+            close(out_fd);
         waitpid(pid, &status, 0);
     }
 }

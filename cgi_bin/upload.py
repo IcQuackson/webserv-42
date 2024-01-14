@@ -1,4 +1,9 @@
 #!/usr/bin/env python
+import warnings
+# Disable all warnings
+warnings.filterwarnings("ignore", category=DeprecationWarning)
+warnings.simplefilter("ignore", category=UserWarning)
+
 import cgi
 import cgitb
 
