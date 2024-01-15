@@ -122,7 +122,7 @@ void RouteHandler::handleGet(HttpRequest& request, HttpResponse& response) {
 	std::string indexPath = root + index;
 
 	//std::cout << "HANDLE GET LOCATION: " << location << std::endl;
-	std::cout << path << std::endl;
+	//std::cout << path << std::endl;
 	
 	if(root == "./cgi_bin")
 	{

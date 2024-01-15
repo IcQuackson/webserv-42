@@ -68,9 +68,9 @@ void CgiHandler::exec_cgi_py(HttpRequest& request, HttpResponse& response, Route
 {
     std::string full_path = route.getLocation().getCgiPath();
     size_t lastSlashPos = request.getResource().find_last_of('/');
-    if (type)
-        lastSlashPos += 1;
-    std::string scriptName = route.getLocation().getCgiPath().substr(lastSlashPos);
+    //if (type)
+    //    lastSlashPos += 1;
+    std::string scriptName = route.getLocation().getCgiPath().substr(lastSlashPos + 1);
 
     if(scriptName.empty())
     {
@@ -130,8 +130,6 @@ void    CgiHandler::execute_script(HttpRequest& request, HttpResponse& response,
     int     pipes[2];
     int     status;
     std::string filename;
-    (void) request;
-
 
     if (request.getHeaders().count("Content-Disposition") > 0)
     {
@@ -149,7 +147,7 @@ void    CgiHandler::execute_script(HttpRequest& request, HttpResponse& response,
         response.setStatusCode("500");
         return ;
     }
-    write(pipes[1],request.getBody().c_str(), 0);
+    write(pipes[1],response.getBody().c_str(), 0);
     close(pipes[1]);
     pid = fork();
     if (pid == 0)
