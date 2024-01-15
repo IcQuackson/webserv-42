@@ -4,39 +4,34 @@ import warnings
 warnings.filterwarnings("ignore", category=DeprecationWarning)
 warnings.simplefilter("ignore", category=UserWarning)
 
+#!/usr/bin/env python3
 import cgi
-import cgitb
+import cgitb; cgitb.enable()
+import os
+import sys
+import shutil
 
-cgitb.enable()
+UPLOAD_FOLDER = sys.argv[1]
+UPLOAD_FILE = "cgi_bin/upload/" + sys.argv[2]
 
-print("Content-Type: text/html")
-print()
+print(UPLOAD_FOLDER)
+print(UPLOAD_FILE)
 
-# Retrieve form data
-form = cgi.FieldStorage()
+def main():
+	if not UPLOAD_FILE:
+		print("<h1> No file was selected </h1>")
+		return
 
-# Check if the file field is present in the form
-if "file" in form:
-    fileitem = form["file"]
+	# Create the uploads folder if it doesn't exist
+	if not os.path.exists(UPLOAD_FOLDER):
+		os.makedirs(UPLOAD_FOLDER)
 
-    # Check if the file was uploaded
-    if fileitem.filename:
-        # Specify the path to save the uploaded file
-        upload_path = "./YoupiBanane/upload"
-        
-        # Save the file
-        with open(upload_path + fileitem.filename, 'wb') as f:
-            f.write(fileitem.file.read())
+	# Save the file
+	file_path = os.path.join(UPLOAD_FOLDER, sys.argv[2])
+	shutil.copy(UPLOAD_FILE, UPLOAD_FOLDER)
 
-        print("<html><body>")
-        print("<h2>File successfully uploaded.</h2>")
-        print("<p>File name: {0}</p>".format(fileitem.filename))
-        print("</body></html>")
-    else:
-        print("<html><body>")
-        print("<h2>No file was uploaded.</h2>")
-        print("</body></html>")
-else:
-    print("<html><body>")
-    print("<h2>No 'file' field in the form.</h2>")
-    print("</body></html>")
+	print(f"File '{UPLOAD_FILE}' successfully uploaded and saved")
+	print("<a href=\"/\">Back</a>")
+
+if __name__ == '__main__':
+	main()

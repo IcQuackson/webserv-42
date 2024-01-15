@@ -68,9 +68,10 @@ void CgiHandler::exec_cgi_py(HttpRequest& request, HttpResponse& response, Route
 {
     std::string full_path = route.getLocation().getCgiPath();
     size_t lastSlashPos = request.getResource().find_last_of('/');
-    std::string scriptName = route.getLocation().getCgiPath().substr(lastSlashPos + 1);
+    if (type)
+        lastSlashPos += 1;
+    std::string scriptName = route.getLocation().getCgiPath().substr(lastSlashPos);
 
-    std::cout << "filename:" << scriptName << std::endl;
     if(scriptName.empty())
     {
         std::cerr << "Error: Empty script name." << std::endl;
@@ -104,23 +105,41 @@ void CgiHandler::exec_cgi_py(HttpRequest& request, HttpResponse& response, Route
     execute_script(request,response,route,type);
 }
 
+std::string    CgiHandler::extract_filename(std::string content_disp)
+{
+    size_t filenamePos = content_disp.find("filename=");
+    if (filenamePos != std::string::npos) {
+        // Extract the substring starting from the position after "filename=" until the closing quote
+        size_t startQuotePos = content_disp.find("\"", filenamePos);
+        size_t endQuotePos = content_disp.find("\"", startQuotePos + 1);
+
+        if (startQuotePos != std::string::npos && endQuotePos != std::string::npos) {
+            std::string filename = content_disp.substr(startQuotePos + 1, endQuotePos - startQuotePos - 1);
+            return (filename);
+        } 
+        else
+            return "";
+    } 
+    else 
+        return "";
+}
+
 void    CgiHandler::execute_script(HttpRequest& request, HttpResponse& response, RouteHandler& route, int type)
 {
     pid_t   pid;
     int     pipes[2];
     int     status;
-    std::string cgi_output = route.getLocation().getUploadPath() + "/" + "cgi_output";
-    int out_fd;
+    std::string filename;
+    (void) request;
 
-    if (type)
+
+    if (request.getHeaders().count("Content-Disposition") > 0)
     {
-        out_fd = open(cgi_output.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0644);
-        // Check if the file is open
-        if (out_fd == -1) 
+        filename = extract_filename(request.getHeaders().find("Content-Disposition")->second);
+        if (filename.empty())
         {
-            std::cerr << "Failed to open file: " << cgi_output << std::endl;
+            std::cerr << "File Name Not Extracted\n";
             response.setStatusCode("500");
-            response.setBody("Failed to open file");
             return ;
         }
     }
@@ -130,54 +149,34 @@ void    CgiHandler::execute_script(HttpRequest& request, HttpResponse& response,
         response.setStatusCode("500");
         return ;
     }
-
-    if (type)
-    {
-        std::cout << "body:" << request.getBody() << std::endl;
-        std::cout << "body:" << request.getBody().length() << std::endl;
-        fcntl(pipes[1], F_SETPIPE_SZ, request.getBody().length());
-        write(pipes[1], request.getBody().c_str(), request.getBody().length());
-        close(pipes[1]);
-    }
-    else
-    {
-        write(pipes[1], request.getBody().c_str(), 0);
-        close(pipes[1]);
-    }
+    write(pipes[1],request.getBody().c_str(), 0);
+    close(pipes[1]);
     pid = fork();
     if (pid == 0)
     {
         dup2(pipes[0], STDIN_FILENO);
         close(pipes[0]);
 
-        if (!type)
-        {
-            dup2(pipes[1], STDOUT_FILENO);
-            close(pipes[1]);
-        }
-        else
-        {
-            dup2(out_fd, STDOUT_FILENO);
-            close(out_fd);
-        }
+        dup2(pipes[1], STDOUT_FILENO);
+        close(pipes[1]);
         
         std::string python_exe = "/usr/bin/python";
 
-        char **argv = new char*[4];
+        char **argv = new char*[5];
         argv[0] = strdup("python");
         if (type)
         {
             argv[1] = strdup(route.getLocation().getCgiPath().c_str());
             argv[2] = strdup(route.getLocation().getUploadPath().c_str());
+            argv[3] = strdup(filename.c_str());
         }
         else
         {
             argv[1] = strdup((route.getLocation().getRoot() + "/GET.py").c_str());
             argv[2] = strdup("");
+            argv[3] = strdup("");
         }
-        argv[3] = NULL;
-
-        std::cout << argv[2] << std::endl;
+        argv[4] = NULL;
 
         char **env_vars = new char*[this->cgi_Env.size() + 1];
 
@@ -187,7 +186,6 @@ void    CgiHandler::execute_script(HttpRequest& request, HttpResponse& response,
             env_vars[i] = strdup(it->second.c_str());
         }
         env_vars[i] = NULL;
-    
         status = execve("/usr/bin/python", argv, env_vars);
         perror("execve failed");
         response.setStatusCode("500");
@@ -196,10 +194,7 @@ void    CgiHandler::execute_script(HttpRequest& request, HttpResponse& response,
     else
     {
         close(pipes[0]);
-        if (!type)
-            close(pipes[1]);
-        else
-            close(out_fd);
+        close(pipes[1]);
         waitpid(pid, &status, 0);
     }
 }
