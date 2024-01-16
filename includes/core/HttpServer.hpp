@@ -73,8 +73,8 @@ public:
 
 
 	bool init();
-	static void setupServers(std::vector<HttpServer> servers);
-	static void runServers(std::vector<HttpServer> servers);
+	static void setupServers(std::vector<HttpServer> &servers);
+	static void runServers(std::vector<HttpServer> &servers);
 	void handleEvents();
 	bool loadConfig(const std::string& configFilePath);
 	void addRouteHandler(const RouteHandler routeHandler);

@@ -83,78 +83,26 @@ bool HttpServer::loadConfig(const std::string& configFilePath) {
 	return true;
 }
 
-void HttpServer::setupServers(std::vector<HttpServer> servers) {
+void HttpServer::setupServers(std::vector<HttpServer> &servers) {
 	for (size_t i = 0; i < servers.size(); ++i) {
         if (!servers[i].init()) {
             std::cerr << "Failed to initialize server on port " << servers[i].getPort() << std::endl;
             exit(1);
         }
 		std::cout << "Server initialized on port " << servers[i].getPort() << std::endl;
+		std::cout << "Server socket: " << servers[i].getServerSocket() << std::endl;
     }
 }
-
-void HttpServer::runServers(std::vector<HttpServer> servers) {
-	std::vector<pollfd> pollSet(servers.size());
-
-	std::cout << "Running servers" << std::endl;
-	std::cout << "Size: " << servers.size() << std::endl;
-
-    // Populate the poll set
-    for (size_t i = 0; i < servers.size(); ++i) {
-        pollSet[i].fd = servers[i].getServerSocket();
-        pollSet[i].events = POLLIN;// | POLLOUT;
-        pollSet[i].revents = 0;
-    }
-
-    // Main event loop
-    while (true) {
-        int numReady = poll(&pollSet[0], pollSet.size(), 200);
-        if (numReady == -1) {
-            perror("Error in poll");
-            exit(1);
-        }
-
-        // Handle events for each server
-        for (size_t i = 0; i < servers.size(); ++i) {
-            if (pollSet[i].revents & (POLLERR | POLLHUP | POLLNVAL)) {
-				std::cerr << "Error on server " << servers[i].getPort() << std::endl;
-				exit(1);
-            } else if (pollSet[i].revents & POLLIN) {
-                std::cout << "Received event on server " << servers[i].getPort() << std::endl;
-                servers[i].handleEvents();
-            }
-        }
-    }
-}
-
-void HttpServer::handleEvents() {
-        // Check if there is a pending connection
-        int clientSocket = accept(serverSocket, NULL, NULL);
-		std::cout << "Accepting connection in server " << this->port << std::endl;
-		std::cout << "Client socket: " << clientSocket << std::endl;
-
-        if (clientSocket == -1) {
-            if (errno != EWOULDBLOCK && errno != EAGAIN) {
-                perror("Error accepting connection");
-            }
-			std::cout << "No incoming connection, or it's a non-blocking error" << std::endl;
-            // No incoming connection, or it's a non-blocking error
-        } else {
-			std::cout << "Handling request in server " << this->port << std::endl;
-            this->handleRequest(clientSocket);
-
-            // Close the client socket when done
-            close(clientSocket);
-        }
-    }
 
 bool HttpServer::init() {
 	// Create a socket
-	serverSocket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+	this->serverSocket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
 	if (serverSocket == -1) {
 		perror("Error creating server socket");
 		return false;
 	}
+
+	std::cout << "Server socket created: " << serverSocket << std::endl;
 
 	// Set socket options to reuse address
 	int reuseAddr = 1;
@@ -197,6 +145,87 @@ bool HttpServer::init() {
 
 	return true;
 }
+
+void HttpServer::runServers(std::vector<HttpServer> &servers) {
+	std::vector<pollfd> pollSet(servers.size());
+	//pollfd *pollSet = new pollfd[servers.size()];
+
+	std::cout << "Running servers" << std::endl;
+	std::cout << "Size: " << servers.size() << std::endl;
+
+	for (size_t i = 0; i < servers.size(); ++i) {
+		std::cout << "Server " << servers[i].getServerSocket() << std::endl;
+	}
+
+    // Populate the poll set
+    for (size_t i = 0; i < servers.size(); ++i) {
+        pollSet[i].fd = servers[i].getServerSocket();
+        pollSet[i].events = POLLIN | POLLOUT;
+        pollSet[i].revents = 0;
+    }
+
+	for (size_t i = 0; i < pollSet.size(); ++i) {
+		std::cout << "Server " << pollSet[i].fd << std::endl;
+	}
+
+    // Main event loop
+    while (true) {
+        int numReady = poll(&pollSet[0], servers.size(), 200);
+        if (numReady == -1) {
+            perror("Error in poll");
+            exit(1);
+        }
+
+        // Handle events for each server
+        for (size_t i = 0; i < servers.size(); ++i) {
+			//std::cout << "Server " << servers[i].getPort() << std::endl;
+            if (pollSet[i].revents & (POLLERR | POLLHUP | POLLNVAL)) {
+				std::cerr << "Error on server " << servers[i].getPort() << std::endl;
+				exit(1);
+            } else if (pollSet[i].revents & POLLIN) {
+                std::cout << "Received event on server " << servers[i].getPort() << std::endl;
+                servers[i].handleEvents();
+            }
+        }
+    }
+}
+
+int HttpServer::acceptConnection() {
+    struct sockaddr_in clientAddr;
+    socklen_t clientAddrLen = sizeof(clientAddr);
+
+    int clientSocket = accept(serverSocket, (struct sockaddr*)&clientAddr, &clientAddrLen);
+    if (clientSocket == -1) {
+        perror("Error accepting connection");
+        return -1;
+    }
+
+    //log("New connection accepted", clientSocket);
+
+    return clientSocket;
+}
+
+void HttpServer::handleEvents() {
+        // Check if there is a pending connection
+        int clientSocket = accept(serverSocket, NULL, NULL);
+		std::cout << "Accepting connection in server " << this->port << std::endl;
+		std::cout << "Client socket: " << clientSocket << std::endl;
+
+        if (clientSocket == -1) {
+            if (errno != EWOULDBLOCK && errno != EAGAIN) {
+                perror("Error accepting connection");
+            }
+			std::cout << "No incoming connection, or it's a non-blocking error" << std::endl;
+            // No incoming connection, or it's a non-blocking error
+        } else {
+			std::cout << "Handling request in server " << this->port << std::endl;
+            this->handleRequest(clientSocket);
+
+            // Close the client socket when done
+            close(clientSocket);
+        }
+    }
+
 
 void HttpServer::run() {
 	struct epoll_event events[MAX_EVENTS];
@@ -249,20 +278,7 @@ void HttpServer::run() {
 	close(epollFd);
 }
 
-int HttpServer::acceptConnection() {
-    struct sockaddr_in clientAddr;
-    socklen_t clientAddrLen = sizeof(clientAddr);
 
-    int clientSocket = accept(serverSocket, (struct sockaddr*)&clientAddr, &clientAddrLen);
-    if (clientSocket == -1) {
-        perror("Error accepting connection");
-        return -1;
-    }
-
-    //log("New connection accepted", clientSocket);
-
-    return clientSocket;
-}
 
 bool isBufferEmpty(const char* buffer) {
     for (size_t i = 0; i < MAX_BUFFER_SIZE; i++) {
@@ -279,30 +295,38 @@ void HttpServer::handleRequest(int clientSocket) {
 
 	// Buffer to read incoming data
     char *dataBuffer = new char[MAX_BUFFER_SIZE]();
-	char *fileBuffer = new char[MAX_BUFFER_SIZE]();
-	char *concatBuffer  = new char[MAX_BUFFER_SIZE]();
+	//char *fileBuffer = new char[MAX_BUFFER_SIZE]();
+	//char *concatBuffer  = new char[MAX_BUFFER_SIZE]();
 
-	memset(concatBuffer, 0, MAX_BUFFER_SIZE);
+	//memset(concatBuffer, 0, MAX_BUFFER_SIZE);
 	memset(dataBuffer, 0, MAX_BUFFER_SIZE);
     // Read incoming data
     ssize_t bytesRead;
-	int read = 0;
-	int bytesCount = 0;
-    while ((bytesRead = recv(clientSocket, dataBuffer, sizeof(char) * MAX_BUFFER_SIZE, 0)) > 0) {
+	//int read = 0;
+	//int bytesCount = 0;
+
+	std::cout << "clientSocket: " << clientSocket << std::endl;
+/*     while () {
 			read = 1;
 			dataBuffer[bytesRead] = '\0';
 			strcat(concatBuffer, dataBuffer);
 			memset(dataBuffer, 0, MAX_BUFFER_SIZE);
 			bytesCount += bytesRead;
-			std::cout << "NbytesRead" << bytesRead << std::endl;
-			std::cout << "Nbytes" << bytesCount << std::endl;
-	}
+			std::cout << "NbytesRead " << bytesRead << std::endl;
+			std::cout << "Nbytes " << bytesCount << std::endl;
+			std::cout << "BUFFER@:" << concatBuffer << std::endl;
+			std::cout << "clientSocket: " << clientSocket << std::endl;
 
-	std::cout << "BUFFER@:" << concatBuffer << std::endl;
-	std::istringstream concatStream(concatBuffer);
-	std::string word;
 
-	while (concatStream >> word) {
+	} */
+
+	bytesRead = recv(clientSocket, dataBuffer, sizeof(char) * MAX_BUFFER_SIZE, 0);
+
+	std::cout << "BUFFER@:" << dataBuffer << std::endl;
+	//std::istringstream concatStream(concatBuffer);
+	//std::string word;
+
+/* 	while (concatStream >> word) {
         if (word == "Content-Length:") {
 			concatStream >> word;
 			this->fileBytes = std::atoi(word.c_str());
@@ -310,11 +334,11 @@ void HttpServer::handleRequest(int clientSocket) {
         }
 		else
 			this->fileBytes = 0;
-    }
+    } */
 
 	HttpResponse response;
 
-    if (bytesRead == -1 && !read) {
+    if (bytesRead == -1) {
         perror("Error reading data");
 		response.setStatusCode("500");
 		response.setBody("Error reading data");
@@ -329,7 +353,7 @@ void HttpServer::handleRequest(int clientSocket) {
 		std::cout << "-----------" << std::endl;
 		Utils::printYellow("Request:");
 		HttpRequest request;
-		bool isValidRequest = parseRequest(clientSocket, concatBuffer, request, response);
+		bool isValidRequest = parseRequest(clientSocket, dataBuffer, request, response);
 
 		if (isValidRequest) {
 			// Check if the requested resource exists
@@ -346,8 +370,8 @@ void HttpServer::handleRequest(int clientSocket) {
 	std::cout << "-----------" << std::endl;
 	std::cout << std::endl;
 	delete[] dataBuffer;
-	delete[] fileBuffer;
-	delete[] concatBuffer;
+	//delete[] fileBuffer;
+	//delete[] concatBuffer;
 	sendResponse(clientSocket, response);
     //send(clientSocket, acknowledgment, std::strlen(acknowledgment), 0);
     close(clientSocket);
@@ -441,13 +465,13 @@ bool HttpServer::parseRequest(int clientSocket, char data[], HttpRequest &reques
 
 
 	if (request.getHeaders().find("Content-Length") != request.getHeaders().end()) {
-		ssize_t contentLength = std::atoi(request.getHeaders()["Content-Length"].c_str());
+		//ssize_t contentLength = std::atoi(request.getHeaders()["Content-Length"].c_str());
 
-		if (contentLength != this->fileBytes) {
-			// set error
+		/* if (contentLength != this->fileBytes) {
+			std::cout << "Error: Content-Length does not match body size" << std::endl;
 			response.setStatusCode("400");
 			return false;
-		}
+		} */
 	} 
 
 	// Set the request properties

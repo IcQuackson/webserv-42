@@ -105,6 +105,16 @@ int main(int argc, char **argv) {
 
 	HttpStatusCode::initStatusCodes();
 	HttpServer::setupServers(httpServers);
+	for (size_t i = 0; i < httpServers.size(); i++) {
+		std::cout << "server socket: " << httpServers[i].getServerSocket() << std::endl;
+	}
+
+
+
+
+
+
+	
 	HttpServer::runServers(httpServers);
 	// Start all initialized servers
 }
