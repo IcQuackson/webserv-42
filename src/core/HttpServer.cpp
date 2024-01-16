@@ -357,9 +357,10 @@ void HttpServer::handleRequest(int clientSocket) {
 
 		if (isValidRequest) {
 			// Check if the requested resource exists
+			std::cout << "request.getResource(): " << request.getResource() << std::endl;
 			if (!parseResource(request.getResource(), request)) {
 				response.setStatusCode("404");
-				//response.setBody("Resource does not exist");
+				response.setBody("Resource does not exist");
 			}
 			else {
 				routes[request.getRoute()].handleRequest(request, response);
@@ -466,6 +467,8 @@ bool HttpServer::parseRequest(int clientSocket, char data[], HttpRequest &reques
 
 	if (request.getHeaders().find("Content-Length") != request.getHeaders().end()) {
 		//ssize_t contentLength = std::atoi(request.getHeaders()["Content-Length"].c_str());
+
+		// TODO: check if contentLength is valid
 
 		/* if (contentLength != this->fileBytes) {
 			std::cout << "Error: Content-Length does not match body size" << std::endl;

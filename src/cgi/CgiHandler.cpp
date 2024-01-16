@@ -99,6 +99,7 @@ void CgiHandler::exec_cgi_py(HttpRequest& request, HttpResponse& response, Route
     {
         std::cerr << "Error: File not found" << std::endl;
         response.setStatusCode("404");
+        std::cout << "Error: cgi_handler" << std::endl;
         return ;
     }
     initCgi_Env(route, request);
@@ -147,8 +148,8 @@ void    CgiHandler::execute_script(HttpRequest& request, HttpResponse& response,
         response.setStatusCode("500");
         return ;
     }
-    write(pipes[1],response.getBody().c_str(), 0);
-    close(pipes[1]);
+    //write(pipes[1],response.getBody().c_str(), 0);
+    //close(pipes[1]);
     pid = fork();
     if (pid == 0)
     {
@@ -158,8 +159,6 @@ void    CgiHandler::execute_script(HttpRequest& request, HttpResponse& response,
         dup2(pipes[1], STDOUT_FILENO);
         close(pipes[1]);
         
-        std::string python_exe = "/usr/bin/python";
-
         char **argv = new char*[5];
         argv[0] = strdup("python");
         if (type)
@@ -184,15 +183,27 @@ void    CgiHandler::execute_script(HttpRequest& request, HttpResponse& response,
             env_vars[i] = strdup(it->second.c_str());
         }
         env_vars[i] = NULL;
-        status = execve("/usr/bin/python", argv, env_vars);
+        status = execve("/usr/bin/python3", argv, env_vars);
         perror("execve failed");
         response.setStatusCode("500");
         exit(status);
     }
     else
     {
+        // ajustar isto. mallocs? buffers? who knows
+        char buffer[1024]; 
+        int readBytes = read(pipes[0], buffer, 1023);
+        buffer[readBytes] = '\0';
+
+        std::string body(buffer);
+        std::cout << "body: " << body << std::endl;
+        std::cout << "readBytes: " << readBytes << std::endl;
+        //write(1, buffer, strlen(buffer));
+
         close(pipes[0]);
         close(pipes[1]);
         waitpid(pid, &status, 0);
+        // TODO: verificar se wait pid deve estar aqui
+        response.setBody(body);
     }
 }
