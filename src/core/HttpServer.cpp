@@ -153,20 +153,12 @@ void HttpServer::runServers(std::vector<HttpServer> &servers) {
 	std::cout << "Running servers" << std::endl;
 	std::cout << "Size: " << servers.size() << std::endl;
 
-	for (size_t i = 0; i < servers.size(); ++i) {
-		std::cout << "Server " << servers[i].getServerSocket() << std::endl;
-	}
-
     // Populate the poll set
     for (size_t i = 0; i < servers.size(); ++i) {
         pollSet[i].fd = servers[i].getServerSocket();
         pollSet[i].events = POLLIN | POLLOUT;
         pollSet[i].revents = 0;
     }
-
-	for (size_t i = 0; i < pollSet.size(); ++i) {
-		std::cout << "Server " << pollSet[i].fd << std::endl;
-	}
 
     // Main event loop
     while (true) {
@@ -178,7 +170,6 @@ void HttpServer::runServers(std::vector<HttpServer> &servers) {
 
         // Handle events for each server
         for (size_t i = 0; i < servers.size(); ++i) {
-			//std::cout << "Server " << servers[i].getPort() << std::endl;
             if (pollSet[i].revents & (POLLERR | POLLHUP | POLLNVAL)) {
 				std::cerr << "Error on server " << servers[i].getPort() << std::endl;
 				exit(1);
