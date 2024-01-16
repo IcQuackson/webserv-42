@@ -102,7 +102,7 @@ void HttpServer::runServers(std::vector<HttpServer> servers) {
     // Populate the poll set
     for (size_t i = 0; i < servers.size(); ++i) {
         pollSet[i].fd = servers[i].getServerSocket();
-        pollSet[i].events = POLLIN | POLLOUT;
+        pollSet[i].events = POLLIN;// | POLLOUT;
         pollSet[i].revents = 0;
     }
 
@@ -116,9 +116,11 @@ void HttpServer::runServers(std::vector<HttpServer> servers) {
 
         // Handle events for each server
         for (size_t i = 0; i < servers.size(); ++i) {
-			//std::cout << "Searching for event on server " << servers[i].getPort() << std::endl;
-            if (pollSet[i].revents & POLLIN) {
-				std::cout << "Received event on server " << servers[i].getPort() << std::endl;
+            if (pollSet[i].revents & (POLLERR | POLLHUP | POLLNVAL)) {
+				std::cerr << "Error on server " << servers[i].getPort() << std::endl;
+				exit(1);
+            } else if (pollSet[i].revents & POLLIN) {
+                std::cout << "Received event on server " << servers[i].getPort() << std::endl;
                 servers[i].handleEvents();
             }
         }
@@ -185,13 +187,13 @@ bool HttpServer::init() {
 
 	std::cout << "Server listening on port " << port << std::endl;
 
-/* 	// Set server socket to non-blocking mode
+	// Set server socket to non-blocking mode
 	int flags = fcntl(serverSocket, F_GETFL, 0);
 	if (flags == -1 || fcntl(serverSocket, F_SETFL, flags | O_NONBLOCK) == -1) {
 		perror("Error setting server socket to non-blocking mode");
 		close(serverSocket);
 		return false;
-	} */
+	}
 
 	return true;
 }
