@@ -147,7 +147,7 @@ bool HttpRequest::readHeaders(std::istringstream& requestStream, HttpRequest& re
         std::string headerValue;
         std::getline(headerLineStream, headerValue);
         request.headers[headerName] = headerValue;
-		//std::cout << headerName << ": " << headerValue << std::endl;
+		//std::cout << "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa:" << headerName << ": " << headerValue << std::endl;
     }
 
 	if (request.headers.find("Host") == request.headers.end()) {

@@ -54,5 +54,6 @@ public:
     void exec_cgi_py(HttpRequest& request, HttpResponse& response, RouteHandler& routehandler, int type);
     void initCgi_Env(RouteHandler& route, HttpRequest& request);
     void execute_script(HttpRequest& request, HttpResponse& response, RouteHandler& route, int type);
+    std::string extract_filename(std::string content_disp);
 	
 };
