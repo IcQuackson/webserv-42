@@ -275,8 +275,7 @@ int ConfigParser::parse_var(std::string &token, std::stringstream& ss, int macro
         {
             if(!parse_var_add(macro, token))
                 return (0);
-            if (macro != LISTEN)
-                ss >> token;
+            ss >> token;
             this->executed = 1;
             if (token == ";")
                 return (1);
@@ -388,10 +387,11 @@ int ConfigParser::parse_location(std::string &token, std::stringstream& ss)
                 if (!this->executed)
                     throw std::runtime_error("Error: Invalid input near token 11: " + token);
                 loops++;
-                if (loops > 1 || token == ";")
+                if (loops > 5 || token == ";")
                 {
                     loops = 0;
-                    ss >> token;
+                    if(token != "}")
+                        ss >> token;
                 }
             }
             if (see_next_token(ss) != "server")
@@ -562,6 +562,8 @@ bool ConfigParser::proccess_input()
                 if (!parse_var(token, line, CLIENT_MAX_BODY_SIZE))
                     throw std::runtime_error("Error: client_max_body_size parsing: " + token);
                 parse_location(token, line);
+                if (token == ";")
+                    line >> token; 
             }
             
         }
