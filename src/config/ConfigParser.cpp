@@ -344,6 +344,15 @@ std::string see_next_token(std::stringstream& line)
     return (next_token);
 }
 
+bool ConfigParser::hasLocationWithName(ServerConfig* serverConfig, std::string name) {
+    std::vector<Location*> locations = serverConfig->getLocations();
+    for (std::vector<Location*>::iterator it = locations.begin(); it != locations.end(); ++it) {
+        if ((*it)->getPath() == name)
+            return (1);
+    }
+    return (0);
+}
+
 int ConfigParser::parse_location(std::string &token, std::stringstream& ss)
 {
     std::string next_token;
@@ -353,6 +362,8 @@ int ConfigParser::parse_location(std::string &token, std::stringstream& ss)
         // TODO root
         if (token[0] == '/')
         {
+            if (hasLocationWithName(this->serverConfigVector.back(), token))
+                throw std::runtime_error("Error: location already exists: " + token);
             Location *location = new Location(token);
             int maxClientBodySize = std::atoi(this->serverConfigVector.back()->getClient_max_body_size().c_str());
             location->setClientBodySize(maxClientBodySize);

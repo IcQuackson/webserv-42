@@ -54,4 +54,5 @@ public:
     int verify_error_code(std::string &token, int &flag_code, int &flag_page);
     int parse_limit_except(std::string &token, std::stringstream& ss);
     bool check_valid_method(std::string token);
+    bool hasLocationWithName(ServerConfig *serverConfig, std::string name);
 };
