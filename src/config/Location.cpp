@@ -5,8 +5,8 @@ Location::Location() {
 	this->methods = std::vector<std::string>();
 	this->indexFile = "";
 	this->redirection = "";
-	this->root = "";
-	this->directoryListing = false;
+	this->root = "." + this->path;
+	this->directoryListing = true;
 	this->defaultFile = "";
 	this->cgiExtension = "";
 	this->acceptUploads = false;
@@ -19,8 +19,8 @@ Location::Location(const std::string& path) : path(path) {
 	this->methods = std::vector<std::string>();
 	this->indexFile = "";
 	this->redirection = "";
-	this->root = "";
-	this->directoryListing = false;
+	this->root = "." + path;
+	this->directoryListing = true;
 	this->defaultFile = "";
 	this->cgiExtension = "";
 	this->acceptUploads = false;

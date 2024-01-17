@@ -14,8 +14,8 @@ import shutil
 UPLOAD_FOLDER = sys.argv[1]
 UPLOAD_FILE = "cgi_bin/upload/" + sys.argv[2]
 
-#print(UPLOAD_FOLDER)
-#print(UPLOAD_FILE)
+print(UPLOAD_FOLDER)
+print(UPLOAD_FILE)
 
 def main():
 	if not UPLOAD_FILE:

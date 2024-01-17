@@ -52,6 +52,10 @@ void RouteHandler::handleRequest(HttpRequest& request, HttpResponse& response) {
 		response.setStatusCode("405");
 		return;
 	}
+	if (this->location.getClientBodySize() < (int)request.getBody().length()) {
+		response.setStatusCode("413");
+		return;
+	}
 	if (request.getMethod() == "GET") {
 		this->handleGet(request, response);
 	} else if (request.getMethod() == "POST") {
@@ -303,6 +307,14 @@ void RouteHandler::handlePost(HttpRequest& request, HttpResponse& response) {
 		return;
 	}
 
+	if(!location.getAcceptUploads())
+	{
+		std::cerr << "Uploads are not allowed" << std::endl;
+		response.setStatusCode("403");
+		response.setBody("Uploads are not allowed");
+		return ;
+	}
+
 	if (!isDirectory(upload_abs_path)) {
 		std::cerr << "Upload path does not exist: " << path << std::endl;
 		response.setStatusCode("404");
@@ -324,7 +336,10 @@ void RouteHandler::handlePost(HttpRequest& request, HttpResponse& response) {
 			}
 		}
 		if (filename.empty())
+		{
+			response.setStatusCode("400");
 			return ;
+		}
 		else
 		{
 			std::ofstream ofile;
@@ -344,12 +359,13 @@ void RouteHandler::handlePost(HttpRequest& request, HttpResponse& response) {
     			ofile.close();
 
 				std::cout << "Data appended to the file." << std::endl;
-			} else {
+				response.setBody("Data appended to the file.");
+				response.setStatusCode("201");
+			} 
+			else
 				std::cerr << "Error opening the file for appending." << std::endl;
-			}
 		}
-	}
-	// TODO Acabar de implementar o POST	
+	}	
 }
 
 bool deleteDirectory(const char* path) {
