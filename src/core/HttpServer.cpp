@@ -354,7 +354,21 @@ void HttpServer::handleRequest(int clientSocket) {
 				response.setBody("Resource does not exist");
 			}
 			else {
-				routes[request.getRoute()].handleRequest(request, response);
+				std::string redirect_path = routes[request.getRoute()].getLocation().getRedirection();
+				if (!redirect_path.empty()) {
+					if (routes.find(redirect_path) != routes.end())
+					{
+						request.setRoute(redirect_path);
+						routes[redirect_path].handleRequest(request, response);
+					}
+					else
+					{
+						response.setStatusCode("404");
+						response.setBody("Resource does not exist");
+					}
+				}
+				else
+					routes[request.getRoute()].handleRequest(request, response);
 			}
 		}
 		log("Request received", clientSocket, request, response);
