@@ -12,7 +12,7 @@ Location::Location() {
 	this->acceptUploads = false;
 	this->uploadEndpoint = "";
 	this->uploadPath = "";
-	this->clientBodySize = 0;
+	this->clientBodySize = 2408;
 }
 
 Location::Location(const std::string& path) : path(path) {
@@ -26,7 +26,7 @@ Location::Location(const std::string& path) : path(path) {
 	this->acceptUploads = false;
 	this->uploadEndpoint = "";
 	this->uploadPath = "";
-	this->clientBodySize = 0;
+	this->clientBodySize = 2408;
 }
 
 Location::~Location() {

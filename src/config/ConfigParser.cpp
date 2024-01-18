@@ -220,7 +220,11 @@ bool ConfigParser::parse_var_add(int macro, std::string &token)
     else if (macro == ROOT)
         this->serverConfigVector.back()->getLocations().back()->setRoot(token);
     else if (macro == CLIENT_MAX_BODY_SIZE)
+    {
+        if (!isDigits(token))
+            return (0);
         this->serverConfigVector.back()->setClient_max_body_size(token);
+    }
     else if (macro == RETURN)
         this->serverConfigVector.back()->getLocations().back()->setRedirection(token);
     else if (macro == AUTOINDEX)
@@ -366,6 +370,8 @@ int ConfigParser::parse_location(std::string &token, std::stringstream& ss)
                 throw std::runtime_error("Error: location already exists: " + token);
             Location *location = new Location(token);
             int maxClientBodySize = std::atoi(this->serverConfigVector.back()->getClient_max_body_size().c_str());
+            if (maxClientBodySize > 2048 || maxClientBodySize < 0)
+                throw std::runtime_error("Error: Invalid client_max_body_size > 2048");
             location->setClientBodySize(maxClientBodySize);
             this->serverConfigVector.back()->addLocation(location);
         }
