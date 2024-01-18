@@ -373,6 +373,10 @@ int ConfigParser::parse_location(std::string &token, std::stringstream& ss)
             if (maxClientBodySize > 2048 || maxClientBodySize < 0)
                 throw std::runtime_error("Error: Invalid client_max_body_size > 2048");
             location->setClientBodySize(maxClientBodySize);
+            if (this->serverConfigVector.back()->getError_codes().size() > 0)
+                location->setErrorCodes(this->serverConfigVector.back()->getError_codes());
+            if (this->serverConfigVector.back()->getError_pages().size() > 0)
+                location->setErrorPage(this->serverConfigVector.back()->getError_pages()[0]);
             this->serverConfigVector.back()->addLocation(location);
         }
         ss >> token;

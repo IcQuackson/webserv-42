@@ -32,7 +32,11 @@ private:
 
 	std::string uploadPath;              // Directory where uploaded files should be saved
 
-	int clientBodySize;		 	 // Max size of the body of a request
+	int clientBodySize;		 	         // Max size of the body of a request
+
+    std::vector<int> error_codes;        // Error codes vector
+
+    std::string error_page;              // Error page path
 
 public:
 
@@ -70,6 +74,10 @@ public:
 
 	int getClientBodySize() const;
 
+    std::string getErrorPage() const;
+
+    std::vector<int> getErrorCodes() const;
+
     void addMethod(std::string method);
 
     void setPath(const std::string& path);
@@ -101,6 +109,10 @@ public:
     void setUploadPath(const std::string& uploadPath);
 
 	void setClientBodySize(int clientBodySize);
+
+    void setErrorPage(const std::string& error_page);
+
+    void setErrorCodes(const std::vector<int>& error_codes);
 
 };
 
