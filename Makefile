@@ -25,7 +25,7 @@ SRCS := \
 	$(SRC_DIR)/cgi/CgiHandler.cpp
 
 OBJS	=	$(patsubst $(SRC_DIR)/%.cpp, $(BIN_DIR)/%.o, $(SRCS))
-ARGS	= 	
+ARGS	= 	configFiles/test2.conf
 
 # Colors
 

@@ -73,7 +73,7 @@ int main(int argc, char **argv) {
 	//serverConfig = *parser.getServerConfigVector()[0];
 
 	// Create and initialize instances of HttpServer based on server configurations
-    std::vector<HttpServer> httpServers;
+    std::vector<HttpServer> httpServers = std::vector<HttpServer>();
 
 	for (size_t i = 0; i < serverConfigs.size(); i++) {
 		HttpServer httpServer(*serverConfigs[i]);
