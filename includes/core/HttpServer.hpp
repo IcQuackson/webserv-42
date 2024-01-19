@@ -32,6 +32,7 @@ private:
 	// Port and Host Information
 	int port;
 	std::string host;
+	ServerConfig &serverConfig;
 
 	// Configuration
 	std::string configFilePath;
@@ -54,8 +55,8 @@ private:
 
 
 public:
-	HttpServer();
-	HttpServer(int port, const std::string& host);
+	HttpServer(ServerConfig& serverConfig);
+	HttpServer(int port, const std::string& host,ServerConfig& serverConfig);
 	~HttpServer();
 	HttpServer(HttpServer const &httpServer);
 	HttpServer &operator=(HttpServer const &httpServer);
@@ -65,11 +66,13 @@ public:
 	int getServerSocket();
 	int getMaxConnections();
 	int getClientBodySize();
+	ServerConfig getServerConfig();
 	ssize_t getFileBytes();
 	void setPort(int port);
 	void setHost(const std::string& host);
 	void setMaxConnections(int maxConnections);
 	void setClientBodySize(int clientBodySize);
+	void setServerConfigs(ServerConfig serverConfigs);
 
 
 	bool init();

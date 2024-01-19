@@ -7,6 +7,7 @@
 #include <vector>
 #include <algorithm>
 #include "ServerConfig.hpp"
+#include <unistd.h>
 
 #define LISTEN 1
 #define ROOT 2

@@ -5,10 +5,10 @@
 int epollFd = -1;
 bool HttpServer::enableLogging = true;
 
-HttpServer::HttpServer() {
+HttpServer::HttpServer(ServerConfig& serverConfig): serverConfig(serverConfig) {
 }
 
-HttpServer::HttpServer(int port, const std::string& host) {
+HttpServer::HttpServer(int port, const std::string& host, ServerConfig &serverConfig): serverConfig(serverConfig) {
 	this->port = port;
 	this->host = host;
 }
@@ -16,7 +16,7 @@ HttpServer::HttpServer(int port, const std::string& host) {
 HttpServer::~HttpServer() {
 }
 
-HttpServer::HttpServer(HttpServer const &httpServer) {
+HttpServer::HttpServer(HttpServer const &httpServer): serverConfig(httpServer.serverConfig) {
 	*this = httpServer;
 }
 
@@ -61,6 +61,9 @@ ssize_t HttpServer::getFileBytes() {
 	return this->fileBytes;
 }
 
+ServerConfig HttpServer::getServerConfig() {
+	return this->serverConfig;
+}
 
 void HttpServer::setPort(int port) {
 	this->port = port;
@@ -78,12 +81,17 @@ void HttpServer::setClientBodySize(int clientBodySize) {
 	this->clientBodySize = clientBodySize;
 }
 
+void HttpServer::setServerConfigs(ServerConfig serverConfig) {
+	this->serverConfig = serverConfig;
+}
+
 bool HttpServer::loadConfig(const std::string& configFilePath) {
 	this->configFilePath = configFilePath;
 	return true;
 }
 
 void HttpServer::setupServers(std::vector<HttpServer> &servers) {
+	// Initialize all servers
 	for (size_t i = 0; i < servers.size(); ++i) {
         if (!servers[i].init()) {
             std::cerr << "Failed to initialize server on port " << servers[i].getPort() << std::endl;
@@ -197,25 +205,25 @@ int HttpServer::acceptConnection() {
 }
 
 void HttpServer::handleEvents() {
-        // Check if there is a pending connection
-        int clientSocket = accept(serverSocket, NULL, NULL);
-		std::cout << "Accepting connection in server " << this->port << std::endl;
-		std::cout << "Client socket: " << clientSocket << std::endl;
+	// Check if there is a pending connection
+	int clientSocket = accept(serverSocket, NULL, NULL);
+	std::cout << "Accepting connection in server " << this->port << std::endl;
+	std::cout << "Client socket: " << clientSocket << std::endl;
 
-        if (clientSocket == -1) {
-            if (errno != EWOULDBLOCK && errno != EAGAIN) {
-                perror("Error accepting connection");
-            }
-			std::cout << "No incoming connection, or it's a non-blocking error" << std::endl;
-            // No incoming connection, or it's a non-blocking error
-        } else {
-			std::cout << "Handling request in server " << this->port << std::endl;
-            this->handleRequest(clientSocket);
+	if (clientSocket == -1) {
+		if (errno != EWOULDBLOCK && errno != EAGAIN) {
+			perror("Error accepting connection");
+		}
+		std::cout << "No incoming connection, or it's a non-blocking error" << std::endl;
+		// No incoming connection, or it's a non-blocking error
+	} else {
+		std::cout << "Handling request in server " << this->port << std::endl;
+		this->handleRequest(clientSocket);
 
-            // Close the client socket when done
-            close(clientSocket);
-        }
-    }
+		// Close the client socket when done
+		close(clientSocket);
+	}
+}
 
 
 void HttpServer::run() {
@@ -329,10 +337,17 @@ void HttpServer::handleRequest(int clientSocket) {
 
 	HttpResponse response;
 
+	if(this->serverConfig.getError_codes().size() > 0)
+	{
+		response.setErrorCodes(this->getServerConfig().getError_codes());
+		response.setErrorPage(this->getServerConfig().getError_pages()[0]);
+	}
+
     if (bytesRead == -1) {
         perror("Error reading data");
 		response.setStatusCode("500");
 		response.setBody("Error reading data");
+		response.setDefaultErrorPage(500);
     }
 	else if (bytesRead == 0) {
         std::cout << "Connection closed by client." << std::endl;
@@ -352,6 +367,7 @@ void HttpServer::handleRequest(int clientSocket) {
 			if (!parseResource(request.getResource(), request)) {
 				response.setStatusCode("404");
 				response.setBody("Resource does not exist");
+				response.setDefaultErrorPage(404);
 			}
 			else {
 				std::string redirect_path = routes[request.getRoute()].getLocation().getRedirection();

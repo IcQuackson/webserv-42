@@ -76,7 +76,7 @@ int main(int argc, char **argv) {
     std::vector<HttpServer> httpServers;
 
 	for (size_t i = 0; i < serverConfigs.size(); i++) {
-		HttpServer httpServer;
+		HttpServer httpServer(*serverConfigs[i]);
 
 		for (size_t j = 0; j < serverConfigs[i]->getLocations().size(); j++) {
 			std::cout << serverConfigs[i]->getLocations().size() << std::endl;
