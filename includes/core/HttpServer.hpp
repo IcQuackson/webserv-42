@@ -17,6 +17,7 @@
 #include <ctime>
 #include <sstream>
 #include <iomanip>
+#include <deque>
 
 #include "core/HttpRequestHandler.hpp"
 #include "core/HttpRequest.hpp"
@@ -47,10 +48,13 @@ private:
 	std::map<std::string, RouteHandler> routes;
 
 	// Request and Response Buffers
-	char buffer[];
+	//char requestBuffer[MAX_BUFFER_SIZE];
+	static std::map<int, HttpServer*> _allActiveConnections;
+	std::deque<int> serverActiveConnections;
 
 	// Logging
 	static bool enableLogging;
+	std::deque<HttpResponse> responses;
 
 
 public:
@@ -66,22 +70,26 @@ public:
 	int getMaxConnections();
 	int getClientBodySize();
 	ssize_t getFileBytes();
+	std::deque<HttpResponse>& getResponses();
+	std::deque<int>& getServerActiveConnections();
 	void setPort(int port);
 	void setHost(const std::string& host);
 	void setMaxConnections(int maxConnections);
 	void setClientBodySize(int clientBodySize);
 
 
-	bool init();
 	static void setupServers(std::vector<HttpServer> &servers);
 	static void runServers(std::vector<HttpServer> &servers);
-	void handleEvents();
+	static HttpServer* getServerFromClientSocket(int clientSocket);
+	void acceptConnection(std::vector<pollfd> &pollSet);
+	void closeConnection(int clientSocket, std::vector<pollfd> &pollSet);
+	bool init();
+	void handleReceive(int clientSocket, std::vector<pollfd> &pollSet);
+	void handleSend(std::vector<pollfd> &pollSet);
 	bool loadConfig(const std::string& configFilePath);
 	void addRouteHandler(const RouteHandler routeHandler);
 	const std::map<std::string, RouteHandler> getRouteHandlers();
-	int acceptConnection();
-	void handleRequest(int clientSocket);
-	void processRequest();
+	HttpResponse processRequest(char *dataBuffer, int clientSocket, HttpResponse &response);
 	bool parseRequest(int clientSocket, char data[], HttpRequest &request, HttpResponse &response);
 	void sendResponse(int clientSocket, HttpResponse& response);
 	void handleError(int clientSocket, int errorCode);
