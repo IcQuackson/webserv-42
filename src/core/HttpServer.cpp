@@ -347,7 +347,7 @@ HttpResponse HttpServer::processRequest(char *dataBuffer, int clientSocket, Http
 		if (!parseResource(request.getResource(), request)) {
 			response.setStatusCode("404");
 			response.setBody("Resource does not exist");
-				response.setDefaultErrorPage(404);
+			response.setDefaultErrorPage(404);
 		}
 		else {
 				std::string redirect_path = routes[request.getRoute()].getLocation().getRedirection();
