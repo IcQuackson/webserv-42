@@ -34,8 +34,6 @@ private:
 
 	int clientBodySize;		 	         // Max size of the body of a request
 
-    std::vector<int> error_codes;        // Error codes vector
-
     std::string error_page;              // Error page path
 
 public:
@@ -111,8 +109,6 @@ public:
 	void setClientBodySize(int clientBodySize);
 
     void setErrorPage(const std::string& error_page);
-
-    void setErrorCodes(const std::vector<int>& error_codes);
 
 };
 

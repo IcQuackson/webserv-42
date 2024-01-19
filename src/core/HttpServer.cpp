@@ -14,6 +14,7 @@ HttpServer::HttpServer(int port, const std::string& host, ServerConfig &serverCo
 	this->port = port;
 	this->host = host;
 	this->responses = std::deque<HttpResponse>();
+	setErrorCodes(serverConfig.getError_codes());
 }
 
 HttpServer::~HttpServer() {
@@ -78,6 +79,16 @@ std::deque<HttpResponse>& HttpServer::getResponses() {
 }
 ServerConfig HttpServer::getServerConfig() {
 	return this->serverConfig;
+}
+
+std::vector<int> HttpServer::getErrorCodes() {
+	return this->errorCodes;
+}
+
+void HttpServer::setErrorCodes(std::vector<int> errorCodes) {
+	for (size_t i = 0; i < errorCodes.size(); i++) {
+		this->errorCodes.push_back(errorCodes[i]);
+	}
 }
 
 void HttpServer::setPort(int port) {
@@ -314,8 +325,12 @@ void HttpServer::handleReceive(int clientSocket, std::vector<pollfd> &pollSet) {
 		return;
 	}
 
+	std::cout << "Data received: " << std::endl << requestBuffer << std::endl;
+
 	// Process the HTTP request and generate a response
 	HttpResponse response;
+	response.setErrorCodes(getServerConfig().getError_codes());
+	
 	processRequest(requestBuffer, clientSocket, response);
 	this->responses.push_back(response);
 }
@@ -384,8 +399,8 @@ HttpResponse HttpServer::processRequest(char *dataBuffer, int clientSocket, Http
 		std::cout << "request.getResource(): " << request.getResource() << std::endl;
 		if (!parseResource(request.getResource(), request)) {
 			response.setStatusCode("404");
-			response.setBody("Resource does not exist");
-			response.setDefaultErrorPage(404);
+			response.addHeader("Content-Type", "text/html");
+			//response.setDefaultErrorPage(404);
 		}
 		else {
 				std::string redirect_path = routes[request.getRoute()].getLocation().getRedirection();
@@ -398,7 +413,6 @@ HttpResponse HttpServer::processRequest(char *dataBuffer, int clientSocket, Http
 					else
 					{
 						response.setStatusCode("404");
-						response.setBody("Resource does not exist");
 					}
 				}
 				else

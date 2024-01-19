@@ -26,7 +26,7 @@
 #include "core/RouteHandler.hpp"
 
 #define MAX_EVENTS 64
-#define MAX_BUFFER_SIZE 2048
+#define MAX_BUFFER_SIZE 50000
 
 class HttpServer {
 
@@ -58,6 +58,7 @@ private:
 	// Logging
 	static bool enableLogging;
 	std::deque<HttpResponse> responses;
+	std::vector<int> errorCodes;
 
 
 public:
@@ -72,11 +73,14 @@ public:
 	int getServerSocket();
 	int getMaxConnections();
 	int getClientBodySize();
+	std::vector<int> getErrorCodes();
 	std::map<int, time_t>& getSocketLastActiveTime();
 	ServerConfig getServerConfig();
 	ssize_t getFileBytes();
 	std::deque<HttpResponse>& getResponses();
 	std::deque<int>& getServerActiveConnections();
+
+	void setErrorCodes(std::vector<int> errorCodes);
 	void setPort(int port);
 	void setHost(const std::string& host);
 	void setMaxConnections(int maxConnections);

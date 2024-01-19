@@ -152,7 +152,6 @@ bool HttpRequest::readHeaders(std::istringstream& requestStream, HttpRequest& re
 
 	if (request.headers.find("Host") == request.headers.end()) {
 		response.setStatusCode("400");
-		response.setBody("Bad Request");
 		return false;
 	}
 	return true;

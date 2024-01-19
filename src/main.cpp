@@ -22,37 +22,6 @@ int main(int argc, char **argv) {
 		{	
 			if(!parser.proccess_input())
 				return (0);
-
-			/* std::cout << parser.getServerConfigVector().back()->getPort() << std::endl;
-			std::cout << parser.getServerConfigVector().back()->getPort() << std::endl;
-			std::cout << parser.getServerConfigVector()[0]->getPort() << std::endl;
-			std::cout << parser.getServerConfigVector()[0]->getHost() << std::endl;
-
-			std::cout << parser.getServerConfigVector().back()->getServer_names()[0] << std::endl;
-			std::cout << parser.getServerConfigVector().back()->getServer_names()[1] << std::endl;
-
-			std::cout << parser.getServerConfigVector().back()->getRoot() << std::endl;
-
-
-			std::cout << parser.getServerConfigVector().back()->getError_codes()[0] << std::endl;
-			std::cout << parser.getServerConfigVector().back()->getError_pages()[0] << std::endl;
-
-			std::cout << parser.getServerConfigVector().back()->getClient_max_body_size() << std::endl;
-
-			std::cout << parser.getServerConfigVector().back()->getLocations()[0]->getPath() << std::endl;
-			std::cout << parser.getServerConfigVector().back()->getLocations()[0]->getRoot() << std::endl;
-
-			std::cout << parser.getServerConfigVector().back()->getLocations().back()->getMethods()[0] << std::endl;
-			std::cout << parser.getServerConfigVector().back()->getLocations().back()->getMethods()[1] << std::endl;
-
-			std::cout << parser.getServerConfigVector().back()->getLocations().back()->getRedirection() << std::endl;
-			std::cout << parser.getServerConfigVector().back()->getLocations().back()->getDirectoryListing() << std::endl;
-
-			std::cout << parser.getServerConfigVector().back()->getLocations().back()->getDefaultFile() << std::endl;
-
-			std::cout << parser.getServerConfigVector().back()->getLocations().back()->getCgiPath() << std::endl;
-			std::cout << parser.getServerConfigVector().back()->getLocations().back()->getCgiExtension() << std::endl;
-	*/
 		}
 		catch(const std::exception& e)
 		{

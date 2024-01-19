@@ -13,7 +13,7 @@ private:
 	std::string host;
 	std::vector<std::string> server_names;
 	std::vector<int> error_codes;
-	std::vector<std::string> error_pages;
+	std::string error_page;
 	std::string client_max_body_size;
 	std::vector<Location*> locations;
 
@@ -30,7 +30,7 @@ public:
 	std::string getHost();
 	std::vector<std::string> getServer_names();
 	std::vector<int> getError_codes();
-	std::vector<std::string> getError_pages();
+	std::string getErrorPage();
 	int getNbr();
 	std::string getClient_max_body_size();
 	std::vector<Location*> getLocations();
@@ -39,7 +39,7 @@ public:
 	void addServer_name(std::string server_name);
 	void addLocation(Location* location);
 	void addError_code(int error_code);
-	void addError_page(std::string error_page);
+	void setErrorPage(std::string error_page);
 	//void setConfigFilePath(const std::string& configFilePath);
 	//void setHost(const std::string& host);
 	void setNbr(int nbr);

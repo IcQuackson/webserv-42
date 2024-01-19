@@ -17,8 +17,7 @@ private:
 	std::string statusMessage;
 	std::map<std::string, std::string> headers;
 	std::string body;
-	std::vector<int> error_codes;
-	std::string error_page;
+	std::vector<int> errorCodes;
 
 public:
 	HttpResponse();
@@ -32,16 +31,14 @@ public:
 	std::map<std::string, std::string> getHeaders() const;
 	std::string getBody() const;
 	std::vector<int> getErrorCodes() const;
-	std::string getErrorPage() const;
 
+	void setErrorCodes(std::vector<int> errorCodes);
 	void setHttpVersion(const std::string httpVersion);
 	void setStatusCode(const std::string statusCode);
 	void setStatusMessage(const std::string statusMessage);
 	void addHeader(const std::string header, const std::string value);
 	void setHeaders(const std::map<std::string, std::string> headers);
 	void setBody(const std::string body);
-	void setErrorCodes(const std::vector<int> error_codes);
-	void setErrorPage(const std::string error_page);
 	void setDefaultErrorPage(int error_code);
 	std::string toString() const;
 };

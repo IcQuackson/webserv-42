@@ -146,7 +146,6 @@ void RouteHandler::handleGet(HttpRequest& request, HttpResponse& response) {
 		if (!location.getDirectoryListing()) {
 			std::cerr << "Directory listing is disabled" << std::endl;
 			response.setStatusCode("403");
-			response.setBody("Directory listing is disabled");
 			return;
 		}
 		// Check if the index file exists
@@ -179,7 +178,6 @@ void RouteHandler::handleRegularFile(const std::string filePath, HttpRequest& re
     if (!fileStream) {
         std::cerr << "Failed to open file: " << filePath << std::endl;
 		response.setStatusCode("500");
-		response.setBody("Failed to open file");
         return;
     }
 
@@ -311,7 +309,6 @@ void RouteHandler::handlePost(HttpRequest& request, HttpResponse& response) {
 	{
 		std::cerr << "Uploads are not allowed" << std::endl;
 		response.setStatusCode("403");
-		response.setBody("Uploads are not allowed");
 		return ;
 	}
 
@@ -352,7 +349,6 @@ void RouteHandler::handlePost(HttpRequest& request, HttpResponse& response) {
 				{
 					std::cerr << "Failed to open file: " << (upload_abs_path + "/" + filename) << std::endl;
 					response.setStatusCode("500");
-					response.setBody("Failed to open file");
 					return ;
 				}
     			ofile << request.getBody();
@@ -436,7 +432,6 @@ void RouteHandler::handleDelete(HttpRequest& request, HttpResponse& response) {
     	} else {
         	std::cerr << "Error removing directory." << std::endl;
 			response.setStatusCode("500");
-			response.setBody("Failed to remove directory");
     	}
 	}
 	else {
@@ -444,7 +439,6 @@ void RouteHandler::handleDelete(HttpRequest& request, HttpResponse& response) {
         if (remove(path.c_str()) != 0) {
             std::cerr << "Error removing file: " << strerror(errno) << std::endl;
             response.setStatusCode("500");
-			response.setBody("Failed to remove file");
         }
 		std::cout << "File removed successfully." << std::endl;
         response.setStatusCode("204");
