@@ -18,6 +18,7 @@
 #include <sstream>
 #include <iomanip>
 #include <deque>
+#include <time.h>
 
 #include "core/HttpRequestHandler.hpp"
 #include "core/HttpRequest.hpp"
@@ -25,7 +26,7 @@
 #include "core/RouteHandler.hpp"
 
 #define MAX_EVENTS 64
-#define MAX_BUFFER_SIZE 500000
+#define MAX_BUFFER_SIZE 2048
 
 class HttpServer {
 
@@ -51,6 +52,7 @@ private:
 	// Request and Response Buffers
 	//char requestBuffer[MAX_BUFFER_SIZE];
 	static std::map<int, HttpServer*> _allActiveConnections;
+	static std::map<int, time_t> _socketLastActiveTime;
 	std::deque<int> serverActiveConnections;
 
 	// Logging
@@ -70,6 +72,7 @@ public:
 	int getServerSocket();
 	int getMaxConnections();
 	int getClientBodySize();
+	std::map<int, time_t>& getSocketLastActiveTime();
 	ServerConfig getServerConfig();
 	ssize_t getFileBytes();
 	std::deque<HttpResponse>& getResponses();

@@ -5,6 +5,7 @@
 int epollFd = -1;
 bool HttpServer::enableLogging = true;
 std::map<int, HttpServer*> HttpServer::_allActiveConnections = std::map<int, HttpServer*>();
+std::map<int, time_t> HttpServer::_socketLastActiveTime = std::map<int, time_t>();
 
 HttpServer::HttpServer(ServerConfig& serverConfig): serverConfig(serverConfig) {
 }
@@ -66,6 +67,10 @@ ssize_t HttpServer::getFileBytes() {
 
 std::deque<int>& HttpServer::getServerActiveConnections() {
 	return this->serverActiveConnections;
+}
+
+std::map<int, time_t>& HttpServer::getSocketLastActiveTime() {
+	return this->_socketLastActiveTime;
 }
 
 std::deque<HttpResponse>& HttpServer::getResponses() {
@@ -154,12 +159,12 @@ bool HttpServer::init() {
 	std::cout << "Server listening on port " << port << std::endl;
 
 	// Set server socket to non-blocking mode
-	int flags = fcntl(serverSocket, F_GETFL, 0);
+/* 	int flags = fcntl(serverSocket, F_GETFL, 0);
 	if (flags == -1 || fcntl(serverSocket, F_SETFL, flags | O_NONBLOCK) == -1) {
 		perror("Error setting server socket to non-blocking mode");
 		close(serverSocket);
 		return false;
-	}
+	} */
 
 	return true;
 }
@@ -185,7 +190,7 @@ void HttpServer::runServers(std::vector<HttpServer> &servers) {
     // Populate the poll set
     for (size_t i = 0; i < servers.size(); i++) {
         pollSet[i].fd = servers[i].getServerSocket();
-        pollSet[i].events = POLLIN | POLLOUT;
+        pollSet[i].events = POLLIN;
         pollSet[i].revents = 0;
     }
 
@@ -201,25 +206,40 @@ void HttpServer::runServers(std::vector<HttpServer> &servers) {
 
         // Handle events for each server
         for (size_t i = 0; i < pollSet.size(); i++) {
+
+			// Check if the connection has timed out
+			time_t last_request_time = _socketLastActiveTime[pollSet[i].fd];
+			if (i >= servers.size() && (std::time(0) - last_request_time) > 4) {
+				std::cout << "Connection closed by timeout" << std::endl;
+				HttpServer *server = getServerFromClientSocket(pollSet[i].fd);
+				server->closeConnection(pollSet[i].fd, pollSet);
+				continue;
+			}
 			if (pollSet[i].revents & POLLIN) {
 				if (i < servers.size() && servers[i].getServerSocket() == pollSet[i].fd) {
+					std::cout << "Accepting connection on fd " << pollSet[i].fd << std::endl;
 					servers[i].acceptConnection(pollSet);
 				}
 				else {
+					_socketLastActiveTime[pollSet[i].fd] = std::time(0);
+					std::cout << "Received data on fd " << pollSet[i].fd << std::endl;
 					getServerFromClientSocket(pollSet[i].fd)->handleReceive(pollSet[i].fd, pollSet);
 				}
 			}
 			// Check for errors 
             else if (pollSet[i].revents & (POLLERR | POLLHUP | POLLNVAL)) {
+				printPollSet(pollSet);
 				std::cerr << "Error on fd " << pollSet[i].fd << std::endl;
 				HttpServer *server = getServerFromClientSocket(pollSet[i].fd);
 				server->closeConnection(pollSet[i].fd, pollSet);
             }
 			 // Check if a client socket is ready to write
 			else if (pollSet[i].revents & POLLOUT) {
+				std::cout << "Sending data on fd " << pollSet[i].fd << std::endl;
 				HttpServer *server = getServerFromClientSocket(pollSet[i].fd);
 				server->handleSend(pollSet);
 				pollSet[i].events &= ~POLLOUT;
+				std::cout << "Responses size: " << server->getResponses().size() << std::endl;
 			}
         }
     }
@@ -233,12 +253,20 @@ void HttpServer::acceptConnection(std::vector<pollfd> &pollSet) {
     int clientSocket = accept(this->serverSocket, (struct sockaddr *) &clientAddress, &clientAddressLength);
     if (clientSocket == -1) {
         perror("Error accepting connection");
+		closeConnection(clientSocket, pollSet);
         return;
     }
+	int flags = fcntl(clientSocket, F_GETFL, 0);
+	if (flags == -1 || fcntl(clientSocket, F_SETFL, flags | O_NONBLOCK) == -1) {
+		perror("Error setting server socket to non-blocking mode");
+		closeConnection(clientSocket, pollSet);
+		return;
+	}
 	std::cout << "Connection accepted on socket " << clientSocket << std::endl;
 
     // Add the new client socket to the active connections
     _allActiveConnections.insert(std::pair<int, HttpServer*>(clientSocket, this));
+	_socketLastActiveTime.insert(std::pair<int, time_t>(clientSocket, time(0)));
 	serverActiveConnections.push_back(clientSocket);
 
     // Add the new client socket to the poll set
@@ -262,6 +290,7 @@ void HttpServer::closeConnection(int clientSocket, std::vector<pollfd> &pollSet)
 
 	// Remove the client socket from the active connections
 	_allActiveConnections.erase(clientSocket);
+	_socketLastActiveTime.erase(clientSocket);
 
 	// erase from serverActiveConnections
 	serverActiveConnections.erase(std::remove(serverActiveConnections.begin(), serverActiveConnections.end(), clientSocket), serverActiveConnections.end());
@@ -274,8 +303,13 @@ void HttpServer::handleReceive(int clientSocket, std::vector<pollfd> &pollSet) {
 	memset(requestBuffer, 0, MAX_BUFFER_SIZE);
 	ssize_t bytesRead = recv(clientSocket, requestBuffer, MAX_BUFFER_SIZE - 1, 0);
 	requestBuffer[MAX_BUFFER_SIZE - 1] = '\0';
-	if (bytesRead == -1) {
+	if (bytesRead < 0) {
 		perror("Error receiving data");
+		closeConnection(clientSocket, pollSet);
+		return;
+	}
+	else if (bytesRead == 0) {
+		std::cout << "Connection closed by client" << std::endl;
 		closeConnection(clientSocket, pollSet);
 		return;
 	}
@@ -284,12 +318,11 @@ void HttpServer::handleReceive(int clientSocket, std::vector<pollfd> &pollSet) {
 	HttpResponse response;
 	processRequest(requestBuffer, clientSocket, response);
 	this->responses.push_back(response);
-
 }
 
 void HttpServer::handleSend(std::vector<pollfd> &pollSet) {
-    if (_allActiveConnections.empty() || serverActiveConnections.empty() || responses.empty()) {
-        // No active connections or no responses to send
+    if (serverActiveConnections.empty() || responses.empty()) {
+        std::cout << "No active connections or responses" << std::endl;
         return;
     }
 
@@ -299,11 +332,16 @@ void HttpServer::handleSend(std::vector<pollfd> &pollSet) {
 
     // Send the HTTP response
     ssize_t bytesSent = send(clientSocket, response.c_str(), response.size(), 0);
-    if (bytesSent == -1) {
+    if (bytesSent < 0) {
         perror("Error sending data");
         closeConnection(clientSocket, pollSet);
         return;
     }
+	else if (bytesSent == 0) {
+		std::cout << "Connection closed by client" << std::endl;
+		closeConnection(clientSocket, pollSet);
+		return;
+	}
 
 	// Remove the response from the queue
     responses.erase(responses.begin());
