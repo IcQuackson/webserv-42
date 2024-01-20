@@ -190,20 +190,44 @@ void    CgiHandler::execute_script(HttpRequest& request, HttpResponse& response,
     }
     else
     {
-        // ajustar isto. mallocs? buffers? who knows
+        close(pipes[1]);
         char buffer[2048]; 
         int readBytes = read(pipes[0], buffer, 2048);
+        close(pipes[0]);
+        if (readBytes < 0)
+        {
+            std::cerr << "read failed\n";
+            response.setStatusCode("500");
+            return ;
+        }
         buffer[readBytes] = '\0';
 
         std::string body(buffer);
         std::cout << "body: " << body << std::endl;
         std::cout << "readBytes: " << readBytes << std::endl;
-        //write(1, buffer, strlen(buffer));
 
-        close(pipes[0]);
-        close(pipes[1]);
-        waitpid(pid, &status, 0);
-        // TODO: verificar se wait pid deve estar aqui
+        pid_t wpid;
+        wpid = waitpid(pid, &status, WNOHANG);
+        if (wpid == 0) {
+            kill (pid, SIGKILL);
+        }
+        // Child process is still running
+        if (wpid == -1) {
+            // waitpid failed
+            perror("waitpid");
+        } else if (WIFEXITED(status)) {
+            // Child process exited normally
+            int exit_status = WEXITSTATUS(status);
+            std::cout << "Child exited with status: " << exit_status << std::endl;
+            if (exit_status != 0) {
+                response.setStatusCode("500");
+            }
+            return;
+        } else if (WIFSIGNALED(status)) {
+            // Child process was terminated by a signal
+            int term_signal = WTERMSIG(status);
+            std::cout << "Child was terminated by signal: " << term_signal << std::endl;
+        }
         response.setBody(body);
     }
 }
