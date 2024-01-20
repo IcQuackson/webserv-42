@@ -647,7 +647,10 @@ bool HttpServer::parseResource(const std::string& path, HttpRequest& request) {
 			break;  // No more parts to check
 		}
 		requestedPath = "/" + routePath.substr(lastSlash + 1) + requestedPath;
-		routePath = routePath.substr(0, lastSlash);
+		if (lastSlash == 0)
+			routePath = "/";
+		else
+			routePath = routePath.substr(0, lastSlash);
 	}
 
 	return false;
