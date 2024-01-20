@@ -34,7 +34,7 @@ private:
 
 	int clientBodySize;		 	         // Max size of the body of a request
 
-    std::string error_page;              // Error page path
+    std::string error_page_path;              // Error page path
 
 public:
 
@@ -108,7 +108,7 @@ public:
 
 	void setClientBodySize(int clientBodySize);
 
-    void setErrorPage(const std::string& error_page);
+    void setErrorPage(const std::string& error_page_path);
 
 };
 

@@ -24,7 +24,7 @@
 void CgiHandler::initCgi_Env(RouteHandler& route, HttpRequest& request)
 {
     (void) route;
-    this->cgi_Env["SCRIPT_FILENAME"] = route.getLocation().getRoot() + route.getLocation().getCgiPath();
+    this->cgi_Env["SCRIPT_FILENAME"] = route.getLocation().getCgiPath();
     this->cgi_Env["SERVER_NAME"] = request.getHost();
     this->cgi_Env["SERVER_SOFTWARE"] = "webserv-42/1.0";
     std::map<std::string, std::string>::iterator it = request.getHeaders().find("Content-Type");
@@ -148,8 +148,6 @@ void    CgiHandler::execute_script(HttpRequest& request, HttpResponse& response,
         response.setStatusCode("500");
         return ;
     }
-    //write(pipes[1],response.getBody().c_str(), 0);
-    //close(pipes[1]);
     pid = fork();
     if (pid == 0)
     {
@@ -161,6 +159,8 @@ void    CgiHandler::execute_script(HttpRequest& request, HttpResponse& response,
         
         char **argv = new char*[5];
         argv[0] = strdup("python");
+
+        // If POST
         if (type)
         {
             argv[1] = strdup(route.getLocation().getCgiPath().c_str());
@@ -191,8 +191,8 @@ void    CgiHandler::execute_script(HttpRequest& request, HttpResponse& response,
     else
     {
         // ajustar isto. mallocs? buffers? who knows
-        char buffer[1024]; 
-        int readBytes = read(pipes[0], buffer, 1023);
+        char buffer[2048]; 
+        int readBytes = read(pipes[0], buffer, 2048);
         buffer[readBytes] = '\0';
 
         std::string body(buffer);

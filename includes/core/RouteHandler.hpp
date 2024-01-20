@@ -55,7 +55,7 @@ public:
 
 	void handleDirectoryListing(HttpRequest& request, HttpResponse& response);
 
-	void handleRegularFile(const std::string filePath, HttpRequest& request, HttpResponse& response);
+	void handleRegularFile(const std::string filePath, HttpResponse& response);
 
 	void handleCgi(const std::string filePath, HttpRequest& request, HttpResponse& response);
 

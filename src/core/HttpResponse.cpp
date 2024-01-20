@@ -48,25 +48,6 @@ std::string HttpResponse::getStatusCode() const {
 void HttpResponse::setStatusCode(const std::string statusCode) {
 	this->statusCode = statusCode;
 	statusMessage = HttpStatusCode::getHttpStatusCode(statusCode);
-
-	// convert newStatusCode to int using streams
-	int statusCodeInt;
-
-	std::stringstream ss(statusCode);
-	ss >> statusCodeInt;
-
-	std::cout << "Error code: " << statusCodeInt << std::endl;
-
-	for (size_t i = 0; i < getErrorCodes().size(); i++) {
-		std::cout << "Error code: " << getErrorCodes()[i] << std::endl;
-	}
-
-	for (size_t i = 0; i < getErrorCodes().size(); i++) {
-		if (getErrorCodes()[i] == statusCodeInt) {
-			std::string error_page = "<html><head><title>" + statusCode + "</title></head><body><center><h1>" + statusCode + "</h1></center><hr><center>Webserver</center></body></html>";
-			setBody(error_page);
-		}
-	}
 }
 
 std::string HttpResponse::getStatusMessage() const {
@@ -100,8 +81,8 @@ void HttpResponse::setBody(const std::string newBody) {
 void HttpResponse::setDefaultErrorPage(int error_code)
 {
 	(void) error_code;
-/* 	std::string error_page = "<html><head><title>" + std::to_string(error_code) + "</title></head><body><center><h1>" + std::to_string(error_code) + "</h1></center><hr><center>Webserver</center></body></html>";
-	setBody(error_page); */
+/* 	std::string error_page_path = "<html><head><title>" + std::to_string(error_code) + "</title></head><body><center><h1>" + std::to_string(error_code) + "</h1></center><hr><center>Webserver</center></body></html>";
+	setBody(error_page_path); */
 }
 
 void HttpResponse::addHeader(const std::string header, const std::string value) {

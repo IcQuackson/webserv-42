@@ -50,7 +50,7 @@ public:
     bool parse_listen(std::string &token, std::stringstream& ss);
     bool parse_host_port(std::string& host_port, char sep);
     int parse_server_name(std::string &token, std::stringstream& ss);
-    int parse_error_page(std::string &token, std::stringstream& ss);
+    int parse_error_page_path(std::string &token, std::stringstream& ss);
     int parse_location(std::string &token, std::stringstream& ss);
     int verify_error_code(std::string &token, int &flag_code, int &flag_page);
     int parse_limit_except(std::string &token, std::stringstream& ss);

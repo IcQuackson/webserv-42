@@ -13,7 +13,7 @@ Location::Location() {
 	this->uploadEndpoint = "";
 	this->uploadPath = "";
 	this->clientBodySize = 2408;
-	this->error_page = "";
+	this->error_page_path = "";
 }
 
 Location::Location(const std::string& path) : path(path) {
@@ -28,7 +28,7 @@ Location::Location(const std::string& path) : path(path) {
 	this->uploadEndpoint = "";
 	this->uploadPath = "";
 	this->clientBodySize = 2408;
-	this->error_page = "";
+	this->error_page_path = "";
 }
 
 Location::~Location() {
@@ -87,7 +87,7 @@ int Location::getClientBodySize() const {
 }
 
 std::string Location::getErrorPage() const {
-	return this->error_page;
+	return this->error_page_path;
 }
 
 void Location::addMethod(std::string method) {
@@ -146,8 +146,8 @@ void Location::setClientBodySize(int clientBodySize) {
 	this->clientBodySize = clientBodySize;
 }
 
-void Location::setErrorPage(const std::string& error_page) {
-	this->error_page = error_page;
+void Location::setErrorPage(const std::string& error_page_path) {
+	this->error_page_path = error_page_path;
 }
 
 std::ostream& operator<<(std::ostream& os, const Location& location) {

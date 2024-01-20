@@ -178,9 +178,9 @@ int ConfigParser::verify_error_code(std::string &token, int &flag_code, int &fla
     return (1);
 } 
 
-int ConfigParser::parse_error_page(std::string &token, std::stringstream& ss)
+int ConfigParser::parse_error_page_path(std::string &token, std::stringstream& ss)
 {
-    if (token == "error_page")
+    if (token == "error_page_path")
     {
         ss >> token;
         if (token == ";")
@@ -574,8 +574,8 @@ bool ConfigParser::proccess_input()
                     throw std::runtime_error("Error: server_name parsing: " + token);
                 /* if (!parse_root(token, line))
                     throw std::runtime_error("Error: root parsing: " + token); */
-                if (!parse_error_page(token, line))
-                    throw std::runtime_error("Error: error_page parsing: " + token);
+                if (!parse_error_page_path(token, line))
+                    throw std::runtime_error("Error: error_page_path parsing: " + token);
                 if (!parse_var(token, line, CLIENT_MAX_BODY_SIZE))
                     throw std::runtime_error("Error: client_max_body_size parsing: " + token);
                 parse_location(token, line);

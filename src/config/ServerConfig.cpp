@@ -24,7 +24,7 @@ ServerConfig &ServerConfig::operator=(ServerConfig const &serverConfig) {
 		this->port = serverConfig.port;
 		this->server_names = serverConfig.server_names;
 		this->error_codes = serverConfig.error_codes;
-		this->error_page = serverConfig.error_page;
+		this->error_page_path = serverConfig.error_page_path;
 		this->client_max_body_size = serverConfig.client_max_body_size;
 		this->locations = serverConfig.locations;
 	}
@@ -62,7 +62,7 @@ std::vector<int> ServerConfig::getError_codes() {
 }
 
 std::string ServerConfig::getErrorPage() {
-	return this->error_page;
+	return this->error_page_path;
 }
 
 std::string ServerConfig::getClient_max_body_size() {
@@ -83,8 +83,8 @@ void ServerConfig::addError_code(int error_code) {
 	this->error_codes.push_back(error_code);
 }
 
-void ServerConfig::setErrorPage(std::string error_page) {
-	this->error_page = error_page;
+void ServerConfig::setErrorPage(std::string error_page_path) {
+	this->error_page_path = error_page_path;
 }
 
 void ServerConfig::setHost(std::string host) {

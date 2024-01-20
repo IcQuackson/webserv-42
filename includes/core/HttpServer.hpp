@@ -79,6 +79,7 @@ public:
 	ssize_t getFileBytes();
 	std::deque<HttpResponse>& getResponses();
 	std::deque<int>& getServerActiveConnections();
+	static std::string getFileContent(std::string filePath);
 
 	void setErrorCodes(std::vector<int> errorCodes);
 	void setPort(int port);

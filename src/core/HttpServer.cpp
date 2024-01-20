@@ -332,7 +332,38 @@ void HttpServer::handleReceive(int clientSocket, std::vector<pollfd> &pollSet) {
 	response.setErrorCodes(getServerConfig().getError_codes());
 	
 	processRequest(requestBuffer, clientSocket, response);
+
+	int statusCodeInt;
+
+	std::stringstream ss(response.getStatusCode());
+	ss >> statusCodeInt;
+
+	std::cout << "Status code: " << statusCodeInt << std::endl;
+
+	// TODO: ADD HEADERS WITH CONTENT LENGTH
+	for (size_t i = 0; i < serverConfig.getError_codes().size(); i++) {
+		if (serverConfig.getError_codes()[i] == statusCodeInt) {
+			std::string errorPageContent = getFileContent(getServerConfig().getErrorPage());
+			std::cout << "Error page content: " << std::endl << errorPageContent << std::endl;
+			response.setBody(errorPageContent);
+		}
+	}
 	this->responses.push_back(response);
+}
+
+std::string HttpServer::getFileContent(std::string filePath) {
+		std::ifstream fileStream(filePath.c_str(), std::ios::binary);
+
+    if (!fileStream) {
+        std::cerr << "Failed to open file: " << filePath << std::endl;
+        return "";
+    }
+
+	std::string fileContent((std::istreambuf_iterator<char>(fileStream)), std::istreambuf_iterator<char>());
+	std::cout << "File content: " << std::endl << fileContent << std::endl;
+	fileStream.close();
+
+	return fileContent;
 }
 
 void HttpServer::handleSend(std::vector<pollfd> &pollSet) {
@@ -630,6 +661,16 @@ bool HttpServer::parseResource(const std::string& path, HttpRequest& request) {
 	std::string routePath = path;
 	std::string requestedPath = "";
 
+	std::cout << "Route path: " << routePath << std::endl;
+
+	std::cout << "Path: " << path << std::endl;
+	std::cout << "Print all endpoints: " << std::endl;
+	for (std::map<std::string, RouteHandler>::iterator it = routes.begin(); it != routes.end(); ++it) {
+		std::cout << it->first << std::endl;
+	}
+
+
+
 	while (!routePath.empty()) {
 		std::cout << "Requested path: " << requestedPath << std::endl;
 		// Check if the current path is a valid endpoint
@@ -647,10 +688,13 @@ bool HttpServer::parseResource(const std::string& path, HttpRequest& request) {
 			break;  // No more parts to check
 		}
 		requestedPath = "/" + routePath.substr(lastSlash + 1) + requestedPath;
-		if (lastSlash == 0)
+		if (lastSlash == 0 && routes.find("/") != routes.end()) {
 			routePath = "/";
-		else
+		}
+		else {
 			routePath = routePath.substr(0, lastSlash);
+		}
+		std::cout << "Route path: " << routePath << std::endl;
 	}
 
 	return false;

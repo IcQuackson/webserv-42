@@ -121,12 +121,18 @@ void RouteHandler::handleGet(HttpRequest& request, HttpResponse& response) {
 	Location location = getLocation();
 	std::string resource = request.getResource();
 	std::string root = location.getRoot();
-	std::string index = location.getIndex();
+	std::string index = location.getDefaultFile();
 	std::string path = root + resource;
 	std::string indexPath = root + index;
 
 	//std::cout << "HANDLE GET LOCATION: " << location << std::endl;
 	//std::cout << path << std::endl;
+
+	std::cout << "resource: " << resource << std::endl;
+	std::cout << "root: " << root << std::endl;
+	std::cout << "index: " << index << std::endl;
+	std::cout << "path: " << path << std::endl;
+	std::cout << "indexPath: " << indexPath << std::endl;
 	
 	if(root == "./cgi_bin")
 	{
@@ -139,20 +145,24 @@ void RouteHandler::handleGet(HttpRequest& request, HttpResponse& response) {
 		response.setStatusCode("404");
 		return;
 	}
+
+	if (path != "./" && path[path.length() - 1] == '/') {
+		path = path.substr(0, path.length() - 1);
+	}
 	
 	if (isDirectory(path)) {
 		std::cout << "Directory" << std::endl;
+		// Check if the index file exists
+		if (!index.empty() && path == root && resourceExists(indexPath) && !isDirectory(indexPath)) {
+			std::cout << "Index file exists" << std::endl;
+			std::cout << "Index file: " << indexPath << std::endl;
+			path = indexPath;
+		}
 		// Check if directory listing is enabled
 		if (!location.getDirectoryListing()) {
 			std::cerr << "Directory listing is disabled" << std::endl;
 			response.setStatusCode("403");
 			return;
-		}
-		// Check if the index file exists
-		if (!index.empty() && resourceExists(indexPath) && !isDirectory(indexPath)) {
-			std::cout << "Index file exists" << std::endl;
-			std::cout << "Index file: " << indexPath << std::endl;
-			path = indexPath;
 		}
 		else {
 			handleDirectoryListing(response, root, resource);
@@ -166,12 +176,11 @@ void RouteHandler::handleGet(HttpRequest& request, HttpResponse& response) {
 	}
 	else {
 		std::cerr << "Regular file" << std::endl;
-		handleRegularFile(path, request, response);
+		handleRegularFile(path, response);
 	}
 }
 
-void RouteHandler::handleRegularFile(const std::string filePath, HttpRequest& request, HttpResponse& response) {
-	(void) request;
+void RouteHandler::handleRegularFile(const std::string filePath, HttpResponse& response) {
 
 	std::ifstream fileStream(filePath.c_str(), std::ios::binary);
 
