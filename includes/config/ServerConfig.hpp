@@ -47,4 +47,5 @@ public:
 	void setHost(std::string host);
 	void setClient_max_body_size(std::string client_max_body_size);
 	static void setDefaultServer(ServerConfig *serverConfig);
+	void delete_mem();
 };

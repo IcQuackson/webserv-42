@@ -21,11 +21,23 @@ int main(int argc, char **argv) {
 		try
 		{	
 			if(!parser.proccess_input())
+			{
+				for (size_t i = 0; i < serverConfigs.size(); ++i) {
+					serverConfigs[i]->delete_mem();
+					delete serverConfigs[i];
+    			}
+				delete serverConfig;
 				return (0);
+			}
 		}
 		catch(const std::exception& e)
 		{
 			std::cerr << e.what() << '\n';
+			for (size_t i = 0; i < serverConfigs.size(); ++i) {
+				serverConfigs[i]->delete_mem();
+					delete serverConfigs[i];
+    			}
+			delete serverConfig;
 			return (0);
 		}
 		
@@ -75,5 +87,4 @@ int main(int argc, char **argv) {
 	HttpStatusCode::initStatusCodes();
 	HttpServer::setupServers(httpServers);
 	HttpServer::runServers(httpServers);
-	// Start all initialized servers
 }

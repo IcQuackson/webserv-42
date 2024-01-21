@@ -9,7 +9,11 @@ ConfigParser::ConfigParser(ConfigParser const &configParser)
     *this = configParser;
 }
 
-ConfigParser::~ConfigParser() {}
+ConfigParser::~ConfigParser() {
+    /* for (size_t i = 0; i < serverConfigVector.size(); ++i) {
+        delete serverConfigVector[i];
+    } */
+}
 
 bool ConfigParser::checkServer(std::string token, std::stringstream& ss) 
 {
@@ -587,6 +591,10 @@ bool ConfigParser::proccess_input()
         catch(const std::exception& e)
         {
             std::cerr << e.what() << '\n';
+            for (size_t i = 0; i < serverConfigVector.size(); ++i) {
+                    serverConfigVector[i]->delete_mem();
+					delete serverConfigVector[i];
+    			}
             return (0);
         }
         if (token == "}")

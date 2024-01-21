@@ -16,6 +16,12 @@ ServerConfig::ServerConfig(ServerConfig const &serverConfig) {
 	*this = serverConfig;
 }
 
+void ServerConfig::delete_mem(){
+	for (size_t j = 0; j < locations.size(); ++j) {
+				delete locations[j];
+		}
+}
+
 ServerConfig &ServerConfig::operator=(ServerConfig const &serverConfig) {
 	if (this != &serverConfig) {
 		this->nbr = serverConfig.nbr;
