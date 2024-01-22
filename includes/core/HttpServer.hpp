@@ -93,6 +93,8 @@ public:
 	static void runServers(std::vector<HttpServer*> &servers);
 	static HttpServer* getServerFromClientSocket(int clientSocket);
 	static void closeIfTimedOut(int clientSocket);
+	static std::string trim(const std::string& str);
+	bool isHostNameAllowed(const std::string& target);
 	void acceptConnection();
 	void closeConnection(int clientSocket);
 	bool init();

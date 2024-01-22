@@ -45,7 +45,7 @@ std::string HttpRequest::getMethod() const {
 }
 
 void HttpRequest::setMethod(const std::string& newMethod) {
-	method = newMethod;
+	method = HttpServer::trim(newMethod);
 }
 
 std::string HttpRequest::getResource() const {
@@ -53,7 +53,7 @@ std::string HttpRequest::getResource() const {
 }
 
 void HttpRequest::setResource(const std::string& newResource) {
-	resource = newResource;
+	resource = HttpServer::trim(newResource);
 }
 
 std::string HttpRequest::getHttpVersion() const {
@@ -61,7 +61,7 @@ std::string HttpRequest::getHttpVersion() const {
 }
 
 void HttpRequest::setHttpVersion(const std::string& newHttpVersion) {
-	httpVersion = newHttpVersion;
+	httpVersion = HttpServer::trim(newHttpVersion);
 }
 
 std::string HttpRequest::getHost() const {
@@ -69,7 +69,7 @@ std::string HttpRequest::getHost() const {
 }
 
 void HttpRequest::setHost(const std::string& newHost) {
-	host = newHost;
+	host = HttpServer::trim(newHost);
 }
 
 std::map<std::string, std::string> HttpRequest::getArgs() const {

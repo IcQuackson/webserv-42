@@ -419,49 +419,56 @@ bool isBufferEmpty(const char* buffer) {
     return true;  // Buffer is empty
 }
 
+bool HttpServer::isHostNameAllowed(const std::string& target) {
+	std::cout << "Host wanted: " << target << std::endl;
+	std::cout << "Server hostnames:" << std::endl;
+
+	std::vector<std::string> hostNames = serverConfig.getServer_names();
+	for (size_t i = 0; i < hostNames.size(); i++) {
+		std::cout << hostNames[i] << std::endl;
+	}
+	return std::find(hostNames.begin(), hostNames.end(), target) != hostNames.end();
+}
+
 HttpResponse HttpServer::processRequest(char *dataBuffer, int clientSocket, HttpResponse &response) {
-    // Acknowledge the connection
-    //const char* acknowledgment = "HTTP/1.1 200 OK\r\nContent-Length: 0\r\nConnection: close\r\n\r\n";
-
-    //ssize_t bytesRead;
-
 	// Read data from the client
 	std::cout << "clientSocket: " << clientSocket << std::endl;
-	//bytesRead = std::strlen(dataBuffer);
 
 	// TODO: store bytes read
-
     
-	//std::cout << "Read " << bytesRead << " bytes of data." << std::endl;
 	response.setStatusCode("200");
 	std::cout << "-----------" << std::endl;
 	Utils::printYellow("Request:");
 	HttpRequest request;
-	bool isValidRequest = parseRequest(clientSocket, dataBuffer, request, response);
+	bool isValidSyntax = parseRequest(clientSocket, dataBuffer, request, response);
 
-	if (isValidRequest) {
-		// Check if the requested resource exists
-		std::cout << "request.getResource(): " << request.getResource() << std::endl;
-		if (!parseResource(request.getResource(), request)) {
+	if (!isValidSyntax) {
+		std::cerr << "Invalid syntax" << std::endl;
+		return response;
+	}
+
+	// Check if the requested resource exists
+	std::cout << "Resource wanted: " << request.getResource() << std::endl;
+	if (!parseResource(request.getResource(), request)) {
+		response.setStatusCode("404");
+		std::cerr << "Resource not found" << std::endl;
+	}
+	// TODO: make server config store all the hosts
+	if (!isHostNameAllowed(request.getHost())) {;
+		std::cerr << "Host not allowed" << std::endl;
+		return response;
+	}
+	else {
+		std::string redirect_path = routes[request.getRoute()].getLocation().getRedirection();
+		if (!redirect_path.empty() && routes.find(redirect_path) != routes.end()) {
+			request.setRoute(redirect_path);
+			routes[redirect_path].handleRequest(request, response);
+		}
+		else if (!redirect_path.empty()) {
 			response.setStatusCode("404");
-			response.addHeader("Content-Type", "text/html");
-			//response.setDefaultErrorPage(404);
 		}
 		else {
-				std::string redirect_path = routes[request.getRoute()].getLocation().getRedirection();
-				if (!redirect_path.empty()) {
-					if (routes.find(redirect_path) != routes.end())
-					{
-						request.setRoute(redirect_path);
-						routes[redirect_path].handleRequest(request, response);
-					}
-					else
-					{
-						response.setStatusCode("404");
-					}
-				}
-				else
-				routes[request.getRoute()].handleRequest(request, response);
+			routes[request.getRoute()].handleRequest(request, response);
 		}
 	}
 	log("Request received", clientSocket, request, response);
@@ -584,6 +591,28 @@ bool HttpServer::parseRequest(int clientSocket, char data[], HttpRequest &reques
 	//std::cout << request << std::endl;
 
 	return true;
+}
+
+std::string HttpServer::trim(const std::string& str) {
+    // Find the first non-space character
+    std::string::const_iterator first = str.begin();
+    while (first != str.end() && std::isspace(*first)) {
+        ++first;
+    }
+
+    // Find the last non-space character
+    std::string::const_reverse_iterator last = str.rbegin();
+    while (last != str.rend() && std::isspace(*last)) {
+        ++last;
+    }
+
+    // Check if the string is empty or contains only spaces
+    if (first == str.end() || last.base() == str.begin()) {
+        return std::string();  // Return an empty string
+    }
+	else {
+        return std::string(first, last.base());
+    }
 }
 
 void HttpServer::addRouteHandler(const RouteHandler routeHandler) {
