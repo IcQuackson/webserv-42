@@ -164,7 +164,7 @@ void    CgiHandler::execute_script(HttpRequest& request, HttpResponse& response,
         if (type)
         {
             argv[1] = strdup(route.getLocation().getCgiPath().c_str());
-            argv[2] = strdup(route.getLocation().getUploadPath().c_str());
+            argv[2] = strdup((route.getLocation().getRoot() + route.getLocation().getUploadPath()).c_str());
             argv[3] = strdup(filename.c_str());
         }
         else
@@ -221,8 +221,8 @@ void    CgiHandler::execute_script(HttpRequest& request, HttpResponse& response,
             std::cout << "Child exited with status: " << exit_status << std::endl;
             if (exit_status != 0) {
                 response.setStatusCode("500");
+                return;
             }
-            return;
         } else if (WIFSIGNALED(status)) {
             // Child process was terminated by a signal
             int term_signal = WTERMSIG(status);

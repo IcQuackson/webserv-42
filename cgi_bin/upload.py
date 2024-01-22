@@ -14,11 +14,11 @@ import shutil
 UPLOAD_FOLDER = sys.argv[1]
 UPLOAD_FILE = "cgi_bin/upload/" + sys.argv[2]
 
-print(UPLOAD_FOLDER)
-print(UPLOAD_FILE)
+#print(UPLOAD_FOLDER)
+#print(UPLOAD_FILE)
 
 def main():
-	if not UPLOAD_FILE:
+	if not UPLOAD_FILE or not sys.argv[2]:
 		print("<h1> No file was selected </h1>")
 		return
 
