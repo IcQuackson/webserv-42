@@ -4,6 +4,7 @@
 
 int epollFd = -1;
 bool HttpServer::enableLogging = true;
+std::vector<pollfd> HttpServer::_pollSet = std::vector<pollfd>();
 std::map<int, HttpServer*> HttpServer::_allActiveConnections = std::map<int, HttpServer*>();
 std::map<int, time_t> HttpServer::_socketLastActiveTime = std::map<int, time_t>();
 
@@ -116,15 +117,15 @@ bool HttpServer::loadConfig(const std::string& configFilePath) {
 	return true;
 }
 
-void HttpServer::setupServers(std::vector<HttpServer> &servers) {
+void HttpServer::setupServers(std::vector<HttpServer*> &servers) {
 	// Initialize all servers
-	for (size_t i = 0; i < servers.size(); ++i) {
-        if (!servers[i].init()) {
-            std::cerr << "Failed to initialize server on port " << servers[i].getPort() << std::endl;
+	for (size_t i = 0; i < servers.size(); i++) {
+        if (!servers[i]->init()) {
+            std::cerr << "Failed to initialize server on port " << servers[i]->getPort() << std::endl;
             exit(1);
         }
-		std::cout << "Server initialized on port " << servers[i].getPort() << std::endl;
-		std::cout << "Server socket: " << servers[i].getServerSocket() << std::endl;
+		std::cout << "Server initialized on port " << servers[i]->getPort() << std::endl;
+		std::cout << "Server socket: " << servers[i]->getServerSocket() << std::endl;
     }
 }
 
@@ -180,12 +181,12 @@ bool HttpServer::init() {
 	return true;
 }
 
-void printPollSet(std::vector<pollfd> &pollSet) {
+void printPollSet(std::vector<pollfd> &_pollSet) {
 	std::cout << "Poll set: " << std::endl;
-	for (size_t i = 0; i < pollSet.size(); i++) {
-		std::cout << "fd: " << pollSet[i].fd << std::endl;
-		std::cout << "events: " << pollSet[i].events << std::endl;
-		std::cout << "revents: " << pollSet[i].revents << std::endl;
+	for (size_t i = 0; i < _pollSet.size(); i++) {
+		std::cout << "fd: " << _pollSet[i].fd << std::endl;
+		std::cout << "events: " << _pollSet[i].events << std::endl;
+		std::cout << "revents: " << _pollSet[i].revents << std::endl;
 	}
 }
 
@@ -193,70 +194,83 @@ HttpServer* HttpServer::getServerFromClientSocket(int clientSocket) {
 	return _allActiveConnections.at(clientSocket);
 }
 
-void HttpServer::runServers(std::vector<HttpServer> &servers) {
-	std::vector<pollfd> pollSet(servers.size());
+void HttpServer::closeIfTimedOut(int clientSocket) {
+	if (_socketLastActiveTime.find(clientSocket) == _socketLastActiveTime.end()) {
+		return;
+	}
+
+	time_t last_request_time = _socketLastActiveTime[clientSocket];
+	if ((std::time(0) - last_request_time) > 4) {
+		std::cout << "Connection closed by timeout" << std::endl;
+		HttpServer *server = getServerFromClientSocket(clientSocket);
+		server->closeConnection(clientSocket);
+		return;
+	}
+}
+
+void HttpServer::runServers(std::vector<HttpServer*> &servers) {
+	for (size_t i = 0; i < servers.size(); i++) {
+		_pollSet.push_back(pollfd());
+	}
 
 	std::cout << "Running servers" << std::endl;
 
     // Populate the poll set
     for (size_t i = 0; i < servers.size(); i++) {
-        pollSet[i].fd = servers[i].getServerSocket();
-        pollSet[i].events = POLLIN;
-        pollSet[i].revents = 0;
+        _pollSet[i].fd = servers[i]->getServerSocket();
+        _pollSet[i].events = POLLIN;
+        _pollSet[i].revents = 0;
     }
 
-	printPollSet(pollSet);
+	//printPollSet(_pollSet);
 
     // Main event loop
     while (true) {
-        int numReady = poll(&pollSet[0], pollSet.size(), 200);
+        int numReady = poll(&_pollSet[0], _pollSet.size(), 200);
         if (numReady == -1) {
             perror("Error in poll");
             exit(1);
         }
 
         // Handle events for each server
-        for (size_t i = 0; i < pollSet.size(); i++) {
+        for (size_t i = 0; i < _pollSet.size(); i++) {
 
-			// Check if the connection has timed out
-			time_t last_request_time = _socketLastActiveTime[pollSet[i].fd];
-			if (i >= servers.size() && (std::time(0) - last_request_time) > 4) {
-				std::cout << "Connection closed by timeout" << std::endl;
-				HttpServer *server = getServerFromClientSocket(pollSet[i].fd);
-				server->closeConnection(pollSet[i].fd, pollSet);
-				continue;
-			}
-			if (pollSet[i].revents & POLLIN) {
-				if (i < servers.size() && servers[i].getServerSocket() == pollSet[i].fd) {
-					std::cout << "Accepting connection on fd " << pollSet[i].fd << std::endl;
-					servers[i].acceptConnection(pollSet);
+			closeIfTimedOut(_pollSet[i].fd);
+
+			// Check if a socket is ready to read
+			if (_pollSet[i].revents & POLLIN) {
+				// Check if a new client connection is ready to be accepted
+				if (i < servers.size() && servers[i]->getServerSocket() == _pollSet[i].fd) {
+					std::cout << "Accepting connection on fd " << _pollSet[i].fd << std::endl;
+					servers[i]->acceptConnection();
 				}
+				// Check if a client socket is ready to read
 				else {
-					_socketLastActiveTime[pollSet[i].fd] = std::time(0);
-					std::cout << "Received data on fd " << pollSet[i].fd << std::endl;
-					getServerFromClientSocket(pollSet[i].fd)->handleReceive(pollSet[i].fd, pollSet);
+					_socketLastActiveTime[_pollSet[i].fd] = std::time(0);
+					std::cout << "Received data on fd " << _pollSet[i].fd << std::endl;
+					getServerFromClientSocket(_pollSet[i].fd)->handleReceive(_pollSet[i].fd);
 				}
 			}
 			// Check for errors 
-            else if (pollSet[i].revents & (POLLERR | POLLHUP | POLLNVAL)) {
-				printPollSet(pollSet);
-				std::cerr << "Error on fd " << pollSet[i].fd << std::endl;
-				HttpServer *server = getServerFromClientSocket(pollSet[i].fd);
-				server->closeConnection(pollSet[i].fd, pollSet);
+            else if (_pollSet[i].revents & (POLLERR | POLLHUP | POLLNVAL)) {
+				printPollSet(_pollSet);
+				std::cerr << "Error on fd " << _pollSet[i].fd << std::endl;
+				HttpServer *server = getServerFromClientSocket(_pollSet[i].fd);
+				server->closeConnection(_pollSet[i].fd);
             }
-			 // Check if a client socket is ready to write
-			else if (pollSet[i].revents & POLLOUT) {
-				std::cout << "Sending data on fd " << pollSet[i].fd << std::endl;
-				HttpServer *server = getServerFromClientSocket(pollSet[i].fd);
-				server->handleSend(pollSet);
-				pollSet[i].events &= ~POLLOUT;
+			 // Check if a socket is ready to write
+			else if (_pollSet[i].revents & POLLOUT) {
+				std::cout << "Sending data on fd " << _pollSet[i].fd << std::endl;
+				HttpServer *server = getServerFromClientSocket(_pollSet[i].fd);
+				server->handleSend();
+				_pollSet[i].events &= ~POLLOUT;
 				std::cout << "Responses size: " << server->getResponses().size() << std::endl;
 			}
         }
     }
 }
 
-void HttpServer::acceptConnection(std::vector<pollfd> &pollSet) {
+void HttpServer::acceptConnection() {
     struct sockaddr_in clientAddress;
     socklen_t clientAddressLength = sizeof(clientAddress);
 
@@ -264,13 +278,13 @@ void HttpServer::acceptConnection(std::vector<pollfd> &pollSet) {
     int clientSocket = accept(this->serverSocket, (struct sockaddr *) &clientAddress, &clientAddressLength);
     if (clientSocket == -1) {
         perror("Error accepting connection");
-		closeConnection(clientSocket, pollSet);
+		closeConnection(clientSocket);
         return;
     }
 	int flags = fcntl(clientSocket, F_GETFL, 0);
 	if (flags == -1 || fcntl(clientSocket, F_SETFL, flags | O_NONBLOCK) == -1) {
 		perror("Error setting server socket to non-blocking mode");
-		closeConnection(clientSocket, pollSet);
+		closeConnection(clientSocket);
 		return;
 	}
 	std::cout << "Connection accepted on socket " << clientSocket << std::endl;
@@ -284,17 +298,17 @@ void HttpServer::acceptConnection(std::vector<pollfd> &pollSet) {
     struct pollfd pfd;
     pfd.fd = clientSocket;
     pfd.events = POLLIN | POLLOUT;
-    pollSet.push_back(pfd);
+    _pollSet.push_back(pfd);
 }
 
-void HttpServer::closeConnection(int clientSocket, std::vector<pollfd> &pollSet) {
+void HttpServer::closeConnection(int clientSocket) {
 	// Close the client socket
 	close(clientSocket);
 
 	// Remove the client socket from the poll set
-	for (size_t i = 0; i < pollSet.size(); i++) {
-		if (pollSet[i].fd == clientSocket) {
-			pollSet.erase(pollSet.begin() + i);
+	for (size_t i = 0; i < _pollSet.size(); i++) {
+		if (_pollSet[i].fd == clientSocket) {
+			_pollSet.erase(_pollSet.begin() + i);
 			break;
 		}
 	}
@@ -307,7 +321,7 @@ void HttpServer::closeConnection(int clientSocket, std::vector<pollfd> &pollSet)
 	serverActiveConnections.erase(std::remove(serverActiveConnections.begin(), serverActiveConnections.end(), clientSocket), serverActiveConnections.end());
 }
 
-void HttpServer::handleReceive(int clientSocket, std::vector<pollfd> &pollSet) {
+void HttpServer::handleReceive(int clientSocket) {
 
 	// Receive the HTTP request
 	char requestBuffer[MAX_BUFFER_SIZE];
@@ -316,12 +330,12 @@ void HttpServer::handleReceive(int clientSocket, std::vector<pollfd> &pollSet) {
 	requestBuffer[MAX_BUFFER_SIZE - 1] = '\0';
 	if (bytesRead < 0) {
 		perror("Error receiving data");
-		closeConnection(clientSocket, pollSet);
+		closeConnection(clientSocket);
 		return;
 	}
 	else if (bytesRead == 0) {
 		std::cout << "Connection closed by client" << std::endl;
-		closeConnection(clientSocket, pollSet);
+		closeConnection(clientSocket);
 		return;
 	}
 
@@ -366,7 +380,7 @@ std::string HttpServer::getFileContent(std::string filePath) {
 	return fileContent;
 }
 
-void HttpServer::handleSend(std::vector<pollfd> &pollSet) {
+void HttpServer::handleSend() {
     if (serverActiveConnections.empty() || responses.empty()) {
         std::cout << "No active connections or responses" << std::endl;
         return;
@@ -380,12 +394,12 @@ void HttpServer::handleSend(std::vector<pollfd> &pollSet) {
     ssize_t bytesSent = send(clientSocket, response.c_str(), response.size(), 0);
     if (bytesSent < 0) {
         perror("Error sending data");
-        closeConnection(clientSocket, pollSet);
+        closeConnection(clientSocket);
         return;
     }
 	else if (bytesSent == 0) {
 		std::cout << "Connection closed by client" << std::endl;
-		closeConnection(clientSocket, pollSet);
+		closeConnection(clientSocket);
 		return;
 	}
 
@@ -393,7 +407,7 @@ void HttpServer::handleSend(std::vector<pollfd> &pollSet) {
     responses.erase(responses.begin());
 
     // Close the client socket
-    closeConnection(clientSocket, pollSet);
+    closeConnection(clientSocket);
 }
 
 bool isBufferEmpty(const char* buffer) {

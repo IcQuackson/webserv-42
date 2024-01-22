@@ -24,7 +24,6 @@ public:
 	ServerConfig(ServerConfig const &serverConfig);
 	ServerConfig &operator=(ServerConfig const &serverConfig);
 
-	// getters and setters
 	std::string getConfigFilePath();
 	int getPort();
 	std::string getHost();
@@ -40,8 +39,6 @@ public:
 	void addLocation(Location* location);
 	void addError_code(int error_code);
 	void setErrorPage(std::string error_page_path);
-	//void setConfigFilePath(const std::string& configFilePath);
-	//void setHost(const std::string& host);
 	void setNbr(int nbr);
 	void setPort(int port);
 	void setHost(std::string host);

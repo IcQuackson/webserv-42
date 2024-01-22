@@ -156,7 +156,8 @@ void RouteHandler::handleGet(HttpRequest& request, HttpResponse& response) {
 		if (!index.empty() && path == root && resourceExists(indexPath) && !isDirectory(indexPath)) {
 			std::cout << "Index file exists" << std::endl;
 			std::cout << "Index file: " << indexPath << std::endl;
-			path = indexPath;
+			handleRegularFile(indexPath, response);
+			return;
 		}
 		// Check if directory listing is enabled
 		if (!location.getDirectoryListing()) {

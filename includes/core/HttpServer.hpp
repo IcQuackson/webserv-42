@@ -50,7 +50,7 @@ private:
 	std::map<std::string, RouteHandler> routes;
 
 	// Request and Response Buffers
-	//char requestBuffer[MAX_BUFFER_SIZE];
+	static std::vector<pollfd> _pollSet;
 	static std::map<int, HttpServer*> _allActiveConnections;
 	static std::map<int, time_t> _socketLastActiveTime;
 	std::deque<int> serverActiveConnections;
@@ -89,14 +89,15 @@ public:
 	void setServerConfigs(ServerConfig serverConfigs);
 
 
-	static void setupServers(std::vector<HttpServer> &servers);
-	static void runServers(std::vector<HttpServer> &servers);
+	static void setupServers(std::vector<HttpServer*> &servers);
+	static void runServers(std::vector<HttpServer*> &servers);
 	static HttpServer* getServerFromClientSocket(int clientSocket);
-	void acceptConnection(std::vector<pollfd> &pollSet);
-	void closeConnection(int clientSocket, std::vector<pollfd> &pollSet);
+	static void closeIfTimedOut(int clientSocket);
+	void acceptConnection();
+	void closeConnection(int clientSocket);
 	bool init();
-	void handleReceive(int clientSocket, std::vector<pollfd> &pollSet);
-	void handleSend(std::vector<pollfd> &pollSet);
+	void handleReceive(int clientSocket);
+	void handleSend();
 	bool loadConfig(const std::string& configFilePath);
 	void addRouteHandler(const RouteHandler routeHandler);
 	const std::map<std::string, RouteHandler> getRouteHandlers();

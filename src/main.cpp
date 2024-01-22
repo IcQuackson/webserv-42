@@ -50,39 +50,27 @@ int main(int argc, char **argv) {
 		serverConfigs.push_back(serverConfig);
 	}
 
-
-	//serverConfig = *parser.getServerConfigVector()[0];
-
 	// Create and initialize instances of HttpServer based on server configurations
-    std::vector<HttpServer> httpServers = std::vector<HttpServer>();
+    std::vector<HttpServer*> httpServers = std::vector<HttpServer*>();
 
 	for (size_t i = 0; i < serverConfigs.size(); i++) {
-		HttpServer httpServer(*serverConfigs[i]);
+		HttpServer* httpServer = new HttpServer(*serverConfigs[i]);
 
 		for (size_t j = 0; j < serverConfigs[i]->getLocations().size(); j++) {
 			std::cout << serverConfigs[i]->getLocations().size() << std::endl;
 			Location *location = serverConfigs[i]->getLocations()[j];
 			RouteHandler routeHandler(*serverConfigs[i],*location);
-			//delete location;
-			httpServer.addRouteHandler(routeHandler);
+			httpServer->addRouteHandler(routeHandler);
 		}
 
         // Configure the HttpServer instance based on serverConfigs[i]
-        httpServer.loadConfig(serverConfigs[i]->getConfigFilePath());
-        httpServer.setPort(serverConfigs[i]->getPort());
-		httpServer.setHost(serverConfigs[i]->getHost());
+        httpServer->loadConfig(serverConfigs[i]->getConfigFilePath());
+        httpServer->setPort(serverConfigs[i]->getPort());
+		httpServer->setHost(serverConfigs[i]->getHost());
 
         // Initialize and add to the vector of HttpServers
         httpServers.push_back(httpServer);
 	}
-
-	std::map<std::string, RouteHandler> routes = httpServers.at(0).getRouteHandlers();
-	//RouteHandler handler = routes["/resources"];
-
-	std::map<std::string, RouteHandler>::iterator it;
-	for (it = routes.begin(); it != routes.end(); ++it) {
-	}
-	//std::cout << "debug: " << handler.getLocation() << std::endl;
 
 	HttpStatusCode::initStatusCodes();
 	HttpServer::setupServers(httpServers);

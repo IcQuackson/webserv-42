@@ -592,7 +592,6 @@ bool ConfigParser::proccess_input()
         {
             std::cerr << e.what() << '\n';
             for (size_t i = 0; i < serverConfigVector.size(); ++i) {
-                    serverConfigVector[i]->delete_mem();
 					delete serverConfigVector[i];
     			}
             return (0);
