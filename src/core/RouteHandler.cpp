@@ -45,22 +45,27 @@ void RouteHandler::handleRequest(HttpRequest& request, HttpResponse& response) {
 	for (std::vector<std::string>::iterator it = methods.begin(); it != methods.end(); ++it) {
 		std::cout << ' ' << *it;
 	}
-	std::cout << '\n';
+	std::cout << std::endl;
 
 	// Check if method is allowed
+	//TODO: AS VEZES methods NAO TEM NADA
 	if (it == methods.end()) {
+		std::cerr << "Method not allowed: " << request.getMethod() << std::endl;
 		response.setStatusCode("405");
 		return;
 	}
 	if (this->location.getClientBodySize() < (int)request.getBody().length()) {
+		std::cerr << "Request body too large: " << request.getBody().length() << std::endl;
 		response.setStatusCode("413");
 		return;
 	}
 	if (request.getMethod() == "GET") {
 		this->handleGet(request, response);
-	} else if (request.getMethod() == "POST") {
+	}
+	else if (request.getMethod() == "POST") {
 		this->handlePost(request, response);
-	} else if (request.getMethod() == "DELETE") {
+	}
+	else if (request.getMethod() == "DELETE") {
 		this->handleDelete(request, response);
 	}
 }

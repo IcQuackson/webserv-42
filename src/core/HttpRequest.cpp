@@ -185,6 +185,9 @@ bool HttpRequest::isRequestValid(char data[], HttpResponse& response) {
 	std::string httpVersion;
 	requestLineStream >> method >> resource >> httpVersion;
 
+	// Print first line
+	std::cout << "request line: " << line << std::endl;
+
 	if (method.empty() || resource.empty() || httpVersion.empty()) {
 		response.setStatusCode("400");
 		return false;

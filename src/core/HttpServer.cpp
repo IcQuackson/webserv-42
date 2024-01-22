@@ -120,13 +120,13 @@ bool HttpServer::loadConfig(const std::string& configFilePath) {
 void HttpServer::setupServers(std::vector<HttpServer*> &servers) {
 	// Initialize all servers
 	for (size_t i = 0; i < servers.size(); i++) {
-        if (!servers[i]->init()) {
-            std::cerr << "Failed to initialize server on port " << servers[i]->getPort() << std::endl;
-            exit(1);
-        }
+		if (!servers[i]->init()) {
+			std::cerr << "Failed to initialize server on port " << servers[i]->getPort() << std::endl;
+			exit(1);
+		}
 		std::cout << "Server initialized on port " << servers[i]->getPort() << std::endl;
 		std::cout << "Server socket: " << servers[i]->getServerSocket() << std::endl;
-    }
+	}
 }
 
 bool HttpServer::init() {
@@ -215,25 +215,25 @@ void HttpServer::runServers(std::vector<HttpServer*> &servers) {
 
 	std::cout << "Running servers" << std::endl;
 
-    // Populate the poll set
-    for (size_t i = 0; i < servers.size(); i++) {
-        _pollSet[i].fd = servers[i]->getServerSocket();
-        _pollSet[i].events = POLLIN;
-        _pollSet[i].revents = 0;
-    }
+	// Populate the poll set
+	for (size_t i = 0; i < servers.size(); i++) {
+		_pollSet[i].fd = servers[i]->getServerSocket();
+		_pollSet[i].events = POLLIN;
+		_pollSet[i].revents = 0;
+	}
 
 	//printPollSet(_pollSet);
 
-    // Main event loop
-    while (true) {
-        int numReady = poll(&_pollSet[0], _pollSet.size(), 200);
-        if (numReady == -1) {
-            perror("Error in poll");
-            exit(1);
-        }
+	// Main event loop
+	while (true) {
+		int numReady = poll(&_pollSet[0], _pollSet.size(), 200);
+		if (numReady == -1) {
+			perror("Error in poll");
+			exit(1);
+		}
 
-        // Handle events for each server
-        for (size_t i = 0; i < _pollSet.size(); i++) {
+		// Handle events for each server
+		for (size_t i = 0; i < _pollSet.size(); i++) {
 
 			closeIfTimedOut(_pollSet[i].fd);
 
@@ -252,12 +252,12 @@ void HttpServer::runServers(std::vector<HttpServer*> &servers) {
 				}
 			}
 			// Check for errors 
-            else if (_pollSet[i].revents & (POLLERR | POLLHUP | POLLNVAL)) {
+			else if (_pollSet[i].revents & (POLLERR | POLLHUP | POLLNVAL)) {
 				printPollSet(_pollSet);
 				std::cerr << "Error on fd " << _pollSet[i].fd << std::endl;
 				HttpServer *server = getServerFromClientSocket(_pollSet[i].fd);
 				server->closeConnection(_pollSet[i].fd);
-            }
+			}
 			 // Check if a socket is ready to write
 			else if (_pollSet[i].revents & POLLOUT) {
 				std::cout << "Sending data on fd " << _pollSet[i].fd << std::endl;
@@ -266,21 +266,21 @@ void HttpServer::runServers(std::vector<HttpServer*> &servers) {
 				_pollSet[i].events &= ~POLLOUT;
 				std::cout << "Responses size: " << server->getResponses().size() << std::endl;
 			}
-        }
-    }
+		}
+	}
 }
 
 void HttpServer::acceptConnection() {
-    struct sockaddr_in clientAddress;
-    socklen_t clientAddressLength = sizeof(clientAddress);
+	struct sockaddr_in clientAddress;
+	socklen_t clientAddressLength = sizeof(clientAddress);
 
 	// Accept the client connection
-    int clientSocket = accept(this->serverSocket, (struct sockaddr *) &clientAddress, &clientAddressLength);
-    if (clientSocket == -1) {
-        perror("Error accepting connection");
+	int clientSocket = accept(this->serverSocket, (struct sockaddr *) &clientAddress, &clientAddressLength);
+	if (clientSocket == -1) {
+		perror("Error accepting connection");
 		closeConnection(clientSocket);
-        return;
-    }
+		return;
+	}
 	int flags = fcntl(clientSocket, F_GETFL, 0);
 	if (flags == -1 || fcntl(clientSocket, F_SETFL, flags | O_NONBLOCK) == -1) {
 		perror("Error setting server socket to non-blocking mode");
@@ -289,16 +289,16 @@ void HttpServer::acceptConnection() {
 	}
 	std::cout << "Connection accepted on socket " << clientSocket << std::endl;
 
-    // Add the new client socket to the active connections
-    _allActiveConnections.insert(std::pair<int, HttpServer*>(clientSocket, this));
+	// Add the new client socket to the active connections
+	_allActiveConnections.insert(std::pair<int, HttpServer*>(clientSocket, this));
 	_socketLastActiveTime.insert(std::pair<int, time_t>(clientSocket, time(0)));
 	serverActiveConnections.push_back(clientSocket);
 
-    // Add the new client socket to the poll set
-    struct pollfd pfd;
-    pfd.fd = clientSocket;
-    pfd.events = POLLIN | POLLOUT;
-    _pollSet.push_back(pfd);
+	// Add the new client socket to the poll set
+	struct pollfd pfd;
+	pfd.fd = clientSocket;
+	pfd.events = POLLIN | POLLOUT;
+	_pollSet.push_back(pfd);
 }
 
 void HttpServer::closeConnection(int clientSocket) {
@@ -368,10 +368,10 @@ void HttpServer::handleReceive(int clientSocket) {
 std::string HttpServer::getFileContent(std::string filePath) {
 		std::ifstream fileStream(filePath.c_str(), std::ios::binary);
 
-    if (!fileStream) {
-        std::cerr << "Failed to open file: " << filePath << std::endl;
-        return "";
-    }
+	if (!fileStream) {
+		std::cerr << "Failed to open file: " << filePath << std::endl;
+		return "";
+	}
 
 	std::string fileContent((std::istreambuf_iterator<char>(fileStream)), std::istreambuf_iterator<char>());
 	std::cout << "File content: " << std::endl << fileContent << std::endl;
@@ -381,22 +381,22 @@ std::string HttpServer::getFileContent(std::string filePath) {
 }
 
 void HttpServer::handleSend() {
-    if (serverActiveConnections.empty() || responses.empty()) {
-        std::cout << "No active connections or responses" << std::endl;
-        return;
-    }
+	if (serverActiveConnections.empty() || responses.empty()) {
+		std::cout << "No active connections or responses" << std::endl;
+		return;
+	}
 
-    // Get the first active connection and response
-    int clientSocket = serverActiveConnections.front();
-    std::string response = this->responses.front().toString();
+	// Get the first active connection and response
+	int clientSocket = serverActiveConnections.front();
+	std::string response = this->responses.front().toString();
 
-    // Send the HTTP response
-    ssize_t bytesSent = send(clientSocket, response.c_str(), response.size(), 0);
-    if (bytesSent < 0) {
-        perror("Error sending data");
-        closeConnection(clientSocket);
-        return;
-    }
+	// Send the HTTP response
+	ssize_t bytesSent = send(clientSocket, response.c_str(), response.size(), 0);
+	if (bytesSent < 0) {
+		perror("Error sending data");
+		closeConnection(clientSocket);
+		return;
+	}
 	else if (bytesSent == 0) {
 		std::cout << "Connection closed by client" << std::endl;
 		closeConnection(clientSocket);
@@ -404,22 +404,22 @@ void HttpServer::handleSend() {
 	}
 
 	// Remove the response from the queue
-    responses.erase(responses.begin());
+	responses.erase(responses.begin());
 
-    // Close the client socket
-    closeConnection(clientSocket);
+	// Close the client socket
+	closeConnection(clientSocket);
 }
 
 bool isBufferEmpty(const char* buffer) {
-    for (size_t i = 0; i < MAX_BUFFER_SIZE; i++) {
-        if (buffer[i] != 0) {
-            return false;  // Buffer is not empty
-        }
-    }
-    return true;  // Buffer is empty
+	for (size_t i = 0; i < MAX_BUFFER_SIZE; i++) {
+		if (buffer[i] != 0) {
+			return false;  // Buffer is not empty
+		}
+	}
+	return true;  // Buffer is empty
 }
 
-bool HttpServer::isHostNameAllowed(const std::string& target) {
+bool HttpServer::isHostNameAllowed(std::string target) {
 	std::cout << "Host wanted: " << target << std::endl;
 	std::cout << "Server hostnames:" << std::endl;
 
@@ -427,7 +427,24 @@ bool HttpServer::isHostNameAllowed(const std::string& target) {
 	for (size_t i = 0; i < hostNames.size(); i++) {
 		std::cout << hostNames[i] << std::endl;
 	}
-	return std::find(hostNames.begin(), hostNames.end(), target) != hostNames.end();
+
+	int portInt = this->getPort();
+	std::stringstream ss;
+	ss << portInt;
+	std::string port = ss.str();
+
+	if (target.find(':') != std::string::npos) {
+		std::string host = target.substr(0, target.find(':'));
+		if (host == "localhost") {
+			// Replace host part with 127.0.0.1
+			target = "127.0.0.1" + target.substr(target.find(':'));
+		}
+	}
+
+	std::cout << "Server host: " << getHost() << ":" << port << std::endl;
+	// Check if the target is in the list of hostnames
+	return std::find(hostNames.begin(), hostNames.end(), target) != hostNames.end()
+		|| target == getHost() + ":" + port;
 }
 
 HttpResponse HttpServer::processRequest(char *dataBuffer, int clientSocket, HttpResponse &response) {
@@ -435,7 +452,7 @@ HttpResponse HttpServer::processRequest(char *dataBuffer, int clientSocket, Http
 	std::cout << "clientSocket: " << clientSocket << std::endl;
 
 	// TODO: store bytes read
-    
+	
 	response.setStatusCode("200");
 	std::cout << "-----------" << std::endl;
 	Utils::printYellow("Request:");
@@ -481,17 +498,17 @@ HttpResponse HttpServer::processRequest(char *dataBuffer, int clientSocket, Http
 bool read_request_content(std::string &input)
 {
 	std::istringstream iss(input);
-    std::string token;
-    std::string separator = "\r";  // Change this to your desired separator
+	std::string token;
+	std::string separator = "\r";  // Change this to your desired separator
 
-    size_t pos = 0;
-    while ((pos = input.find(separator)) != std::string::npos) {
-        // Extract the token before the separator
-        token = input.substr(0, pos);
-        // Remove the processed token and the separator from the input
-        input.erase(pos, separator.length());
+	size_t pos = 0;
+	while ((pos = input.find(separator)) != std::string::npos) {
+		// Extract the token before the separator
+		token = input.substr(0, pos);
+		// Remove the processed token and the separator from the input
+		input.erase(pos, separator.length());
 		return (0);
-    }
+	}
 	return (1);
 }
 
@@ -594,25 +611,25 @@ bool HttpServer::parseRequest(int clientSocket, char data[], HttpRequest &reques
 }
 
 std::string HttpServer::trim(const std::string& str) {
-    // Find the first non-space character
-    std::string::const_iterator first = str.begin();
-    while (first != str.end() && std::isspace(*first)) {
-        ++first;
-    }
+	// Find the first non-space character
+	std::string::const_iterator first = str.begin();
+	while (first != str.end() && std::isspace(*first)) {
+		++first;
+	}
 
-    // Find the last non-space character
-    std::string::const_reverse_iterator last = str.rbegin();
-    while (last != str.rend() && std::isspace(*last)) {
-        ++last;
-    }
+	// Find the last non-space character
+	std::string::const_reverse_iterator last = str.rbegin();
+	while (last != str.rend() && std::isspace(*last)) {
+		++last;
+	}
 
-    // Check if the string is empty or contains only spaces
-    if (first == str.end() || last.base() == str.begin()) {
-        return std::string();  // Return an empty string
-    }
+	// Check if the string is empty or contains only spaces
+	if (first == str.end() || last.base() == str.begin()) {
+		return std::string();  // Return an empty string
+	}
 	else {
-        return std::string(first, last.base());
-    }
+		return std::string(first, last.base());
+	}
 }
 
 void HttpServer::addRouteHandler(const RouteHandler routeHandler) {
@@ -635,39 +652,19 @@ void HttpServer::log(std::string message) {
 		return;
 	}
 
-    // Get current time
-    std::time_t currentTime = std::time(0);
-    std::tm* now = std::localtime(&currentTime);
+	// Get current time
+	std::time_t currentTime = std::time(0);
+	std::tm* now = std::localtime(&currentTime);
 
-    // Format time as HH:MM:SS
-    std::ostringstream timeString;
-    timeString << std::setfill('0') << std::setw(2) << now->tm_hour << ":"
-               << std::setfill('0') << std::setw(2) << now->tm_min << ":"
-               << std::setfill('0') << std::setw(2) << now->tm_sec;
+	// Format time as HH:MM:SS
+	std::ostringstream timeString;
+	timeString << std::setfill('0') << std::setw(2) << now->tm_hour << ":"
+			   << std::setfill('0') << std::setw(2) << now->tm_min << ":"
+			   << std::setfill('0') << std::setw(2) << now->tm_sec;
 
-    // Print log message with timestamp
-    std::cout << "[" << timeString.str() << "] " << message << std::endl;
+	// Print log message with timestamp
+	std::cout << "[" << timeString.str() << "] " << message << std::endl;
 }
-
-/* void HttpServer::log(const std::string& message, int clientSocket) {
-
-    if (!enableLogging) {
-        return;
-    }
-
-    // Get current time
-    std::time_t currentTime = std::time(0);
-    std::tm* now = std::localtime(&currentTime);
-
-    // Format time as HH:MM:SS
-    std::ostringstream timeString;
-    timeString << std::setfill('0') << std::setw(2) << now->tm_hour << ":"
-               << std::setfill('0') << std::setw(2) << now->tm_min << ":"
-               << std::setfill('0') << std::setw(2) << now->tm_sec;
-
-    // Print log message with timestamp and socket information
-    std::cout << "[" << timeString.str() << "] [Socket " << clientSocket << "] " << message << std::endl;
-} */
 
 void HttpServer::log(const std::string& message, int clientSocket, HttpRequest& request, HttpResponse& response) {
 	(void) message;
@@ -712,8 +709,6 @@ bool HttpServer::parseResource(const std::string& path, HttpRequest& request) {
 		std::cout << it->first << std::endl;
 	}
 
-
-
 	while (!routePath.empty()) {
 		std::cout << "Requested path: " << requestedPath << std::endl;
 		// Check if the current path is a valid endpoint
@@ -739,7 +734,6 @@ bool HttpServer::parseResource(const std::string& path, HttpRequest& request) {
 		}
 		std::cout << "Route path: " << routePath << std::endl;
 	}
-
 	return false;
 }
 
