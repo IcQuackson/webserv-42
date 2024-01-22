@@ -34,7 +34,7 @@ int main(int argc, char **argv) {
 		{
 			std::cerr << e.what() << '\n';
 			for (size_t i = 0; i < serverConfigs.size(); ++i) {
-				serverConfigs[i]->delete_mem();
+					serverConfigs[i]->delete_mem();
 					delete serverConfigs[i];
     			}
 			delete serverConfig;

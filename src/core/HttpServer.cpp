@@ -298,6 +298,7 @@ void HttpServer::acceptConnection() {
 	struct pollfd pfd;
 	pfd.fd = clientSocket;
 	pfd.events = POLLIN | POLLOUT;
+	pfd.revents = 0;
 	_pollSet.push_back(pfd);
 }
 
