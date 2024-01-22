@@ -1,4 +1,5 @@
 #include "core/HttpRequest.hpp"
+#include "core/HttpServer.hpp"
 #include "core/HttpStatusCode.hpp"
 #include "core/HttpResponse.hpp"
 
