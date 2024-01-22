@@ -469,10 +469,12 @@ HttpResponse HttpServer::processRequest(char *dataBuffer, int clientSocket, Http
 	if (!parseResource(request.getResource(), request)) {
 		response.setStatusCode("404");
 		std::cerr << "Resource not found" << std::endl;
+		return response;
 	}
 	// TODO: make server config store all the hosts
 	if (!isHostNameAllowed(request.getHost())) {;
 		std::cerr << "Host not allowed" << std::endl;
+		response.setStatusCode("403");
 		return response;
 	}
 	else {
