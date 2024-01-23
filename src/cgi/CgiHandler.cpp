@@ -24,7 +24,7 @@
 void CgiHandler::initCgi_Env(RouteHandler& route, HttpRequest& request)
 {
     (void) route;
-    this->cgi_Env["SCRIPT_FILENAME"] = route.getLocation().getCgiPath();
+    this->cgi_Env["SCRIPT_FILENAME"] = route.getLocation().getRoot() + route.getLocation().getCgiPath();
     this->cgi_Env["SERVER_NAME"] = request.getHost();
     this->cgi_Env["SERVER_SOFTWARE"] = "webserv-42/1.0";
     std::map<std::string, std::string>::iterator it = request.getHeaders().find("Content-Type");
@@ -66,7 +66,7 @@ void CgiHandler::initCgi_Env(RouteHandler& route, HttpRequest& request)
 
 void CgiHandler::exec_cgi_py(HttpRequest& request, HttpResponse& response, RouteHandler& route, int type)
 {
-    std::string full_path = route.getLocation().getCgiPath();
+    std::string full_path = route.getLocation().getRoot() + route.getLocation().getCgiPath();
     size_t lastSlashPos = request.getResource().find_last_of('/');
     //if (type)
     //    lastSlashPos += 1;
@@ -163,15 +163,17 @@ void    CgiHandler::execute_script(HttpRequest& request, HttpResponse& response,
         // If POST
         if (type)
         {
-            argv[1] = strdup(route.getLocation().getCgiPath().c_str());
+            argv[1] = strdup((route.getLocation().getRoot() + route.getLocation().getCgiPath()).c_str());
             argv[2] = strdup((route.getLocation().getRoot() + route.getLocation().getUploadPath()).c_str());
-            argv[3] = strdup(filename.c_str());
+            argv[3] = strdup(request.getBody().c_str());
+            argv[4] = strdup(filename.c_str());
         }
         else
         {
             argv[1] = strdup((route.getLocation().getRoot() + "/GET.py").c_str());
             argv[2] = strdup("");
             argv[3] = strdup("");
+            argv[4] = strdup("");
         }
         argv[4] = NULL;
 

@@ -464,7 +464,6 @@ HttpResponse HttpServer::processRequest(char *dataBuffer, int clientSocket, Http
 		std::cerr << "Invalid syntax" << std::endl;
 		return response;
 	}
-
 	// Check if the requested resource exists
 	std::cout << "Resource wanted: " << request.getResource() << std::endl;
 	if (!parseResource(request.getResource(), request)) {
@@ -473,7 +472,7 @@ HttpResponse HttpServer::processRequest(char *dataBuffer, int clientSocket, Http
 		return response;
 	}
 	// TODO: make server config store all the hosts
-	if (!isHostNameAllowed(request.getHost())) {;
+	if (!isHostNameAllowed(request.getHost())) {
 		std::cerr << "Host not allowed" << std::endl;
 		response.setStatusCode("403");
 		return response;
@@ -488,6 +487,7 @@ HttpResponse HttpServer::processRequest(char *dataBuffer, int clientSocket, Http
 			response.setStatusCode("404");
 		}
 		else {
+			
 			routes[request.getRoute()].handleRequest(request, response);
 		}
 	}

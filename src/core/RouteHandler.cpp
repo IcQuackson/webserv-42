@@ -45,7 +45,6 @@ void RouteHandler::handleRequest(HttpRequest& request, HttpResponse& response) {
 	for (std::vector<std::string>::iterator it = methods.begin(); it != methods.end(); ++it) {
 		std::cout << ' ' << *it;
 	}
-	std::cout << std::endl;
 
 	// Check if method is allowed
 	//TODO: AS VEZES methods NAO TEM NADA
@@ -126,6 +125,7 @@ void RouteHandler::handleGet(HttpRequest& request, HttpResponse& response) {
 	Location location = getLocation();
 	std::string resource = request.getResource();
 	std::string root = location.getRoot();
+	std::string route = request.getRoute();
 	std::string index = location.getDefaultFile();
 	std::string path = root + resource;
 	std::string indexPath = root + index;
@@ -139,7 +139,7 @@ void RouteHandler::handleGet(HttpRequest& request, HttpResponse& response) {
 	std::cout << "path: " << path << std::endl;
 	std::cout << "indexPath: " << indexPath << std::endl;
 	
-	if(root == "./cgi_bin")
+	if(route == "/cgi-bin")
 	{
 		CgiHandler cgi;
 		cgi.exec_cgi_py(request,response, *this, 0);
@@ -300,6 +300,7 @@ void RouteHandler::handlePost(HttpRequest& request, HttpResponse& response) {
 	Location location = getLocation();
 	std::string resource = request.getResource();
 	std::string root = location.getRoot();
+	std::string route = request.getRoute();
 	std::string index = location.getIndex();
 	std::string path = root + resource;
 	std::string indexPath = root + index;
@@ -312,8 +313,7 @@ void RouteHandler::handlePost(HttpRequest& request, HttpResponse& response) {
 	std::string upload_abs_path = location.getRoot() + location.getUploadPath();
 	std::cout << upload_abs_path << std::endl;
 	std::cout << path << std::endl;
-	std::cout << resource << std::endl;
-	if(root == "./cgi_bin")
+	if(route == "/cgi-bin")
 	{
 		CgiHandler cgi;
 		cgi.exec_cgi_py(request,response, *this, 1);
