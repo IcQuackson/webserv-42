@@ -116,6 +116,6 @@ lldb:	all
 		lldb ./$(NAME) $(ARGS)
 
 valgrind: 	all
-			valgrind --leak-check=full --track-origins=yes ./$(NAME) $(ARGS)
+			valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes ./$(NAME) $(ARGS)
 
 .PHONY: re all clean fclean debug test $(LIBFT)

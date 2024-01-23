@@ -374,7 +374,10 @@ void RouteHandler::handlePost(HttpRequest& request, HttpResponse& response) {
 				response.setStatusCode("201");
 			} 
 			else
+			{
+				response.setStatusCode("500");
 				std::cerr << "Error opening the file for appending." << std::endl;
+			}
 		}
 	}	
 }
@@ -415,18 +418,6 @@ bool deleteDirectory(const char* path) {
     return true;
 }
 
-/* int main() {
-    const char* directoryPath = "/path/to/your/directory";
-
-    if (deleteDirectory(directoryPath)) {
-        std::cout << "Directory deleted successfully." << std::endl;
-    } else {
-        std::cerr << "Error deleting directory." << std::endl;
-    }
-
-    return 0;
-}
- */
 void RouteHandler::handleDelete(HttpRequest& request, HttpResponse& response) {
 	Location location = getLocation();
 	std::string resource = request.getResource();
@@ -448,88 +439,11 @@ void RouteHandler::handleDelete(HttpRequest& request, HttpResponse& response) {
         	std::cerr << "Error removing directory." << std::endl;
 			response.setStatusCode("500");
     	}
-	}
-	else {
-        // If it's a regular file, delete it using remove
-        if (remove(path.c_str()) != 0) {
+	} else if (remove(path.c_str()) != 0) {
             std::cerr << "Error removing file: " << strerror(errno) << std::endl;
             response.setStatusCode("500");
-        }
+	} else {
 		std::cout << "File removed successfully." << std::endl;
         response.setStatusCode("204");
-    }
+	}
 }
-
-/*
-	TODO clientBodySize isClientBdyValid()
-
-	if (!location.getAcceptUploads() && isFileUpload)
-	{
-		std::cerr << "Uploads are not allowed" << std::endl;
-		response.setStatusCode("403");
-		response.setBody("Uploads are not allowed");
-		return ;
-	}
-
-	if (location.getAcceptUploads() && !isFileUpload)
-	{
-		std::cerr << "Uploads are allowed" << std::endl;
-		response.setStatusCode("200");
-		response.setBody("Uploads are allowed");
-		return ;
-	} */
-		
-		/* std::ofstream fileStream(upload_abs_path, std::ios::app);
-
-		// Check if the file is open
-		if (fileStream.is_open()) {
-			// Write to the file
-			fileStream << "This line will be appended to the file.\n";
-
-			// Close the file
-			fileStream.close();
-
-			std::cout << "Data appended to the file." << std::endl;
-		} else {
-			std::cerr << "Error opening the file for appending." << std::endl;
-		} */
-
-
-	//std::cout << "HANDLE GET LOCATION: " << location << std::endl;
-	/* std::cout << path << std::endl;
-
-	if (!resourceExists(path)) {
-		std::cerr << "Resource does not exist: " << path << std::endl;
-		response.setStatusCode("404");
-		return;
-	}
-
-	if (isDirectory(path)) {
-		std::cout << "Directory" << std::endl;
-		// Check if directory listing is enabled
-		if (!location.getDirectoryListing()) {
-			std::cerr << "Directory listing is disabled" << std::endl;
-			response.setStatusCode("403");
-			response.setBody("Directory listing is disabled");
-			return;
-		}
-		// Check if the index file exists
-		if (!index.empty() && resourceExists(indexPath) && !isDirectory(indexPath)) {
-			std::cout << "Index file exists" << std::endl;
-			std::cout << "Index file: " << indexPath << std::endl;
-			path = indexPath;
-		}
-		else {
-			handleDirectoryListing(response, root, resource);
-			return;
-		}
-	}
-	// Check if the resource is a CGI script
-	else if (path.substr(path.find_last_of(".") + 1) == location.getCgiExtension()) {
-		std::cerr << "CGI script" << std::endl;
-		//handleCgi(request, response);
-	}
-	else {
-		std::cerr << "Regular file" << std::endl;
-		handleRegularFile(path, request, response);
-	} */

@@ -55,17 +55,17 @@ public:
 
 	void handleDirectoryListing(HttpRequest& request, HttpResponse& response);
 
-	void handleRegularFile(const std::string filePath, HttpResponse& response);
+	static void handleRegularFile(const std::string filePath, HttpResponse& response);
 
 	void handleCgi(const std::string filePath, HttpRequest& request, HttpResponse& response);
 
-	long getFileSize(const std::string& filePath);
+	static long getFileSize(const std::string& filePath);
 
 	void handleDirectoryListing(HttpResponse& response, const std::string& root, const std::string& resource);
 
 	void generateDirectoryListing(const std::string& root, const std::string& path, std::ostringstream& response);
 
-	std::string getContentType(const std::string& filePath);
+	static std::string getContentType(const std::string& filePath);
 
 	bool extract_filename(HttpRequest& request, std::string &filename);
 

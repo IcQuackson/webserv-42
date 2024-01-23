@@ -67,6 +67,7 @@ void CgiHandler::initCgi_Env(RouteHandler& route, HttpRequest& request)
 void CgiHandler::exec_cgi_py(HttpRequest& request, HttpResponse& response, RouteHandler& route, int type)
 {
     std::string full_path = route.getLocation().getRoot() + route.getLocation().getCgiPath();
+    std::cout << "full:" << full_path << std::endl;
     size_t lastSlashPos = request.getResource().find_last_of('/');
     //if (type)
     //    lastSlashPos += 1;
@@ -157,7 +158,7 @@ void    CgiHandler::execute_script(HttpRequest& request, HttpResponse& response,
         dup2(pipes[1], STDOUT_FILENO);
         close(pipes[1]);
         
-        char **argv = new char*[5];
+        char **argv = new char*[6];
         argv[0] = strdup("python");
 
         // If POST
@@ -165,17 +166,17 @@ void    CgiHandler::execute_script(HttpRequest& request, HttpResponse& response,
         {
             argv[1] = strdup((route.getLocation().getRoot() + route.getLocation().getCgiPath()).c_str());
             argv[2] = strdup((route.getLocation().getRoot() + route.getLocation().getUploadPath()).c_str());
-            argv[3] = strdup(request.getBody().c_str());
-            argv[4] = strdup(filename.c_str());
+            argv[3] = strdup(filename.c_str());
+            argv[4] = strdup(request.getBody().c_str());
         }
         else
         {
-            argv[1] = strdup((route.getLocation().getRoot() + "/GET.py").c_str());
+            argv[1] = strdup((route.getLocation().getRoot() + "/GET_CGI.py").c_str());
             argv[2] = strdup("");
             argv[3] = strdup("");
             argv[4] = strdup("");
         }
-        argv[4] = NULL;
+        argv[5] = NULL;
 
         char **env_vars = new char*[this->cgi_Env.size() + 1];
 
@@ -198,16 +199,13 @@ void    CgiHandler::execute_script(HttpRequest& request, HttpResponse& response,
         close(pipes[0]);
         if (readBytes < 0)
         {
-            std::cerr << "read failed\n";
+            std::cerr << "parent process: read failed" << std::endl;
             response.setStatusCode("500");
             return ;
         }
         buffer[readBytes] = '\0';
 
         std::string body(buffer);
-        std::cout << "body: " << body << std::endl;
-        std::cout << "readBytes: " << readBytes << std::endl;
-
         pid_t wpid;
         wpid = waitpid(pid, &status, WNOHANG);
         if (wpid == 0) {

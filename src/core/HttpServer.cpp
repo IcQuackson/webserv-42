@@ -358,9 +358,10 @@ void HttpServer::handleReceive(int clientSocket) {
 	// TODO: ADD HEADERS WITH CONTENT LENGTH
 	for (size_t i = 0; i < serverConfig.getError_codes().size(); i++) {
 		if (serverConfig.getError_codes()[i] == statusCodeInt) {
-			std::string errorPageContent = getFileContent(getServerConfig().getErrorPage());
-			std::cout << "Error page content: " << std::endl << errorPageContent << std::endl;
-			response.setBody(errorPageContent);
+			//std::string errorPageContent = getFileContent(getServerConfig().getErrorPage());
+			//std::cout << "Error page content: " << std::endl << errorPageContent << std::endl;
+			//response.setBody(errorPageContent);
+			RouteHandler::handleRegularFile(getServerConfig().getErrorPage(), response);
 		}
 	}
 	this->responses.push_back(response);
