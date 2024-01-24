@@ -40,6 +40,8 @@ public:
 
 	Location();
     Location(const std::string& path);
+	Location(const Location& location);
+	Location& operator=(const Location& location);
 	~Location();
 
     std::string getPath() const;

@@ -23,7 +23,7 @@
 
 void CgiHandler::initCgi_Env(RouteHandler& route, HttpRequest& request)
 {
-    (void) route;
+	// Create populate env variables that need to be passed to the CGI script
     this->cgi_Env["SCRIPT_FILENAME"] = route.getLocation().getRoot() + route.getLocation().getCgiPath();
     this->cgi_Env["SERVER_NAME"] = request.getHost();
     this->cgi_Env["SERVER_SOFTWARE"] = "webserv-42/1.0";
@@ -34,35 +34,10 @@ void CgiHandler::initCgi_Env(RouteHandler& route, HttpRequest& request)
     if (it != request.getHeaders().end())
         this->cgi_Env["CONTENT_LENGTH"] = request.getHeaders().find("Content-Lenght")->second;;
     this->cgi_Env["GATEWAY_INTERFACE"]="CGI/1.1";
-    this->cgi_Env["REMOTE_ADDR"]=route.getServerConfig().getHost();
-    this->cgi_Env["REMOTE_PORT"]=route.getServerConfig().getPort();
     this->cgi_Env["REQUEST_METHOD"]=request.getMethod();
     this->cgi_Env["QUERY_STRING"]=request.getQueryString();
 
 }
-/*         "SCRIPT_NAME=/script_name",  // replace with the actual script name
-        "QUERY_STRING=parameter1=value1&parameter2=value2",
-        // Add any other CGI environment variables your script might need
- 
-}*/
-/* 
-    this->cgi_path = getScriptFileName(envVars);
-    if (cgi_path.empty())
-        throw CGIException("No SCRIPT_FILENAME provided");
-    this->cgi_ext = cgi_ext;
-
-    size_t dotPos = cgi_path.find_last_of('.');
-    if (dotPos == std::string::npos)
-        throw CGIException("No extension. Expected \"" + cgi_ext + "\"");
-
-    std::string ext = cgi_path.substr(dotPos);
-    if (ext != cgi_ext)
-        throw CGIException("Invalid extension \"" + ext + "\" expected \"" + cgi_ext + "\"");
-
-    if (access(this->cgi_path.c_str(), F_OK) != 0)
-        throw CGIException("Invalid CGI file");
-    this->createArgvAndEnvp(envVars);
-    this->runScript(); */
 
 void CgiHandler::exec_cgi_py(HttpRequest& request, HttpResponse& response, RouteHandler& route, int type)
 {
@@ -104,7 +79,7 @@ void CgiHandler::exec_cgi_py(HttpRequest& request, HttpResponse& response, Route
         return ;
     }
     initCgi_Env(route, request);
-    execute_script(request,response,route,type);
+    execute_script(request, response, route, type);
 }
 
 std::string    CgiHandler::extract_filename(std::string content_disp)
@@ -138,7 +113,7 @@ void    CgiHandler::execute_script(HttpRequest& request, HttpResponse& response,
         filename = extract_filename(request.getHeaders().find("Content-Disposition")->second);
         if (filename.empty())
         {
-            std::cerr << "File Name Not Extracted\n";
+            std::cerr << "File Name Not Extracted" << std::endl;
             response.setStatusCode("500");
             return ;
         }

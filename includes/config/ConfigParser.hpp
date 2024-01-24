@@ -56,4 +56,6 @@ public:
     int parse_limit_except(std::string &token, std::stringstream& ss);
     bool check_valid_method(std::string token);
     bool hasLocationWithName(ServerConfig *serverConfig, std::string name);
+	bool hasRepeatedPorts(std::vector<ServerConfig*> serverConfigVector);
+	void freeServerConfigVector();
 };

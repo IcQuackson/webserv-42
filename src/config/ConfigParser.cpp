@@ -10,9 +10,6 @@ ConfigParser::ConfigParser(ConfigParser const &configParser)
 }
 
 ConfigParser::~ConfigParser() {
-    /* for (size_t i = 0; i < serverConfigVector.size(); ++i) {
-        delete serverConfigVector[i];
-    } */
 }
 
 bool ConfigParser::checkServer(std::string token, std::stringstream& ss) 
@@ -379,6 +376,9 @@ int ConfigParser::parse_location(std::string &token, std::stringstream& ss)
             location->setClientBodySize(maxClientBodySize);
             this->serverConfigVector.back()->addLocation(location);
         }
+		else {
+			throw std::runtime_error("Error: Invalid location path: " + token);
+		}
         ss >> token;
         if (token != "{")
             return (0);
@@ -554,22 +554,22 @@ bool ConfigParser::proccess_input()
     // Parse the configuration
     while (line >> token)
     {
-        // Check if the token is a server
-        if (!this->server_in)
-        {
-            if (!checkServer(token, line))
-                throw std::runtime_error("Error: Invalid input near token 1: " + token);
-            continue;
-        }
-        if (!parse_var(token, line, LISTEN))
-            throw std::runtime_error("Error: Invalid input near token 2: " + token);
-        /* else if (see_next_token(line) == "listen")
-            continue; */
-        line >> token;
-
-        // Stores configurations
         try
         {
+			// Check if the token is a server
+			if (!this->server_in)
+			{
+				if (!checkServer(token, line))
+					throw std::runtime_error("Error: Invalid input near token 1: " + token);
+				continue;
+			}
+			if (!parse_var(token, line, LISTEN))
+				throw std::runtime_error("Error: Invalid input near token 2: " + token);
+			/* else if (see_next_token(line) == "listen")
+				continue; */
+			line >> token;
+
+			// Stores configurations
             this->executed = 1;
             while (this->executed)
             {
@@ -586,29 +586,49 @@ bool ConfigParser::proccess_input()
                 if (token == ";")
                     line >> token; 
             }
-            
+			if (token == "}")
+			{
+				this->server_in = 0;
+				if (see_next_token(line) == "server")
+					continue;
+				break;
+			}
+			else {
+				throw std::runtime_error("Error: Invalid input near token 12: " + token);
+			}
+			if (hasRepeatedPorts(serverConfigVector)) {
+				throw std::runtime_error("Error: Repeated port number");
+			}
         }
         catch(const std::exception& e)
         {
             std::cerr << e.what() << '\n';
-            for (size_t i = 0; i < serverConfigVector.size(); ++i) {
-                    serverConfigVector[i]->delete_mem();
-					delete serverConfigVector[i];
-    			}
-            return (0);
+            freeServerConfigVector();
+            return (false);
         }
-        if (token == "}")
-        {
-            this->server_in = 0;
-            if (see_next_token(line) == "server")
-                continue;
-            break;
-        }
-        else
-            throw std::runtime_error("Error: Invalid input near token 12: " + token);
-        
     }
-    return (1);
+	if (hasRepeatedPorts(serverConfigVector)) {
+		freeServerConfigVector();
+		throw std::runtime_error("Error: Repeated port number");
+	}
+    return (true);
+}
+
+void ConfigParser::freeServerConfigVector() {
+	for (size_t i = 0; i < serverConfigVector.size(); i++) {
+		ServerConfig::deleteServerConfig(serverConfigVector[i]);
+	}
+}
+
+bool ConfigParser::hasRepeatedPorts(std::vector<ServerConfig*> serverConfigs) {
+	for (size_t i = 0; i < serverConfigs.size(); i++) {
+		for (size_t j = i + 1; j < serverConfigs.size(); j++) {
+			if (serverConfigs[i]->getPort() == serverConfigs[j]->getPort()) {
+				return (true);
+			}
+		}
+	}
+	return (false);
 }
 
 std::vector<ServerConfig*> ConfigParser::getServerConfigVector()

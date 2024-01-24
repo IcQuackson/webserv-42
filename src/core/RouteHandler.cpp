@@ -5,14 +5,13 @@
 RouteHandler::RouteHandler() {
 }
 
-RouteHandler::RouteHandler(const ServerConfig serverConfig, const Location location) : serverConfig(serverConfig),location(location) {
+RouteHandler::RouteHandler(const Location location) : location(location) {
 }
 
 RouteHandler::~RouteHandler() {
 }
 
 RouteHandler &RouteHandler::operator=(RouteHandler const &routeHandler) {
-	this->serverConfig = routeHandler.serverConfig;
 	this->location = routeHandler.location;
 	return *this;
 }
@@ -24,15 +23,6 @@ Location RouteHandler::getLocation() const {
 void RouteHandler::setLocation(const Location& location) {
 	this->location = location;
 }
-
-ServerConfig RouteHandler::getServerConfig() const {
-	return this->serverConfig;
-}
-
-void RouteHandler::setServerConfig(const ServerConfig& serverConfig) {
-	this->serverConfig = serverConfig;
-}
-
 
 void RouteHandler::handleRequest(HttpRequest& request, HttpResponse& response) {
 	std::vector<std::string> methods = this->location.getMethods();
@@ -142,7 +132,7 @@ void RouteHandler::handleGet(HttpRequest& request, HttpResponse& response) {
 	if(route == "/cgi-bin")
 	{
 		CgiHandler cgi;
-		cgi.exec_cgi_py(request,response, *this, 0);
+		cgi.exec_cgi_py(request, response, *this, 0);
 		return;
 	}
 	if (!resourceExists(path)) {
@@ -369,8 +359,8 @@ void RouteHandler::handlePost(HttpRequest& request, HttpResponse& response) {
     			ofile << request.getBody();
     			ofile.close();
 
-				std::cout << "Data appended to the file." << std::endl;
-				response.setBody("Data appended to the file.");
+				std::cout << "Upload sucessfull" << std::endl;
+				response.setBody("Upload successful");
 				response.setStatusCode("201");
 			} 
 			else

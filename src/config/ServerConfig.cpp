@@ -1,12 +1,22 @@
 #include "config/ServerConfig.hpp"
 
 ServerConfig::ServerConfig() {
+	this->nbr = 0;
+	this->configFilePath = "";
+	this->port = 0;
+	this->host = "";
+	this->error_page_path = "";
+	this->client_max_body_size = "";
 }
 
 ServerConfig::ServerConfig(const std::string& configFilePath, const std::string& host, int port) {
 	this->configFilePath = configFilePath;
+	this->nbr = 0;
+	this->error_page_path = "";
+	this->client_max_body_size = "";
 	this->port = port;
 	this->host = host;
+	
 }
 
 ServerConfig::~ServerConfig() {
@@ -14,12 +24,6 @@ ServerConfig::~ServerConfig() {
 
 ServerConfig::ServerConfig(ServerConfig const &serverConfig) {
 	*this = serverConfig;
-}
-
-void ServerConfig::delete_mem(){
-	for (size_t j = 0; j < locations.size(); ++j) {
-				delete locations[j];
-		}
 }
 
 ServerConfig &ServerConfig::operator=(ServerConfig const &serverConfig) {
@@ -131,3 +135,9 @@ void ServerConfig::setDefaultServer(ServerConfig *serverConfig) {
 	serverConfig->addLocation(location);
 }
 
+void ServerConfig::deleteServerConfig(ServerConfig *serverConfig) {
+	for (size_t i = 0; i < serverConfig->getLocations().size(); i++) {
+		delete serverConfig->getLocations()[i];
+	}
+	delete serverConfig;
+}

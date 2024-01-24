@@ -16,6 +16,30 @@ Location::Location() {
 	this->error_page_path = "";
 }
 
+Location::Location(const Location& location) {
+	*this = location;
+}
+
+Location &Location::operator=(const Location& location) {
+	if (this != &location) {
+		this->path = location.path;
+		this->methods = location.methods;
+		this->indexFile = location.indexFile;
+		this->redirection = location.redirection;
+		this->root = location.root;
+		this->directoryListing = location.directoryListing;
+		this->defaultFile = location.defaultFile;
+		this->cgiPath = location.cgiPath;
+		this->cgiExtension = location.cgiExtension;
+		this->acceptUploads = location.acceptUploads;
+		this->uploadEndpoint = location.uploadEndpoint;
+		this->uploadPath = location.uploadPath;
+		this->clientBodySize = location.clientBodySize;
+		this->error_page_path = location.error_page_path;
+	}
+	return *this;
+}
+
 Location::Location(const std::string& path) : path(path) {
 	this->methods = std::vector<std::string>();
 	this->indexFile = "";

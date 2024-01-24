@@ -20,22 +20,17 @@
 class RouteHandler {
 
 private:
-	ServerConfig serverConfig;
 	Location location;
 
 public:
 
 	RouteHandler();
 
-	RouteHandler(const ServerConfig serverConfig, const Location location);
+	RouteHandler(const Location location);
 
 	~RouteHandler();
 
 	RouteHandler &operator=(RouteHandler const &routeHandler);
-
-	ServerConfig getServerConfig() const;
-
-	void setServerConfig(const ServerConfig& serverConfig);
 
 	Location getLocation() const;
 

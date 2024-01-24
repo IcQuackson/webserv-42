@@ -13,39 +13,22 @@ int main(int argc, char **argv) {
 	}
 
 	std::vector<ServerConfig*> serverConfigs;
-	ServerConfig *serverConfig = new ServerConfig();
-
 	if (argc == 2) {
 		ConfigParser parser(argv[1]);
 
-		try
-		{	
-			if(!parser.proccess_input())
-			{
-				for (size_t i = 0; i < serverConfigs.size(); ++i) {
-					serverConfigs[i]->delete_mem();
-					delete serverConfigs[i];
-    			}
-				delete serverConfig;
+		try {
+			if(!parser.proccess_input()) {
 				return (0);
 			}
 		}
-		catch(const std::exception& e)
-		{
-			std::cerr << e.what() << '\n';
-			for (size_t i = 0; i < serverConfigs.size(); ++i) {
-					serverConfigs[i]->delete_mem();
-					delete serverConfigs[i];
-    			}
-			delete serverConfig;
+		catch (std::exception& e) {
+			std::cerr << e.what() << std::endl;
 			return (0);
 		}
-		
-		//std::string configFilePath(argv[1]);
 		serverConfigs = parser.getServerConfigVector();
 	}
 	else {
-
+		ServerConfig* serverConfig = new ServerConfig();
 		ServerConfig::setDefaultServer(serverConfig);
 		serverConfigs.push_back(serverConfig);
 	}
@@ -58,8 +41,8 @@ int main(int argc, char **argv) {
 
 		for (size_t j = 0; j < serverConfigs[i]->getLocations().size(); j++) {
 			std::cout << serverConfigs[i]->getLocations().size() << std::endl;
-			Location *location = serverConfigs[i]->getLocations()[j];
-			RouteHandler routeHandler(*serverConfigs[i],*location);
+			Location location = *serverConfigs[i]->getLocations()[j];
+			RouteHandler routeHandler(location);
 			httpServer->addRouteHandler(routeHandler);
 		}
 
@@ -68,12 +51,21 @@ int main(int argc, char **argv) {
         httpServer->setPort(serverConfigs[i]->getPort());
 		httpServer->setHost(serverConfigs[i]->getHost());
 
-        // Initialize and add to the vector of HttpServers
         httpServers.push_back(httpServer);
 	}
 
 	HttpStatusCode::initStatusCodes();
-	HttpServer::setupServers(httpServers);
-	HttpServer::runServers(httpServers);
-
+	try {
+		HttpServer::setupServers(httpServers);
+		HttpServer::runServers(httpServers);
+	}
+	catch (std::exception& e) {
+		std::cerr << e.what() << std::endl;
+		for (size_t i = 0; i < httpServers.size(); i++) {
+			delete httpServers[i];
+		}
+		for (size_t i = 0; i < serverConfigs.size(); i++) {
+			ServerConfig::deleteServerConfig(serverConfigs[i]);
+		}
+	}
 }

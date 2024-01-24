@@ -101,7 +101,7 @@ public:
 	void handleReceive(int clientSocket);
 	void handleSend();
 	bool loadConfig(const std::string& configFilePath);
-	void addRouteHandler(const RouteHandler routeHandler);
+	void addRouteHandler(RouteHandler &routeHandler);
 	const std::map<std::string, RouteHandler> getRouteHandlers();
 	HttpResponse processRequest(char *dataBuffer, int clientSocket, HttpResponse &response);
 	bool parseRequest(int clientSocket, char data[], HttpRequest &request, HttpResponse &response);

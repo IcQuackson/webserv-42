@@ -121,8 +121,7 @@ void HttpServer::setupServers(std::vector<HttpServer*> &servers) {
 	// Initialize all servers
 	for (size_t i = 0; i < servers.size(); i++) {
 		if (!servers[i]->init()) {
-			std::cerr << "Failed to initialize server on port " << servers[i]->getPort() << std::endl;
-			exit(1);
+			throw std::runtime_error("Error initializing server");
 		}
 		std::cout << "Server initialized on port " << servers[i]->getPort() << std::endl;
 		std::cout << "Server socket: " << servers[i]->getServerSocket() << std::endl;
@@ -228,8 +227,7 @@ void HttpServer::runServers(std::vector<HttpServer*> &servers) {
 	while (true) {
 		int numReady = poll(&_pollSet[0], _pollSet.size(), 200);
 		if (numReady == -1) {
-			perror("Error in poll");
-			exit(1);
+			throw std::runtime_error("Error in poll");
 		}
 
 		// Handle events for each server
@@ -636,7 +634,7 @@ std::string HttpServer::trim(const std::string& str) {
 	}
 }
 
-void HttpServer::addRouteHandler(const RouteHandler routeHandler) {
+void HttpServer::addRouteHandler(RouteHandler &routeHandler) {
 	routes[routeHandler.getLocation().getPath()] = routeHandler;
 	std::cout << "Route added: " << routeHandler.getLocation().getPath() << std::endl;
 	std::cout << "Location added: " <<routeHandler.getLocation() << std::endl;
