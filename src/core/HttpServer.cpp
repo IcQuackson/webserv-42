@@ -331,7 +331,6 @@ void HttpServer::handleReceive(int clientSocket) {
 		closeConnection(clientSocket);
 		return;
 	}
-	std::cout << "Raw data received: " << std::endl << requestBuffer << std::endl;
 
 	std::string dataString(requestBuffer);
 	// Check if the request is multipart/form-data
@@ -345,7 +344,6 @@ void HttpServer::handleReceive(int clientSocket) {
 
 		// Check if the boundary is complete
 		if (multiPartRequest.getData().find(boundary + "--\r\n") == std::string::npos) {
-			std::cout << "Boundary not complete" << std::endl;
 			clientBuffers.insert(std::pair<int, MultiPartRequest>(clientSocket, multiPartRequest));
 			return;
 		}
@@ -361,12 +359,11 @@ void HttpServer::handleReceive(int clientSocket) {
 			return;
 		}
 		else {
-			std::cout << "Buffer Deleted" << std::endl;
 			dataString = clientBuffers[clientSocket].getData();
 			clientBuffers.erase(clientSocket);
 		}
 	}
-	std::cout << "Data received: " << std::endl << dataString << "END OF DATA" << std::endl;
+	std::cout << "Data received: " << std::endl << dataString << std::endl;
 
 	// Process the HTTP request and generate a response
 	HttpResponse response;
@@ -443,13 +440,8 @@ bool isBufferEmpty(const char* buffer) {
 }
 
 bool HttpServer::isHostNameAllowed(std::string target) {
-	std::cout << "Host wanted: " << target << std::endl;
-	std::cout << "Server hostnames:" << std::endl;
 
 	std::vector<std::string> hostNames = serverConfig.getServer_names();
-	for (size_t i = 0; i < hostNames.size(); i++) {
-		std::cout << hostNames[i] << std::endl;
-	}
 
 	int portInt = this->getPort();
 	std::stringstream ss;
@@ -464,7 +456,6 @@ bool HttpServer::isHostNameAllowed(std::string target) {
 		}
 	}
 
-	std::cout << "Server host: " << getHost() << ":" << port << std::endl;
 	// Check if the target is in the list of hostnames
 	return std::find(hostNames.begin(), hostNames.end(), target) != hostNames.end()
 		|| target == getHost() + ":" + port;
@@ -487,7 +478,6 @@ HttpResponse HttpServer::processRequest(std::string data, int clientSocket, Http
 		return response;
 	}
 	// Check if the requested resource exists
-	std::cout << "Resource wanted: " << request.getResource() << std::endl;
 	if (!parseResource(request.getResource(), request)) {
 		response.setStatusCode("404");
 		std::cerr << "Resource not found" << std::endl;
@@ -602,22 +592,6 @@ bool HttpServer::parseRequest(int clientSocket, std::string data, HttpRequest &r
 		flag = 1;
 	}
 
-	/* if (is_file == 0)
-		this->fileBytes = (body.size() + count_lines); */
-
-
-	if (request.getHeaders().find("Content-Length") != request.getHeaders().end()) {
-		//ssize_t contentLength = std::atoi(request.getHeaders()["Content-Length"].c_str());
-
-		// TODO: check if contentLength is valid
-
-		/* if (contentLength != this->fileBytes) {
-			std::cout << "Error: Content-Length does not match body size" << std::endl;
-			response.setStatusCode("400");
-			return false;
-		} */
-	} 
-
 	// Set the request properties
 	request.setMethod(method);
 	request.setResource(resource);
@@ -625,8 +599,6 @@ bool HttpServer::parseRequest(int clientSocket, std::string data, HttpRequest &r
 	request.setHost(request.getHeaders()["Host"]);
 	request.setBody(body);
 
-	std::cout << "BODY" << std::endl;
-	std::cout << body << std::endl;
 	return true;
 }
 
@@ -655,7 +627,7 @@ std::string HttpServer::trim(const std::string& str) {
 void HttpServer::addRouteHandler(RouteHandler &routeHandler) {
 	routes[routeHandler.getLocation().getPath()] = routeHandler;
 	std::cout << "Route added: " << routeHandler.getLocation().getPath() << std::endl;
-	std::cout << "Location added: " <<routeHandler.getLocation() << std::endl;
+	std::cout << "Location added: " << routeHandler.getLocation() << std::endl;
 }
 
 void HttpServer::sendResponse(int clientSocket, HttpResponse& response) {
@@ -721,22 +693,11 @@ bool HttpServer::parseResource(const std::string& path, HttpRequest& request) {
 	std::string routePath = path;
 	std::string requestedPath = "";
 
-	std::cout << "Route path: " << routePath << std::endl;
-
-	std::cout << "Path: " << path << std::endl;
-	std::cout << "Print all endpoints: " << std::endl;
-	for (std::map<std::string, RouteHandler>::iterator it = routes.begin(); it != routes.end(); ++it) {
-		std::cout << it->first << std::endl;
-	}
-
 	while (!routePath.empty()) {
-		std::cout << "Requested path: " << requestedPath << std::endl;
 		// Check if the current path is a valid endpoint
 		if (routes.find(routePath) != routes.end()) {
 			request.setRoute(routePath);
 			request.setResource(requestedPath);
-			std::cout << "Endpoint found: " << routePath << std::endl;
-			std::cout << "Requested path: " << requestedPath << std::endl;
 			return true;
 		}
 
@@ -752,7 +713,6 @@ bool HttpServer::parseResource(const std::string& path, HttpRequest& request) {
 		else {
 			routePath = routePath.substr(0, lastSlash);
 		}
-		std::cout << "Route path: " << routePath << std::endl;
 	}
 	return false;
 }

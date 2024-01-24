@@ -27,17 +27,8 @@ void RouteHandler::setLocation(const Location& location) {
 void RouteHandler::handleRequest(HttpRequest& request, HttpResponse& response) {
 	std::vector<std::string> methods = this->location.getMethods();
 	std::vector<std::string>::iterator it = std::find(methods.begin(), methods.end(), request.getMethod());
-	//print methods
-
-	//std::cout << "handleRequest: " << this->location.getMethods() << std::endl;
-
-	std::cout << "Methods:";
-	for (std::vector<std::string>::iterator it = methods.begin(); it != methods.end(); ++it) {
-		std::cout << ' ' << *it;
-	}
 
 	// Check if method is allowed
-	//TODO: AS VEZES methods NAO TEM NADA
 	if (it == methods.end()) {
 		std::cerr << "Method not allowed: " << request.getMethod() << std::endl;
 		response.setStatusCode("405");
@@ -119,15 +110,6 @@ void RouteHandler::handleGet(HttpRequest& request, HttpResponse& response) {
 	std::string index = location.getDefaultFile();
 	std::string path = root + resource;
 	std::string indexPath = root + index;
-
-	//std::cout << "HANDLE GET LOCATION: " << location << std::endl;
-	//std::cout << path << std::endl;
-
-	std::cout << "resource: " << resource << std::endl;
-	std::cout << "root: " << root << std::endl;
-	std::cout << "index: " << index << std::endl;
-	std::cout << "path: " << path << std::endl;
-	std::cout << "indexPath: " << indexPath << std::endl;
 	
 	if(route == "/cgi-bin")
 	{
@@ -151,11 +133,8 @@ void RouteHandler::handleGet(HttpRequest& request, HttpResponse& response) {
 	}
 	
 	if (isDirectory(path)) {
-		std::cout << "Directory" << std::endl;
 		// Check if the index file exists
 		if (!index.empty() && path == root && resourceExists(indexPath) && !isDirectory(indexPath)) {
-			std::cout << "Index file exists" << std::endl;
-			std::cout << "Index file: " << indexPath << std::endl;
 			handleRegularFile(indexPath, response);
 			return;
 		}
@@ -301,11 +280,7 @@ void RouteHandler::handlePost(HttpRequest& request, HttpResponse& response) {
 	std::string indexPath = root + index;
 	std::string filename;
 
-	std::cout << "POST METHOD(body):  " << request.getBody() << std::endl;
-
 	std::string upload_abs_path = location.getRoot() + location.getUploadPath();
-	std::cout << upload_abs_path << std::endl;
-	std::cout << path << std::endl;
 	if(route == "/cgi-bin")
 	{
 		if (!resource.empty() || resource == "/") {
@@ -422,7 +397,6 @@ void RouteHandler::handleDelete(HttpRequest& request, HttpResponse& response) {
 	std::string root = location.getRoot();
 	std::string path = root + resource;
 
-	std::cout << resource << std::endl;
 	if (!resourceExists(path)) {
 		std::cerr << "Resource does not exist: " << path << std::endl;
 		response.setStatusCode("404");

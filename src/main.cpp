@@ -40,7 +40,6 @@ int main(int argc, char **argv) {
 		HttpServer* httpServer = new HttpServer(*serverConfigs[i]);
 
 		for (size_t j = 0; j < serverConfigs[i]->getLocations().size(); j++) {
-			std::cout << serverConfigs[i]->getLocations().size() << std::endl;
 			Location location = *serverConfigs[i]->getLocations()[j];
 			RouteHandler routeHandler(location);
 			httpServer->addRouteHandler(routeHandler);

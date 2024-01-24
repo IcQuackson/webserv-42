@@ -183,16 +183,12 @@ bool HttpRequest::isRequestValid(std::string data, HttpResponse& response) {
 	std::string httpVersion;
 	requestLineStream >> method >> resource >> httpVersion;
 
-	// Print first line
-	std::cout << "request line: " << line << std::endl;
-
 	if (method.empty() || resource.empty() || httpVersion.empty()) {
 		std::cerr << "Error: Empty request line" << std::endl;
 		response.setStatusCode("400");
 		return false;
 	}
 
-	std::cout << "method: " << method << std::endl;
 	// Check if the request line is valid
 	if (method != "GET" && method != "POST" && method != "DELETE") {
 		std::cerr << "Method not valid" << std::endl;

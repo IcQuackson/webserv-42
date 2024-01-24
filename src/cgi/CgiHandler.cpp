@@ -22,7 +22,6 @@ void CgiHandler::initCgi_Env(RouteHandler& route, HttpRequest& request)
 void CgiHandler::exec_cgi_py(HttpRequest& request, HttpResponse& response, RouteHandler& route, int type)
 {
     std::string full_path = route.getLocation().getRoot() + route.getLocation().getCgiPath();
-    std::cout << "full:" << full_path << std::endl;
     size_t lastSlashPos = request.getResource().find_last_of('/');
     std::string scriptName = route.getLocation().getCgiPath().substr(lastSlashPos + 1);
 
@@ -53,7 +52,6 @@ void CgiHandler::exec_cgi_py(HttpRequest& request, HttpResponse& response, Route
     {
         std::cerr << "Error: File not found" << std::endl;
         response.setStatusCode("404");
-        std::cout << "Error: cgi_handler" << std::endl;
         return ;
     }
     initCgi_Env(route, request);
