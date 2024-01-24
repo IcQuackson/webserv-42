@@ -169,14 +169,6 @@ bool HttpServer::init() {
 
 	std::cout << "Server listening on port " << port << std::endl;
 
-	// Set server socket to non-blocking mode
-/* 	int flags = fcntl(serverSocket, F_GETFL, 0);
-	if (flags == -1 || fcntl(serverSocket, F_SETFL, flags | O_NONBLOCK) == -1) {
-		perror("Error setting server socket to non-blocking mode");
-		close(serverSocket);
-		return false;
-	} */
-
 	return true;
 }
 
@@ -486,7 +478,6 @@ HttpResponse HttpServer::processRequest(char *dataBuffer, int clientSocket, Http
 			response.setStatusCode("404");
 		}
 		else {
-			
 			routes[request.getRoute()].handleRequest(request, response);
 		}
 	}
@@ -540,8 +531,8 @@ bool HttpServer::parseRequest(int clientSocket, char data[], HttpRequest &reques
 
 	resource = resource.substr(0, resource.find("?"));
 
-	//request.readHeaders(requestStream, request);
 	if (!request.readHeaders(requestStream, request, response)) {
+		std::cerr << "Error reading headers 1" << std::endl;
 		return false;
 	}
 
@@ -557,8 +548,10 @@ bool HttpServer::parseRequest(int clientSocket, char data[], HttpRequest &reques
 			size_t pos = it->second.find(';');
 			it->second = it->second.substr(0, pos);
 			std::getline(requestStream, line);
-			if (!request.readHeaders(requestStream, request, response))
+			if (!request.readHeaders(requestStream, request, response)) {
+				std::cerr << "Error reading headers 2" << std::endl;
 				return false;
+			}
 		}
 	}
 
@@ -605,10 +598,6 @@ bool HttpServer::parseRequest(int clientSocket, char data[], HttpRequest &reques
 
 	std::cout << "BODY" << std::endl;
 	std::cout << body << std::endl;
-
-	// Print the request
-	//std::cout << request << std::endl;
-
 	return true;
 }
 

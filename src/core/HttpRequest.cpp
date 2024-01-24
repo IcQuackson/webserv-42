@@ -148,7 +148,6 @@ bool HttpRequest::readHeaders(std::istringstream& requestStream, HttpRequest& re
         std::string headerValue;
         std::getline(headerLineStream, headerValue);
         request.headers[headerName] = headerValue;
-		//std::cout << "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa:" << headerName << ": " << headerValue << std::endl;
     }
 
 	if (request.headers.find("Host") == request.headers.end()) {
@@ -189,6 +188,7 @@ bool HttpRequest::isRequestValid(char data[], HttpResponse& response) {
 	std::cout << "request line: " << line << std::endl;
 
 	if (method.empty() || resource.empty() || httpVersion.empty()) {
+		std::cerr << "Error: Empty request line" << std::endl;
 		response.setStatusCode("400");
 		return false;
 	}
@@ -196,18 +196,20 @@ bool HttpRequest::isRequestValid(char data[], HttpResponse& response) {
 	std::cout << "method: " << method << std::endl;
 	// Check if the request line is valid
 	if (method != "GET" && method != "POST" && method != "DELETE") {
-		std::cout << "method not valid" << std::endl;
+		std::cerr << "Method not valid" << std::endl;
 		response.setStatusCode("405");
 		return false;
 	}
 
 	if (httpVersion != "HTTP/1.1") {
+		std::cerr << "Http version not valid" << std::endl;
 		response.setStatusCode("505");
 		return false;
 	}
 
 	// Check if the resource is valid
 	if (resource.empty() || resource[0] != '/') {
+		std::cerr << "Resource not valid" << std::endl;
 		response.setStatusCode("400");
 		return false;
 	}
@@ -215,6 +217,7 @@ bool HttpRequest::isRequestValid(char data[], HttpResponse& response) {
 	// Check if the resource contains a double dot
 	pos = resource.find("..");
 	if (pos != std::string::npos) {
+		std::cerr << "Resource not valid" << std::endl;
 		response.setStatusCode("400");
 		return false;
 	}
@@ -222,6 +225,7 @@ bool HttpRequest::isRequestValid(char data[], HttpResponse& response) {
 	// Check if the resource contains a double slash
 	pos = resource.find("//");
 	if (pos != std::string::npos) {
+		std::cerr << "Resource not valid" << std::endl;
 		response.setStatusCode("400");
 		return false;
 	}

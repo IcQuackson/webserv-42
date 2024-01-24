@@ -82,7 +82,7 @@ void CgiHandler::exec_cgi_py(HttpRequest& request, HttpResponse& response, Route
     execute_script(request, response, route, type);
 }
 
-std::string    CgiHandler::extract_filename(std::string content_disp)
+std::string CgiHandler::extract_filename(std::string content_disp)
 {
     size_t filenamePos = content_disp.find("filename=");
     if (filenamePos != std::string::npos) {
@@ -120,10 +120,13 @@ void    CgiHandler::execute_script(HttpRequest& request, HttpResponse& response,
     }
     if (pipe(pipes) < 0)
     {
-        std::cerr << "pipe failed\n";
+        std::cerr << "pipe failed" << std::endl;
         response.setStatusCode("500");
         return ;
     }
+	std::cout << "GET" << std::endl;
+	std::cout << "cgi_path: " << route.getLocation().getRoot() + route.getLocation().getCgiPath() << std::endl;
+	
     pid = fork();
     if (pid == 0)
     {
@@ -133,7 +136,7 @@ void    CgiHandler::execute_script(HttpRequest& request, HttpResponse& response,
         dup2(pipes[1], STDOUT_FILENO);
         close(pipes[1]);
         
-        char **argv = new char*[6];
+        char **argv = new char*[7];
         argv[0] = strdup("python");
 
         // If POST
@@ -143,15 +146,17 @@ void    CgiHandler::execute_script(HttpRequest& request, HttpResponse& response,
             argv[2] = strdup((route.getLocation().getRoot() + route.getLocation().getUploadPath()).c_str());
             argv[3] = strdup(filename.c_str());
             argv[4] = strdup(request.getBody().c_str());
+			argv[5] = strdup("POST");
         }
         else
         {
-            argv[1] = strdup((route.getLocation().getRoot() + "/GET_CGI.py").c_str());
+			argv[1] = strdup((route.getLocation().getRoot() + route.getLocation().getCgiPath()).c_str());
             argv[2] = strdup("");
             argv[3] = strdup("");
             argv[4] = strdup("");
+			argv[5] = strdup("GET");
         }
-        argv[5] = NULL;
+        argv[6] = NULL;
 
         char **env_vars = new char*[this->cgi_Env.size() + 1];
 
