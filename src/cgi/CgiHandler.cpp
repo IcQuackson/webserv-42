@@ -151,7 +151,7 @@ void    CgiHandler::execute_script(HttpRequest& request, HttpResponse& response,
         char buffer[2048]; 
         int readBytes = read(pipes[0], buffer, 2048);
         close(pipes[0]);
-        if (readBytes < 0)
+        if (readBytes <= 0)
         {
             std::cerr << "parent process: read failed" << std::endl;
             response.setStatusCode("500");
