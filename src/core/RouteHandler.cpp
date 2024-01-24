@@ -131,6 +131,11 @@ void RouteHandler::handleGet(HttpRequest& request, HttpResponse& response) {
 	
 	if(route == "/cgi-bin")
 	{
+		if (!resource.empty() || resource == "/") {
+			std::cerr << "Resource is forbidden: " << path << std::endl;
+			response.setStatusCode("401");
+			return;
+		}
 		CgiHandler cgi;
 		cgi.exec_cgi_py(request, response, *this, 0);
 		return;
@@ -295,8 +300,6 @@ void RouteHandler::handlePost(HttpRequest& request, HttpResponse& response) {
 	std::string path = root + resource;
 	std::string indexPath = root + index;
 	std::string filename;
-	//bool isFileUpload = false;
-	
 
 	std::cout << "POST METHOD(body):  " << request.getBody() << std::endl;
 
@@ -305,6 +308,11 @@ void RouteHandler::handlePost(HttpRequest& request, HttpResponse& response) {
 	std::cout << path << std::endl;
 	if(route == "/cgi-bin")
 	{
+		if (!resource.empty() || resource == "/") {
+			std::cerr << "Resource is forbidden: " << path << std::endl;
+			response.setStatusCode("401");
+			return;
+		}
 		CgiHandler cgi;
 		cgi.exec_cgi_py(request,response, *this, 1);
 		return;

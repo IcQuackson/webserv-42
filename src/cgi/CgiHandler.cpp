@@ -1,25 +1,5 @@
 #include "cgi/CgiHandler.hpp"
-
-/* std::vector<std::string> Client::createEnvVars(const std::string& serverRoot, std::string uri, const location_t& targetLocation) {
-    std::vector<std::string> envVars;
-
-    if (uri.at(0) == '/')
-        uri.erase(0, 1);
-
-    envVars.push_back("SCRIPT_FILENAME=" + (serverRoot + targetLocation.cgi_path + uri));
-
-    if (headers.count("Content-Length") > 0) {
-        envVars.push_back("CONTENT_LENGTH=" + headers["Content-Length"]);
-    }
-
-    envVars.push_back("CONTENT_TYPE=" + headers["Content-Type"]);
-    envVars.push_back("GATEWAY_INTERFACE=CGI/1.1");
-    envVars.push_back("REQUEST_METHOD=" + this->method);
-    envVars.push_back("SERVER_PROTOCOL=HTTP/1.1");
-    envVars.push_back("SERVER_SOFTWARE=42_Webserv/1.0");
-
-    return envVars;
-} */
+#include "core/RouteHandler.hpp"
 
 void CgiHandler::initCgi_Env(RouteHandler& route, HttpRequest& request)
 {
@@ -44,8 +24,6 @@ void CgiHandler::exec_cgi_py(HttpRequest& request, HttpResponse& response, Route
     std::string full_path = route.getLocation().getRoot() + route.getLocation().getCgiPath();
     std::cout << "full:" << full_path << std::endl;
     size_t lastSlashPos = request.getResource().find_last_of('/');
-    //if (type)
-    //    lastSlashPos += 1;
     std::string scriptName = route.getLocation().getCgiPath().substr(lastSlashPos + 1);
 
     if(scriptName.empty())
@@ -124,8 +102,6 @@ void    CgiHandler::execute_script(HttpRequest& request, HttpResponse& response,
         response.setStatusCode("500");
         return ;
     }
-	std::cout << "GET" << std::endl;
-	std::cout << "cgi_path: " << route.getLocation().getRoot() + route.getLocation().getCgiPath() << std::endl;
 	
     pid = fork();
     if (pid == 0)
@@ -208,6 +184,12 @@ void    CgiHandler::execute_script(HttpRequest& request, HttpResponse& response,
             int term_signal = WTERMSIG(status);
             std::cout << "Child was terminated by signal: " << term_signal << std::endl;
         }
+
+		std::ostringstream oss;
+		oss << readBytes;
+		std::string str = oss.str();
+		response.addHeader("Content-Type", "text/plain");
+		response.addHeader("Content-Length", str);
         response.setBody(body);
     }
 }

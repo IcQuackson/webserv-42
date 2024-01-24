@@ -28,10 +28,6 @@ def handlePost():
 	FILENAME = sys.argv[2]
 	CONTENT = sys.argv[3]
 
-	print(f"UPLOAD_FOLDER: {UPLOAD_FOLDER}")
-	print(f"FILENAME: {FILENAME}")
-	print(f"CONTENT: {CONTENT}")
-
 	# Create the uploads folder if it doesn't exist
 	if not os.path.exists(UPLOAD_FOLDER):
 		os.makedirs(UPLOAD_FOLDER)
@@ -44,7 +40,6 @@ def handlePost():
 	print(f"File '{FILENAME}' successfully uploaded and saved")
 
 if __name__ == "__main__":
-	print("method: " + REQUEST_METHOD)
 	if REQUEST_METHOD == "GET":
 		handleGet()
 	if REQUEST_METHOD == "POST":
