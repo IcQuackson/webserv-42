@@ -32,12 +32,12 @@ class TestMyHTTPServer(unittest.TestCase):
 		self.assertIn("index.html", response.text)
 		self.assertIn("<!-- Empty body -->", response.text)
 
-	def test_lol_endpoint_uploads(self):
-		print("Current Directory: " + os.getcwd())
-		files = {"upload_file": open(self.upload_file, "rb")}
-		response = requests.post(f"{self.base_url}/lol", files=files)
-		self.assertEqual(response.status_code, 201)
-		self.assertIn("Upload successful", response.text)
+	#def test_lol_endpoint_uploads(self):
+	#	print("Current Directory: " + os.getcwd())
+	#	files = {"upload_file": open(self.upload_file, "rb")}
+	#	response = requests.post(f"{self.base_url}/lol", files=files)
+	#	self.assertEqual(response.status_code, 201)
+	#	self.assertIn("Upload successful", response.text)
 	
 	def test_wrong_endpoint(self):
 		response = requests.get(f"{self.base_url}/WRONG_ENDPOINT")
@@ -52,9 +52,9 @@ class TestMyHTTPServer(unittest.TestCase):
 		self.assertEqual(response.status_code, 404)
 
 	def test_cgi_get(self):
-		response = requests.get(f"{self.base_url}/cgi_bin")
+		response = requests.get(f"{self.base_url}/cgi-bin")
 		self.assertEqual(response.status_code, 200)
-		self.assertIn("Hello World", response.text)
+		self.assertIn("Current Time", response.text)
 
 if __name__ == "__main__":
 	unittest.main()

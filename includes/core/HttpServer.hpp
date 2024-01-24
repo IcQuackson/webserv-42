@@ -57,7 +57,7 @@ private:
 
 	// Logging
 	static bool enableLogging;
-	std::deque<HttpResponse> responses;
+	std::map<int, HttpResponse> responses;
 	std::vector<int> errorCodes;
 
 
@@ -77,7 +77,7 @@ public:
 	std::map<int, time_t>& getSocketLastActiveTime();
 	ServerConfig getServerConfig();
 	ssize_t getFileBytes();
-	std::deque<HttpResponse>& getResponses();
+	const std::map<int, HttpResponse>& getResponses();
 	std::deque<int>& getServerActiveConnections();
 	static std::string getFileContent(std::string filePath);
 
@@ -99,12 +99,12 @@ public:
 	void closeConnection(int clientSocket);
 	bool init();
 	void handleReceive(int clientSocket);
-	void handleSend();
+	void handleSend(int clientSocket);
 	bool loadConfig(const std::string& configFilePath);
 	void addRouteHandler(RouteHandler &routeHandler);
 	const std::map<std::string, RouteHandler> getRouteHandlers();
-	HttpResponse processRequest(char *dataBuffer, int clientSocket, HttpResponse &response);
-	bool parseRequest(int clientSocket, char data[], HttpRequest &request, HttpResponse &response);
+	HttpResponse processRequest(std::string data, int clientSocket, HttpResponse &response);
+	bool parseRequest(int clientSocket, std::string data, HttpRequest &request, HttpResponse &response);
 	void sendResponse(int clientSocket, HttpResponse& response);
 	void handleError(int clientSocket, int errorCode);
 	bool parseResource(const std::string& path, HttpRequest& request);

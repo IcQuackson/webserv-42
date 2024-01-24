@@ -53,7 +53,7 @@ public:
 	void setContentLength(int contentLength);
 	void setQueryString(const std::string& query);
 	void generateTimestamp();
-	static bool isRequestValid(char data[], HttpResponse& response);
+	static bool isRequestValid(std::string, HttpResponse& response);
 };
 
 std::ostream& operator<<(std::ostream& os, const HttpRequest& request);

@@ -170,9 +170,8 @@ void HttpRequest::generateTimestamp() {
     strftime(this->timestamp, sizeof(this->timestamp), "%Y-%m-%d %H:%M:%S", localtime(&currentTime));
 }
 
-bool HttpRequest::isRequestValid(char data[], HttpResponse& response) {
-	std::string dataString(data);
-	std::istringstream requestStream(dataString);
+bool HttpRequest::isRequestValid(std::string data, HttpResponse& response) {
+	std::istringstream requestStream(data);
 	std::string line;
 	std::size_t pos;
 
@@ -232,11 +231,3 @@ bool HttpRequest::isRequestValid(char data[], HttpResponse& response) {
 
 	return true;
 }
-
-/* int HttpRequest::getContentLength() const {
-	std::map<std::string, std::string>::const_iterator it = headers.find("Content-Length");
-	if (it == headers.end()) {
-		return -1;
-	}
-	return std::stoi(it->second);
-} */

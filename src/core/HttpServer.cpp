@@ -1,6 +1,7 @@
 #include "core/HttpServer.hpp"
 #include "core/HttpStatusCode.hpp"
 #include "core/Utils.hpp"
+#include "core/MultiPartRequest.hpp"
 
 int epollFd = -1;
 bool HttpServer::enableLogging = true;
@@ -14,7 +15,7 @@ HttpServer::HttpServer(ServerConfig& serverConfig): serverConfig(serverConfig) {
 HttpServer::HttpServer(int port, const std::string& host, ServerConfig &serverConfig): serverConfig(serverConfig) {
 	this->port = port;
 	this->host = host;
-	this->responses = std::deque<HttpResponse>();
+	this->responses = std::map<int, HttpResponse>();
 	setErrorCodes(serverConfig.getError_codes());
 }
 
@@ -47,6 +48,10 @@ const std::map<std::string, RouteHandler> HttpServer::getRouteHandlers() {
 	return this->routes;
 }
 
+const std::map<int, HttpResponse>& HttpServer::getResponses() {
+	return this->responses;
+}
+
 std::string HttpServer::getHost() {
 	return this->host;
 }
@@ -75,9 +80,6 @@ std::map<int, time_t>& HttpServer::getSocketLastActiveTime() {
 	return this->_socketLastActiveTime;
 }
 
-std::deque<HttpResponse>& HttpServer::getResponses() {
-	return this->responses;
-}
 ServerConfig HttpServer::getServerConfig() {
 	return this->serverConfig;
 }
@@ -226,7 +228,6 @@ void HttpServer::runServers(std::vector<HttpServer*> &servers) {
 		for (size_t i = 0; i < _pollSet.size(); i++) {
 
 			closeIfTimedOut(_pollSet[i].fd);
-
 			// Check if a socket is ready to read
 			if (_pollSet[i].revents & POLLIN) {
 				// Check if a new client connection is ready to be accepted
@@ -242,7 +243,7 @@ void HttpServer::runServers(std::vector<HttpServer*> &servers) {
 				}
 			}
 			// Check for errors 
-			else if (_pollSet[i].revents & (POLLERR | POLLHUP | POLLNVAL)) {
+			else if (_pollSet[i].revents & (POLLERR | POLLHUP | POLLNVAL | POLLRDHUP)) {
 				printPollSet(_pollSet);
 				std::cerr << "Error on fd " << _pollSet[i].fd << std::endl;
 				HttpServer *server = getServerFromClientSocket(_pollSet[i].fd);
@@ -252,9 +253,9 @@ void HttpServer::runServers(std::vector<HttpServer*> &servers) {
 			else if (_pollSet[i].revents & POLLOUT) {
 				std::cout << "Sending data on fd " << _pollSet[i].fd << std::endl;
 				HttpServer *server = getServerFromClientSocket(_pollSet[i].fd);
-				server->handleSend();
-				_pollSet[i].events &= ~POLLOUT;
-				std::cout << "Responses size: " << server->getResponses().size() << std::endl;
+				server->handleSend(_pollSet[i].fd);
+				_pollSet[i].revents &= ~POLLOUT;
+				//_pollSet[i].events &= ~POLLOUT;
 			}
 		}
 	}
@@ -307,12 +308,13 @@ void HttpServer::closeConnection(int clientSocket) {
 	// Remove the client socket from the active connections
 	_allActiveConnections.erase(clientSocket);
 	_socketLastActiveTime.erase(clientSocket);
-
-	// erase from serverActiveConnections
 	serverActiveConnections.erase(std::remove(serverActiveConnections.begin(), serverActiveConnections.end(), clientSocket), serverActiveConnections.end());
+	responses.erase(clientSocket);
 }
 
 void HttpServer::handleReceive(int clientSocket) {
+
+	static std::map<int, MultiPartRequest> clientBuffers = std::map<int, MultiPartRequest>();
 
 	// Receive the HTTP request
 	char requestBuffer[MAX_BUFFER_SIZE];
@@ -329,32 +331,60 @@ void HttpServer::handleReceive(int clientSocket) {
 		closeConnection(clientSocket);
 		return;
 	}
+	std::cout << "Raw data received: " << std::endl << requestBuffer << std::endl;
 
-	std::cout << "Data received: " << std::endl << requestBuffer << std::endl;
+	std::string dataString(requestBuffer);
+	// Check if the request is multipart/form-data
+	if (dataString.find("Content-Type: multipart/form-data") != std::string::npos
+		&& clientBuffers.find(clientSocket) == clientBuffers.end()) {
+
+		MultiPartRequest multiPartRequest;
+		multiPartRequest.setData(dataString);
+		multiPartRequest.setBoundary(MultiPartRequest::getBoundary(dataString));
+		std::string boundary = multiPartRequest.getBoundary();
+
+		// Check if the boundary is complete
+		if (multiPartRequest.getData().find(boundary + "--\r\n") == std::string::npos) {
+			std::cout << "Boundary not complete" << std::endl;
+			clientBuffers.insert(std::pair<int, MultiPartRequest>(clientSocket, multiPartRequest));
+			return;
+		}
+	}
+	// Check if the request is multipart/form-data and the boundary is not complete
+	else if (clientBuffers.find(clientSocket) != clientBuffers.end()) {
+
+		clientBuffers[clientSocket].appendData(dataString);
+		std::string boundary = clientBuffers[clientSocket].getBoundary();
+
+		// Check if the boundary is complete
+		if (clientBuffers[clientSocket].getData().find(boundary + "--\r\n") == std::string::npos) {
+			return;
+		}
+		else {
+			std::cout << "Buffer Deleted" << std::endl;
+			dataString = clientBuffers[clientSocket].getData();
+			clientBuffers.erase(clientSocket);
+		}
+	}
+	std::cout << "Data received: " << std::endl << dataString << "END OF DATA" << std::endl;
 
 	// Process the HTTP request and generate a response
 	HttpResponse response;
 	response.setErrorCodes(getServerConfig().getError_codes());
 	
-	processRequest(requestBuffer, clientSocket, response);
+	processRequest(dataString, clientSocket, response);
 
 	int statusCodeInt;
 
 	std::stringstream ss(response.getStatusCode());
 	ss >> statusCodeInt;
 
-	std::cout << "Status code: " << statusCodeInt << std::endl;
-
-	// TODO: ADD HEADERS WITH CONTENT LENGTH
 	for (size_t i = 0; i < serverConfig.getError_codes().size(); i++) {
 		if (serverConfig.getError_codes()[i] == statusCodeInt) {
-			//std::string errorPageContent = getFileContent(getServerConfig().getErrorPage());
-			//std::cout << "Error page content: " << std::endl << errorPageContent << std::endl;
-			//response.setBody(errorPageContent);
 			RouteHandler::handleRegularFile(getServerConfig().getErrorPage(), response);
 		}
 	}
-	this->responses.push_back(response);
+	this->responses[clientSocket] = response;
 }
 
 std::string HttpServer::getFileContent(std::string filePath) {
@@ -372,15 +402,19 @@ std::string HttpServer::getFileContent(std::string filePath) {
 	return fileContent;
 }
 
-void HttpServer::handleSend() {
+void HttpServer::handleSend(int clientSocket) {
 	if (serverActiveConnections.empty() || responses.empty()) {
 		std::cout << "No active connections or responses" << std::endl;
 		return;
 	}
 
+	if (responses.find(clientSocket) == responses.end()) {
+		std::cout << "No response for client socket: " << clientSocket << std::endl;
+		return;
+	}
+
 	// Get the first active connection and response
-	int clientSocket = serverActiveConnections.front();
-	std::string response = this->responses.front().toString();
+	std::string response = responses[clientSocket].toString();
 
 	// Send the HTTP response
 	ssize_t bytesSent = send(clientSocket, response.c_str(), response.size(), 0);
@@ -394,9 +428,6 @@ void HttpServer::handleSend() {
 		closeConnection(clientSocket);
 		return;
 	}
-
-	// Remove the response from the queue
-	responses.erase(responses.begin());
 
 	// Close the client socket
 	closeConnection(clientSocket);
@@ -439,7 +470,7 @@ bool HttpServer::isHostNameAllowed(std::string target) {
 		|| target == getHost() + ":" + port;
 }
 
-HttpResponse HttpServer::processRequest(char *dataBuffer, int clientSocket, HttpResponse &response) {
+HttpResponse HttpServer::processRequest(std::string data, int clientSocket, HttpResponse &response) {
 	// Read data from the client
 	std::cout << "clientSocket: " << clientSocket << std::endl;
 
@@ -449,7 +480,7 @@ HttpResponse HttpServer::processRequest(char *dataBuffer, int clientSocket, Http
 	std::cout << "-----------" << std::endl;
 	Utils::printYellow("Request:");
 	HttpRequest request;
-	bool isValidSyntax = parseRequest(clientSocket, dataBuffer, request, response);
+	bool isValidSyntax = parseRequest(clientSocket, data, request, response);
 
 	if (!isValidSyntax) {
 		std::cerr << "Invalid syntax" << std::endl;
@@ -505,7 +536,7 @@ bool read_request_content(std::string &input)
 	return (1);
 }
 
-bool HttpServer::parseRequest(int clientSocket, char data[], HttpRequest &request, HttpResponse& response) {
+bool HttpServer::parseRequest(int clientSocket, std::string data, HttpRequest &request, HttpResponse& response) {
 
 	(void) clientSocket;
 
@@ -513,10 +544,8 @@ bool HttpServer::parseRequest(int clientSocket, char data[], HttpRequest &reques
 		return false;
 	}
 
-	std::string dataString(data);
-
 	// Parse the request
-	std::istringstream requestStream(dataString);
+	std::istringstream requestStream(data);
 	std::string line;
 
 	// Parse the request line

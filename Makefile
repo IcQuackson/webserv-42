@@ -20,6 +20,7 @@ SRCS := \
 	$(SRC_DIR)/core/HttpRequest.cpp \
 	$(SRC_DIR)/core/HttpStatusCode.cpp \
 	$(SRC_DIR)/core/RouteHandler.cpp \
+	$(SRC_DIR)/core/MultiPartRequest.cpp \
 	$(SRC_DIR)/core/Utils.cpp \
 	$(SRC_DIR)/main.cpp \
 	$(SRC_DIR)/cgi/CgiHandler.cpp
