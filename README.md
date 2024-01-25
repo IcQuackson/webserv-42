@@ -1,6 +1,15 @@
-# Webserv
+<div align="center">
+  <h1 style="text-align:center;">Webserv</h1>
+</div>
 
-Webserv is a C++98 project that allows you to create your own HTTP server inspired by NGINX. This project aims to provide a deeper understanding of HTTP and its protocols, as well as the development of a functional web server.
+<div align="center">
+  <p style="text-align:center;">
+    Webserv is a C++98 project that allows you to create your own HTTP server inspired by NGINX.
+  </p>
+  <p style="text-align:center;">
+    This project aims to provide a deeper understanding of HTTP and its protocols, as well as the development of a functional web server.
+  </p>
+</div>
 
 <p align="center">
   <img src="https://github.com/IcQuackson/webserv-42/assets/61185097/06367bae-12cc-4264-a0a7-4082f5b2ded6" alt="Image">
